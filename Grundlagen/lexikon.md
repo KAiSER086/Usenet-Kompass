@@ -27,6 +27,8 @@ Diese Begriffe sind besonders wichtig für Nutzer, die Usenet zum Download von B
 
 Diese Begriffe helfen, die Funktionsweise des Netzwerks besser zu verstehen.
 
+* **PVR (Personal Video Recorder):** Im Usenet ist ein PVR eine Software, die den Prozess der Suche und des Downloads von Mediendateien (wie z. B. Serien oder Filmen) automatisiert. Anstatt manuell nach jeder neuen Episode oder einem bestimmten Film zu suchen, übernimmt die PVR-Software (Sonarr, Radarr, etc.) diese Aufgabe für dich.
+
 * **SSL-Verschlüsselung:** Ein Sicherheitsstandard, der die Verbindung zwischen deinem Newsreader und dem News-Server verschlüsselt. Dies sorgt für Anonymität und verhindert, dass dein Internetanbieter oder andere Dritte deine Aktivitäten einsehen können.
 * **NNTP (Network News Transfer Protocol):** Das Standardprotokoll, das Usenet verwendet, um Nachrichten und Dateien zwischen den News-Servern und zu deinem Newsreader zu übertragen.
 * **Bandbreite (Bandwidth):** Die maximale Geschwindigkeit deiner Internetverbindung. Beim Usenet kannst du diese in der Regel voll ausschöpfen, da die Server extrem hohe Geschwindigkeiten liefern können.
