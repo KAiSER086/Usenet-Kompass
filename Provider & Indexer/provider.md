@@ -16,8 +16,8 @@ Der Usenet-Provider ist der grundlegende Baustein deines Setups. Er gewährt dir
 
 ### Beispiele für Provider
 
-Es gibt viele Usenet-Provider. Bekannte Premium-Anbieter wie Eweka, UsenetServer oder NewsgroupDirect zeichnen sich durch hohe Retention und exzellente Bandbreite aus. Günstigere Alternativen wie SunnyUsenet, Pure Usenet oder ViperNews haben oft eine niedrigere Retention, weniger gleichzeitige Verbindungen und je nach Abomodell auch eine begrenzte Bandbreite.
+Es gibt viele Usenet-Provider. Bekannte Premium-Anbieter wie **Eweka**, **UsenetServer** oder **NewsgroupDirect** zeichnen sich durch hohe Retention und exzellente Bandbreite aus. Günstigere Alternativen wie **SunnyUsenet**, **Pure Usenet** oder **ViperNews** haben oft eine niedrigere Retention, weniger gleichzeitige Verbindungen und je nach Abomodell auch eine begrenzte Bandbreite.
 
-Gerade für Nutzer, die ihren Fokus auf neue Releases legen, ist ein erschwinglicher Provider oft ausreichend. Falls man jedoch ältere Dateien herunterladen möchte, die beim Hauptprovider nicht mehr verfügbar sind, kommen Block Accounts ins Spiel. Sie dienen als perfekte Ergänzung, um diese Lücken zu füllen.
+Gerade für Nutzer, die ihren Fokus auf neue Releases legen, ist ein erschwinglicher Provider oft ausreichend. Falls man jedoch ältere Dateien herunterladen möchte, die beim Hauptprovider nicht mehr verfügbar sind, kommen **Block Accounts** ins Spiel. Sie dienen als perfekte Ergänzung, um diese Lücken zu füllen.
 
-Auf Reddit unter r/usenet findet man eine Liste mit [aktuellen Providerdeals](https://www.reddit.com/r/usenet/wiki/providerdeals/). Eweka ist ein Anbieter, der oft attraktive Angebote hat, wie zum Beispiel den [Eweka Deal1](https://www.eweka.nl/en/landing/promo-deal-evm-e), der in der Community sehr beliebt ist. Es lohnt sich, die Angebote zu vergleichen.
+Auf Reddit unter [r/usenet](https://www.reddit.com/r/usenet/) findet man eine Liste mit [aktuellen Providerdeals](https://www.reddit.com/r/usenet/wiki/providerdeals/). **Eweka** ist ein Anbieter, der oft attraktive Angebote hat, wie zum Beispiel den [Eweka Deal1](https://www.eweka.nl/en/landing/promo-deal-evm-e), der in der Community sehr beliebt ist. Es lohnt sich, die Angebote zu vergleichen.
