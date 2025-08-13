@@ -1,4 +1,3 @@
----
 ### Grundlegende Begriffe
 
 Diese Wörter beschreiben das Fundament des Usenets.
@@ -35,7 +34,7 @@ Diese Begriffe sind besonders wichtig für Nutzer, die Usenet zum Download von B
 
 Diese Begriffe helfen, die Funktionsweise des Netzwerks besser zu verstehen.
 
-* **PVR (Personal Video Recorder):** Im Usenet ist ein PVR eine Software, die den Prozess der Suche und des Downloads von Mediendateien (wie z. B. Serien oder Filmen) automatisiert. Anstatt manuell nach jeder neuen Episode oder einem bestimmten Film zu suchen, übernimmt die PVR-Software (Sonarr, Radarr, etc.) diese Aufgabe für dich.
+* **PVR (Personal Video Recorder):** Ein Sammelbegriff für Tools wie Sonarr und Radarr, die deine Mediensammlung automatisch verwalten. Sie suchen nach neuen Inhalten, laden sie über den Downloader herunter und sortieren sie.
 
 * **SSL-Verschlüsselung:** Ein Sicherheitsstandard, der die Verbindung zwischen deinem Newsreader und dem News-Server verschlüsselt. Dies sorgt für Anonymität und verhindert, dass dein Internetanbieter oder andere Dritte deine Aktivitäten einsehen können.
 
