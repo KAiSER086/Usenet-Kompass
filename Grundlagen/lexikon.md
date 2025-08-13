@@ -1,3 +1,4 @@
+---
 ### Grundlegende Begriffe
 
 Diese Wörter beschreiben das Fundament des Usenets.
