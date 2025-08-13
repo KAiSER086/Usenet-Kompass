@@ -29,7 +29,7 @@ Bevor wir mit der Konfiguration der `docker-compose.yml` beginnen, müssen die n
 
 ### Installation für Debian, Ubuntu und Derivate
 
-Öffne ein Terminal und führe die folgenden Befehle aus, um Docker zu installieren. Wir beginnen mit der korrekten Quelle für Debian/Bookworm.
+Öffne ein Terminal und führe die folgenden Befehle aus, um Docker zu installieren. Wir beginnen mit der Quelle für Debian/Bookworm.
 
 ```bash
 # Paketlisten aktualisieren
