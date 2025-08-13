@@ -38,6 +38,12 @@ Diese Begriffe helfen, die Funktionsweise des Netzwerks besser zu verstehen.
 * **PVR (Personal Video Recorder):** Im Usenet ist ein PVR eine Software, die den Prozess der Suche und des Downloads von Mediendateien (wie z. B. Serien oder Filmen) automatisiert. Anstatt manuell nach jeder neuen Episode oder einem bestimmten Film zu suchen, übernimmt die PVR-Software (Sonarr, Radarr, etc.) diese Aufgabe für dich.
 
 * **SSL-Verschlüsselung:** Ein Sicherheitsstandard, der die Verbindung zwischen deinem Newsreader und dem News-Server verschlüsselt. Dies sorgt für Anonymität und verhindert, dass dein Internetanbieter oder andere Dritte deine Aktivitäten einsehen können.
+
 * **NNTP (Network News Transfer Protocol):** Das Standardprotokoll, das Usenet verwendet, um Nachrichten und Dateien zwischen den News-Servern und zu deinem Newsreader zu übertragen.
+
 * **Bandbreite (Bandwidth):** Die maximale Geschwindigkeit deiner Internetverbindung. Beim Usenet kannst du diese in der Regel voll ausschöpfen, da die Server extrem hohe Geschwindigkeiten liefern können.
+
+* **VPN (Virtual Private Network):** Eine Technologie, die eine sichere und verschlüsselte Verbindung über das Internet herstellt. Sie leitet deinen gesamten Datenverkehr über einen externen Server, sodass deine eigene IP-Adresse verborgen bleibt und dein Internetanbieter deine Online-Aktivitäten nicht einsehen kann.
+
+* **Mesh-VPN (z.B. Tailscale):** Eine moderne Form des VPN, die es ermöglicht, ein sicheres, dezentrales Netzwerk zu erstellen. Statt alle Geräte über einen zentralen Server zu verbinden, ermöglicht ein Mesh-VPN die direkte, verschlüsselte Kommunikation zwischen deinen Geräten (wie deinem Heimserver und deinem Handy), egal wo sie sich befinden. Das ist besonders nützlich für den sicheren Fernzugriff auf deine Usenet-Tools.
 
