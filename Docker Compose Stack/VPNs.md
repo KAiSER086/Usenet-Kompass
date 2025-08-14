@@ -99,7 +99,7 @@ Die angezeigte IP-Adresse sollte mit der eures OVPN-Server übereinstimmen.
 
 Nachdem wir das VPN-Fundament mit Docker Compose und Gluetun geschaffen haben, richten wir den sicheren Fernzugriff ein. Tailscale ist dafür die beste Lösung, da es einen sicheren, verschlüsselten Tunnel zwischen deinen Geräten und deinem Server schafft. Anstatt es in einem Docker-Container laufen zu lassen (um Subnet-Routing zu vermeiden, da wir Einsteigerfreundlich bleiben wollen), installieren wir Tailscale direkt auf dem Host-System. So können wir zuverlässig auf den Server zugreifen, ohne dass es zu Konflikten mit Docker oder Gluetun kommt.
 
-**Tailscale installieren:** Öffne ein Terminal auf deinem Raspberry Pi und führe diesen Befehl aus, um Tailscale zu installieren:
+**Tailscale installieren:** Öffne ein Terminal auf deinem System und führe diesen Befehl aus, um Tailscale zu installieren:
 
 ```bash
 curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) | sh
