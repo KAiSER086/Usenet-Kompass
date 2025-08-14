@@ -107,7 +107,7 @@ curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) 
 
 Dieses Skript erkennt dein System und installiert die notwendigen Pakete.
 
-**Tailscale starten und authentifizieren:** Gib anschließend den folgenden Befehl ein, um den Tailscale-Dienst auf deinem Raspberry Pi zu starten und ihn mit deinem Tailscale-Konto zu verknüpfen.
+**Tailscale starten und authentifizieren:** Gib anschließend den folgenden Befehl ein, um den Tailscale-Dienst auf deinem System zu starten und ihn mit deinem Tailscale-Konto zu verknüpfen.
 
 ```bash
 sudo tailscale up
