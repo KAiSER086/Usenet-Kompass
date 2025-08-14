@@ -139,4 +139,4 @@ NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du 
     * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
 4. **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
 
-![NZBGet-News-Server.png](nzbget-news-Server.png)
+![NZBGet-News-Server.png](nzbget-news-server.png)
