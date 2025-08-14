@@ -13,7 +13,7 @@ Für Usenet-Downloads ist ein VPN aus folgenden Gründen essenziell:
 
 ## Was ist ein Mesh-VPN und warum nutzen wir Tailscale?
 
-Ein **Mesh-VPN**, wie es von Tailscale verwendet wird, ist eine moderne Form des VPN. Während ein herkömmliches VPN all deinen Traffic über einen einzigen zentralen Server leitet, ermöglicht ein Mesh-VPN eine direkte, verschlüsselte Kommunikation zwischen all deinen Geräten – egal wo sie sich befinden.
+Ein **Mesh-VPN**, wie es von Tailscale verwendet wird, ist eine moderne Form des VPN. Während ein herkömmliches VPN all deinen Traffic über einen einzigen zentralen Server leitet, um ihn zu verschleiern, ermöglicht ein Mesh-VPN eine direkte, verschlüsselte Kommunikation zwischen all deinen Geräten – egal wo sie sich befinden.
 
 Stell dir vor, deine Geräte (z. B. dein Heimserver, dein Laptop und dein Handy) sind Teil eines privaten, sicheren Netzwerks. Mit Tailscale kannst du von deinem Handy aus direkt und sicher auf die Benutzeroberflächen deiner Docker-Dienste auf deinem Server zugreifen, ohne dass deine Daten über einen unsicheren Weg übertragen werden. Es ist die optimale Lösung für einen sicheren Fernzugriff auf deinen Usenet-Stack.
 
