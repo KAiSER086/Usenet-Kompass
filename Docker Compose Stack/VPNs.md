@@ -25,10 +25,11 @@ Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir 
 
 Bevor wir den Dienst in der `docker-compose.yml` definieren, erstellen wir einen Ordner auf deinem Host-System, in dem die Container ihre Konfigurationsdateien ablegen werden. Dies ist wichtig, damit deine Einstellungen auch nach einem Neustart des Containers erhalten bleiben.
 
-Führe den folgenden Befehl im Hauptverzeichnis deines Systems aus:
+Führe die folgendenden Befehle im Hauptverzeichnis deines Systems aus:
 
 ```bash
 mkdir docker
+cd docker
 ```
 
 Da wir das Verzeichnis jetzt erstellt haben, können wir mit der `docker-compose.yml` beginnen, wir benötigen aber noch die PUID und die PGID deines Benutzers:
@@ -52,7 +53,7 @@ services:
       - NET_ADMIN
     environment:
       - VPN_SERVICE_PROVIDER=dein-vpn-provider # z.B. nordvpn, mullvad, expressvpn
-      - VPN_TYPE=wireguard # oder OVPN, je nach Anbieter
+      - VPN_TYPE=ovpn # oder wireguard, je nach Anbieter
       - VPN_USER=dein-benutzername
       - VPN_PASSWORD=dein-passwort
       - SERVER_COUNTRIES=Netherlands # Oder ein Land deiner Wahl
@@ -69,7 +70,6 @@ services:
       - 8989:8989 # Sonarr
       - 7878:7878 # Radarr
       - 9696:9696 # Prowlarr
-      - 
     restart: unless-stopped
 ```
 
@@ -79,4 +79,66 @@ Folgende VPN Anbieter haben volle OVPN Integration:
 AirVPN, Cyberghost, ExpressVPN, FastestVPN, Giganews, HideMyAss, IPVanish, IVPN, Mullvad, NordVPN, Perfect Privacy, Privado, Private Internet Access, PrivateVPN, ProtonVPN, PureVPN, SlickVPN, Surfshark, TorGuard, VPNSecure.me, VPNUnlimited, Vyprvpn, WeVPN, Windscribe
 ```
 
-Generell empfiehlt es sich aber, sofern vom VPN Provider angeboten, Wireguard zu verwenden. Das wird von Gluetun allerdings noch nicht vollständig unterstützt, weswegen wir einen kleinen Umweg gehen müssen. 
+Jetzt überprüfen wir ob die Verbindung erfolgreich war:
+
+```bash
+# Im Docker Verzeichnis
+docker compose up -d
+
+# Shell des Gluetun-Containers öffnen
+docker exec -it gluetun sh
+
+# IP-Adresse abfragen
+curl ipinfo.io/ip
+```
+
+---
+
+## 3.5 Tailscale-Dienst hinzufügen
+
+Nachdem das VPN-Fundament steht, richten wir den sicheren Fernzugriff ein. Tailscale ist dafür die beste Lösung, da es einen sicheren, verschlüsselten Tunnel zwischen deinen Geräten und deinem Server schafft.
+
+Füge diesen Dienst zu deiner bestehenden `docker-compose.yml`hinzu:
+
+```bash
+services:
+  gluetun:
+    # ... der Gluetun-Dienst steht hier
+  
+  tailscale:
+    container_name: tailscale
+    image: tailscale/tailscale:latest
+    hostname: dein-servername # nur Kleinbuchstaben und - statt Leerzeichen
+    volumes:
+      - ./tailscale-data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun # Zugriff auf das TUN-Gerät des Hosts
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+```
+
+Es ist wichtig auf die korrekte YAML-Einrückung zu achten, das vemeidet spätere Fehlermeldungen:
+
+```bash
+services:        # <- Hauptabschnitt (Ebene 0)
+  gluetun:       # <- Ein Dienst innerhalb von services (Ebene 1, 2 Leerzeichen Einrückung)
+    image: ...   # <- Konfiguration des Dienstes (Ebene 2, 4 Leerzeichen Einrückung)
+    ports:       # <- Eine Liste innerhalb der Konfiguration (Ebene 2, 4 Leerzeichen Einrückung)
+      - "8080:8080" # <- Ein Element der Liste (Ebene 3, 6 Leerzeichen Einrückung)
+  
+  tailscale:     # <- Ein Dienst innerhalb von services (Ebene 1, 2 Leerzeichen Einrückung)
+    image: ...   # <- Konfiguration des Dienstes (Ebene 2, 4 Leerzeichen Einrückung)
+    volumes:     # <- Eine Liste innerhalb der Konfiguration (Ebene 2, 4 Leerzeichen Einrückung)
+      - ...      # <- Ein Element der Liste (Ebene 3, 6 Leerzeichen Einrückung)
+
+  sabnzbd
+    image: ...
+    volumes:
+      - ....
+```
+
+Nachdem wir den Tailscale Block hinzugefügt haben, starten wir den Dienst:
+
+```bash
+docker compose up -d
+```
