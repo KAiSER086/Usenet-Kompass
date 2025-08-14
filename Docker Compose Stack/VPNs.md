@@ -53,13 +53,20 @@ services:
       - NET_ADMIN
     environment:
       - VPN_SERVICE_PROVIDER=dein-vpn-provider # z.B. nordvpn, mullvad, expressvpn
-      - VPN_TYPE=ovpn # oder wireguard, je nach Anbieter
-      - VPN_USER=dein-benutzername
+      - OPENVPN_TYPE=openvpn # oder wireguard, je nach Anbieter
+      - OPENVPN_USER=dein-benutzername
       - VPN_PASSWORD=dein-passwort
       - SERVER_COUNTRIES=Netherlands # Oder ein Land deiner Wahl
       - TZ=Europe/Berlin
       - PUID=1000 # durch deine PUID ersetzen
       - PGID=1000 # durch deine PGID ersetzen
+    ports:
+      # Port-Mappings für die Dienste, die über Gluetun erreichbar sein sollen
+      - 8080:8080   # Sabnzbd
+      - 6789:6789   # NZBGet
+      - 8686:8686   # Radarr
+      - 8989:8989   # Sonarr
+      - 9696:9696   # Prowlarr
     volumes:
       - ./gluetun-config:/gluetun
     restart: unless-stopped
@@ -84,88 +91,33 @@ docker exec -it gluetun sh
 curl ipinfo.io/ip
 ```
 
+Die angezeigte IP-Adresse sollte mit der eures OVPN-Server übereinstimmen.
+
 ---
 
-## 3.5 Tailscale-Dienst hinzufügen
+### 3.5 Tailscale-Dienst auf dem Host-System hinzufügen
 
-Nachdem das VPN-Fundament steht, richten wir den sicheren Fernzugriff ein. Tailscale ist dafür die beste Lösung, da es einen sicheren, verschlüsselten Tunnel zwischen deinen Geräten und deinem Server schafft.
+Nachdem wir das VPN-Fundament mit Docker Compose und Gluetun geschaffen haben, richten wir den sicheren Fernzugriff ein. Tailscale ist dafür die beste Lösung, da es einen sicheren, verschlüsselten Tunnel zwischen deinen Geräten und deinem Server schafft. Anstatt es in einem Docker-Container laufen zu lassen (um Subnet-Routing zu vermeiden, da wir Einsteigerfreundlich bleiben wollen), installieren wir Tailscale direkt auf dem Host-System. So können wir zuverlässig auf den Server zugreifen, ohne dass es zu Konflikten mit Docker oder Gluetun kommt.
 
-Füge diesen Dienst zu deiner bestehenden `docker-compose.yml`hinzu:
-
-```yaml
-services:
-  gluetun:
-    # ... der Gluetun-Dienst steht hier
-  
-  tailscale:
-    container_name: tailscale
-    image: tailscale/tailscale:latest
-    hostname: dein-servername # nur Kleinbuchstaben und - statt Leerzeichen
-    volumes:
-      - ./tailscale-data:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun # Zugriff auf das TUN-Gerät des Hosts
-    cap_add:
-      - NET_ADMIN
-    restart: unless-stopped
-```
-
-Es ist wichtig auf die korrekte YAML-Einrückung zu achten, das vemeidet spätere Fehlermeldungen:
-
-```yaml
-services:        # <- Hauptabschnitt (Ebene 0)
-  gluetun:       # <- Ein Dienst innerhalb von services (Ebene 1, 2 Leerzeichen Einrückung)
-    image: ...   # <- Konfiguration des Dienstes (Ebene 2, 4 Leerzeichen Einrückung)
-    ports:       # <- Eine Liste innerhalb der Konfiguration (Ebene 2, 4 Leerzeichen Einrückung)
-      - "8080:8080" # <- Ein Element der Liste (Ebene 3, 6 Leerzeichen Einrückung)
-  
-  tailscale:     # <- Ein Dienst innerhalb von services (Ebene 1, 2 Leerzeichen Einrückung)
-    image: ...   # <- Konfiguration des Dienstes (Ebene 2, 4 Leerzeichen Einrückung)
-    volumes:     # <- Eine Liste innerhalb der Konfiguration (Ebene 2, 4 Leerzeichen Einrückung)
-      - ...      # <- Ein Element der Liste (Ebene 3, 6 Leerzeichen Einrückung)
-
-  sabnzbd
-    image: ...
-    volumes:
-      - ....
-```
-
-Nachdem wir den Tailscale Block hinzugefügt haben, starten wir den Dienst:
+**Tailscale installieren:** Öffne ein Terminal auf deinem Raspberry Pi und führe diesen Befehl aus, um Tailscale zu installieren:
 
 ```bash
-docker compose up -d
+curl -fsSL [https://tailscale.com/install.sh](https://tailscale.com/install.sh) | sh
 ```
 
-### 3.6 Tailscale-Mesh erstellen
+Dieses Skript erkennt dein System und installiert die notwendigen Pakete.
 
-Damit dein Tailscale-Dienst funktionieren kann, musst du dich zuerst auf der **Tailscale-Website** registrieren und den Container anschließend mit deinem Konto verknüpfen.
-
-#### Schritt 1: Tailscale-Konto erstellen
-
-1. Öffne die [Tailscale-Website](https://tailscale.com/) in deinem Browser.
-2. Klicke auf **"Sign up"** oder **"Get started"**.
-3. Registriere dich mit deinem bevorzugten Konto (Google, Microsoft, GitHub oder E-Mail).
-
-Nach der Anmeldung befindest du dich in der Tailscale Admin Console. Dein Mesh-Netzwerk ist jetzt erstellt, hat aber noch keine verbundenen Geräte.
-
-#### Schritt 2: Authentifizierungsschlüssel erstellen
-
-Jetzt musst du einen speziellen Schlüssel erstellen, damit dein Docker-Container sich automatisch mit deinem neuen Netzwerk verbinden kann.
-
-1. Gehe in der Admin Console zu **Settings > Keys > Auth keys > Generate auth key...**.
-2. Erstelle einen neuen Schlüssel. Ein **"one-time key"** ist für diesen Zweck die sicherste und beste Option.
-3. Kopiere den generierten Schlüssel.
-
-#### Schritt 3: Container mit dem Netzwerk verbinden
-
-Führe den folgenden Befehl im Terminal in deinem Docker-Verzeichnis aus, um den Tailscale-Client im Container zu starten und ihn mit deinem Mesh-Netzwerk zu verbinden. Ersetze dabei `<dein-auth-key>` mit dem Schlüssel, den du in Schritt 2 kopiert hast.
+**Tailscale starten und authentifizieren:** Gib anschließend den folgenden Befehl ein, um den Tailscale-Dienst auf deinem Raspberry Pi zu starten und ihn mit deinem Tailscale-Konto zu verknüpfen.
 
 ```bash
-docker exec tailscale tailscale up --authkey <dein-auth-key> --accept-dns=false
+sudo tailscale up
 ```
 
-Sobald das erledigt ist, kannst du deine Endgeräte in das Netzwerk einbinden.
+Der Terminal-Ausgabe wird ein Link angezeigt. Kopiere diesen Link und öffne ihn in deinem Webbrowser, um dich bei deinem Tailscale-Konto anzumelden und das Gerät zu autorisieren.
 
-### 3.7 Verbindung zum Mesh-VPN herstellen
+---
+
+### 3.6 Verbindung zum Mesh-VPN herstellen
 
 Nachdem dein Server nun Teil deines Mesh-VPNs ist, musst du deine Endgeräte (Smartphone, Tablet, PC etc.) mit dem Netzwerk verbinden.
 
@@ -181,5 +133,4 @@ Der große Vorteil von **Tailscale** ist, dass es native Anwendungen für alle g
     * Linux
 2. **Mit deinem Konto anmelden:** Öffne die App auf deinem Gerät und melde dich mit demselben Konto an, das du für die Registrierung deines Servers verwendet hast.
 
-Sobald du angemeldet bist, stellt die App automatisch eine sichere, verschlüsselte Verbindung zu deinem Mesh-Netzwerk her. Dein Gerät kann nun über die private Tailscale-IP-Adresse direkt auf die Dienste auf deinem Server zugreifen.
-
+Sobald du angemeldet bist, stellt die App automatisch eine sichere, verschlüsselte Verbindung zu deinem Mesh-Netzwerk her. Dein Gerät kann nun über die private **Tailscale-IP-Adresse** deines Servers direkt auf die Dienste zugreifen. Du findest diese IP-Adresse in der Tailscale-Admin-Konsole unter der Geräteliste.

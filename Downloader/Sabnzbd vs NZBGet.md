@@ -20,7 +20,7 @@ Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das H
 
 Wir zeigen dir hier die Konfiguration für beide Downloader. Du msolltest dich für einen der beiden entscheiden und den nicht benötigten Teil aus deiner Datei entfernen oder auskommentieren, kannst aber testweise auch erstmal beide aufsetzen.
 
-#### Schritt 1: Konfigurations- und Downloadordner erstellen
+#### Konfigurations- und Downloadordner erstellen
 
 Führe diese Befehle im Haupt-Docker-Verzeichnis aus, um die Ordner für deine Konfiguration und deine Downloads anzulegen:
 
@@ -43,7 +43,7 @@ volumes:
 
   Stelle sicher, dass der angegebene Ordner (/mnt/ext_drive/downloads) auf deinem Host-System existiert und der Benutzer, unter dem die Container laufen (PUID), die notwendigen Schreibrechte besitzt.
 
-#### Schritt 2: docker-compose.yml anpassen
+#### Die docker-compose.yml anpassen
 
 Füge die folgenden Dienste-Blöcke zu deiner bestehenden docker-compose.yml-Datei hinzu. Achte darauf, dass du deine persönlichen PUID, PGID, TZ und Speicherort einträgst.
 
@@ -62,9 +62,8 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./sabnzbd-config:/config # Speichert die Konfiguration
-      - ./downloads:/downloads # Ordner für Downloads
-    ports:
-      - 8080:8080 # Webinterface für SABnzbd
+      - ./downloads:/downloads # Ordner für fertige Downloads
+      - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
     network_mode: "service:gluetun"
 
@@ -79,15 +78,14 @@ services:
     volumes:
       - ./nzbget-config:/config # Speichert die Konfiguration
       - ./downloads:/downloads # Ordner für Downloads
-    ports:
-      - 6789:6789 # Webinterface für NZBGet
+      - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
     network_mode: "service:gluetun"
 ```
 
 **Wichtiger Hinweis:** Die Zeile network_mode: "service:gluetun" ist bei beiden Diensten entscheidend. Sie sorgt dafür, dass der gesamte Download-Traffic automatisch über das VPN geleitet wird.
 
-#### Schritt 3: Dienst starten und Webinterface aufrufen
+#### Dienst starten und Webinterface aufrufen
 
 Nachdem du den gewünschten Downloader-Block in deine `docker-compose.yml` eingefügt hast, starte den Dienst mit dem gewohnten Befehl:
 
