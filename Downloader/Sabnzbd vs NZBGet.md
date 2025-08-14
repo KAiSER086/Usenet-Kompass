@@ -133,10 +133,11 @@ NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du 
 3. **Trage die Provider-Details ein:** Gib die Informationen deines Providers in die entsprechenden Felder ein.
     * **Name:** Wähle einen beschreibenden Namen (z. B. `Eweka.nl`).
     * **Host:** Die Server-Adresse deines Anbieters.
+    * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
     * **Port:** Setze den Wert auf **`563`**.
     * **Benutzername & Passwort:** Deine Anmeldedaten.
     * **Verbindungen:** Die Anzahl der parallelen Verbindungen. `50` ist ein guter Ausgangswert, aber je nach Provider und Abomodell unterschiedlich.
-    * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
+    * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
 4. **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
 
 ![NZBGet-News-Server.png](nzbget-news-server.png)
