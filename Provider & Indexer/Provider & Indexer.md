@@ -1,10 +1,12 @@
-# 2.1 Usenet-Provider wählen
+# 2.0 Provider und Indexer
+
+## 2.1 Usenet-Provider wählen
 
 Der Usenet-Provider ist der grundlegende Baustein deines Setups. Er gewährt dir Zugang zu den Usenet-Servern und ist somit die Quelle für deine Downloads. Die Wahl des richtigen Providers hängt von deinen individuellen Bedürfnissen ab.
 
 ---
 
-## Worauf sollte man bei der Auswahl achten?
+### Worauf sollte man bei der Auswahl achten?
 
 * **Retention:** Die Retention bezeichnet die Zeitspanne, über die der Provider Dateien speichert. Je länger die Retention, desto höher die Wahrscheinlichkeit, dass auch ältere Dateien verfügbar sind. Moderne Provider bieten oft eine Retention von mehreren Jahren an.
 * **Geschwindigkeit & Verbindungen:** Die Geschwindigkeit sollte deiner maximalen Internet-Bandbreite entsprechen. Achte zudem auf die Anzahl der gleichzeitig möglichen Verbindungen, die der Provider anbietet.
@@ -24,11 +26,11 @@ Auf Reddit unter [r/usenet](https://www.reddit.com/r/usenet/) findet man eine Li
 
 ---
 
-# 2.2 Indexer finden
+## 2.2 Indexer finden
 
 Ein Indexer ist die Suchmaschine für das Usenet. Ohne einen Indexer wäre es unmöglich, die gesuchten Dateien in der Masse der Newsgroups zu finden. Die Indexer stellen die benötigten **NZB-Dateien** bereit, die deine Downloader dann verwenden.
 
-## Worauf sollte man bei der Auswahl achten?
+### Öffentlich, Privat oder doch eher Boards?
 
 * **Private vs. Öffentliche Indexer:** Öffentliche Indexer sind frei zugänglich, bieten aber oft weniger exklusive Inhalte. Für dein automatisiertes Setup sind sie meist nur bedingt nützlich. Private Indexer erfordern in der Regel eine Einladung oder eine kleine Spende, bieten aber eine höhere Qualität, Zuverlässigkeit und eine bessere API-Anbindung.
 * **Usenet Boards:** Das sind Foren oder Communities, die manuell von Nutzern erstellte NZB-Dateien teilen. Sie eignen sich gut für die manuelle Suche nach speziellen Inhalten, bieten aber keinen API-Zugang für Tools zur Automatisierung.
@@ -52,3 +54,13 @@ Viele Nutzer beginnen mit einem öffentlichen Indexer wie **NZBIndex**, **NZBKin
 * **DrunkenSlug:** Ein sehr beliebter Indexer, der ebenfalls hauptsächlich englischen Content listet. Die Registrierung ist in der Regel geschlossen, öffnet aber in unregelmäßigen Abständen.
 
 Die Kosten für private Indexer bewegen sich meist zwischen 10 und 25 Euro pro Jahr, je nach VIP-Modell.
+
+### Deutsche Usenet Boards
+
+Es gibt einige deutsche Usenet Boards, die sich auf deutschsprachige Inhalte spezialisiert haben. Zu den bekanntesten und etabliertesten gehören **Fileleechers**, **Brothers of Usenet** und **Sky of Usenet**.
+
+Ein wichtiger Punkt, den man beachten muss: Die meisten dieser Boards sind **private Communities**. Das bedeutet, dass die Registrierungen oft geschlossen sind. Ein Zugang ist meist nur über eine persönliche Einladung (`User Invite`) eines bereits registrierten Mitglieds möglich.
+
+Gelegentlich öffnen diese Boards ihre Registrierung für einen kurzen Zeitraum. Es gibt jedoch keine festen Zeiten dafür. Für Nutzer, die primär auf der Suche nach deutschsprachigem Content sind, können diese Boards eine wertvolle Ergänzung zu einem Indexer sein.
+
+**Wichtig:** Für eine vollständige Automatisierung deines Setups sind diese Boards nicht geeignet. Da sie in der Regel **keinen API-Zugang** bieten, ist eine automatische Suche und ein Download über Tools wie Sonarr oder Radarr hier nicht möglich. Du musst die Inhalte manuell suchen.

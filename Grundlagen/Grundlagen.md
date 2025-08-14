@@ -1,10 +1,12 @@
-# 1.1 Was ist Usenet?
+# 1.0 Grundlagen
+
+## 1.1 Was ist Usenet?
 
 Stell dir das **Usenet** als ein dezentrales, weltweites Netzwerk vor, das deutlich älter ist als das World Wide Web, wie wir es heute kennen. Ursprünglich als eine Art riesiges Diskussionsforum konzipiert, das in Tausende von Themenbereichen (sogenannten Newsgroups) unterteilt ist, wird es heute überwiegend für den dezentralen Austausch von Dateien genutzt.
 
 Anders als bei zentralisierten Diensten wie Webseiten oder Cloud-Speichern gibt es keine zentrale Stelle. Stattdessen kommunizieren die Server von Usenet-Providern miteinander und synchronisieren ihre Inhalte, wodurch eine robuste und schnelle Verteilung von Informationen und Dateien ermöglicht wird.
 
-## Usenet vs. Torrent: Die grundlegenden Unterschiede
+### Usenet vs. Torrent: Die grundlegenden Unterschiede
 
 Obwohl sowohl Usenet als auch Torrent (BitTorrent) zum Austausch von Dateien genutzt werden, unterscheiden sie sich grundlegend in ihrer Funktionsweise und den damit verbundenen Konsequenzen.
 
@@ -22,7 +24,7 @@ Obwohl sowohl Usenet als auch Torrent (BitTorrent) zum Austausch von Dateien gen
   * **Verfügbarkeit:** Die Verfügbarkeit ist an die Nutzer gebunden. Wenn niemand mehr eine Datei teilt, ist sie nicht mehr verfügbar.
   * **Nutzung:** Die Nutzung ist in der Regel kostenlos, es gibt aber auch private Tracker, die eine Registrierung erfordern.
 
-## Warum Usenet gerade in Deutschland besser ist
+### Warum Usenet gerade in Deutschland besser ist
 
 In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle, der Usenet gegenüber Torrent oft vorteilhafter macht:
 
@@ -42,42 +44,38 @@ Zusammenfassend lässt sich sagen, dass Usenet in Deutschland eine Alternative d
 
 ---
 
-# 1.2 Usenet Lexikon
+## 1.2 Systemvoraussetzungen & Hardware-Wahl
 
-## Grundlegende Begriffe
+Bevor du beginnst, solltest du dir überlegen, welche Hardware du verwenden möchtest. Mein Setup ist darauf ausgelegt, auf einem **Raspberry Pi 5** zu laufen, da dieser eine gute Balance aus Leistung und Energieeffizienz bietet.
 
-* **Newsgroup:** Das ist das Kernstück des Usenets. Eine Newsgroup ist ein themenspezifisches Diskussionsforum, vergleichbar mit einem Unterforum auf Reddit oder einem Kanal auf Discord. Sie sind hierarchisch geordnet, z.B. `alt.binaries.games`.
+### Warum Linux die beste Wahl ist
 
-* **News-Server:** Der Server, der die Inhalte der Newsgroups speichert und mit anderen Servern weltweit synchronisiert. Um auf Usenet zugreifen zu können, brauchst du einen Zugang zu einem solchen Server, der meist von einem Usenet-Provider bereitgestellt wird.
+Obwohl Docker auf Windows und macOS läuft, wurde es ursprünglich **nativ für Linux entwickelt**. Das bedeutet, dass Docker auf Linux-Systemen am besten funktioniert, die wenigsten Probleme verursacht und in der Regel auch die höchste Performance bietet.
 
-* **Newsreader:** Die Software (Client), die du auf deinem Computer installierst, um dich mit dem News-Server zu verbinden, Newsgroups zu durchsuchen und Dateien herunterzuladen.
+Daher empfehlen wir für dieses Projekt die Verwendung einer schlanken Linux-Distribution wie **DietPi** oder **Debian**. Diese Systeme sind ideal für den 24/7-Betrieb deines Home-Servers. Sie sind ressourcenschonend, stabil und bieten die beste Basis, um deinen Docker-Stack reibungslos zu betreiben.
 
-* **Provider:** Das Unternehmen, das dir gegen eine monatliche Gebühr Zugang zu seinen News-Servern gewährt. Ohne einen Provider-Account hast du keinen Zugriff.
+### Mein System: Raspberry Pi 5 mit DietPi
 
-* **Indexer:** Eine Website, die Usenet-Inhalte durchsucht und die entsprechenden NZB-Dateien bereitstellt. Ohne einen Indexer ist es sehr schwierig, bestimmte Dateien zu finden.
+* **Vorteile**: Der Raspberry Pi 5 ist klein, verbraucht extrem wenig Strom und ist daher ideal für einen 24/7-Betrieb. Er ist leistungsstark genug, um alle Usenet-Dienste (Downloader, Indexer) problemlos auszuführen.
+* **Nachteile**: Ein Single-Board-Computer (SBC) wie der Raspberry Pi hat seine Grenzen bei der Rechenleistung, insbesondere bei anspruchsvollen Aufgaben wie der **Transkodierung**.
 
-## Begriffe rund um Dateien und Downloads
+### Was ist Transkodierung und wann ist sie nötig?
 
-* **Binärdateien (Binaries):** Bezeichnet alle Dateien, die keine reinen Textnachrichten sind, also z. B. Filme, Musik, Software oder Bilder.
+**Transkodierung** ist der Prozess, bei dem eine Mediendatei von einem Format in ein anderes umgewandelt wird.
 
-* **Retention:** Die Speicherdauer der Dateien auf dem News-Server. Eine höhere Retention bedeutet, dass ältere Inhalte länger verfügbar sind. Bei modernen Providern kann die Retention 15 Jahre oder mehr betragen.
+In den allermeisten Fällen ist eine Transkodierung bei modernen Geräten **nicht notwendig**. Aktuelle Smart-TVs, Smartphones und Tablets unterstützen in der Regel das direkte Abspielen (`Direct Play`) der gängigsten Videoformate.
 
-* **NZB-Datei:** Das ist eine kleine XML-basierte Datei, die als "Wegweiser" für den Newsreader dient. Sie enthält alle Informationen, die der Newsreader benötigt, um eine Binärdatei zu finden und herunterzuladen (vergleichbar mit einer `.torrent`-Datei, aber ohne P2P).
+Transkodierung kommt in zwei Hauptszenarien ins Spiel:
 
-* **PAR2-Dateien (Parität):** Dateien, die zusammen mit den eigentlichen Binärdateien gepostet werden. Sie dienen der Reparatur von defekten oder fehlenden Teilen eines Downloads. Wenn ein Teil fehlt, können die PAR2-Dateien den ursprünglichen Download wiederherstellen.
+1. **Format-Inkompatibilität**: Wenn dein Wiedergabegerät das Format der Mediendatei nicht unterstützt (was heute selten vorkommt).
+2. **Unzureichende Upload-Bandbreite**: Dies ist der häufigste Grund. Wenn du von unterwegs auf deine Mediensammlung zugreifst und deine Upload-Geschwindigkeit nicht ausreicht, um den Stream in voller Qualität zu übertragen, transkodiert der Server die Datei in eine geringere Bitrate. Dies ermöglicht unterbrechungsfreies Streaming ohne Pufferung.
 
-* **RAR-Dateien:** Oft sind Binärdateien in `.rar`-Archive gepackt. Ein Newsreader entpackt diese Archive nach dem Download automatisch.
+Da die CPU des Raspberry Pi 5 nicht für diese anspruchsvolle Echtzeit-Transkodierung ausgelegt ist, kann es in solchen Fällen zu Problemen kommen.
 
-## Technische Begriffe
+### Bessere Alternativen & Empfehlungen
 
-* **PVR (Personal Video Recorder):** Ein Sammelbegriff für Tools wie Sonarr und Radarr, die deine Mediensammlung automatisch verwalten. Sie suchen nach neuen Inhalten, laden sie über den Downloader herunter und sortieren sie.
+Wenn du weißt, dass du häufig Medien mit hohen Bitraten von unterwegs streamen möchtest, solltest du eine leistungsstärkere Hardware in Betracht ziehen:
 
-* **SSL-Verschlüsselung:** Ein Sicherheitsstandard, der die Verbindung zwischen deinem Newsreader und dem News-Server verschlüsselt. Dies sorgt für Anonymität und verhindert, dass dein Internetanbieter oder andere Dritte deine Aktivitäten einsehen können.
-
-* **NNTP (Network News Transfer Protocol):** Das Standardprotokoll, das Usenet verwendet, um Nachrichten und Dateien zwischen den News-Servern und zu deinem Newsreader zu übertragen.
-
-* **Bandbreite (Bandwidth):** Die maximale Geschwindigkeit deiner Internetverbindung. Beim Usenet kannst du diese in der Regel voll ausschöpfen, da die Server extrem hohe Geschwindigkeiten liefern können.
-
-* **VPN (Virtual Private Network):** Eine Technologie, die eine sichere und verschlüsselte Verbindung über das Internet herstellt. Sie leitet deinen gesamten Datenverkehr über einen externen Server, sodass deine eigene IP-Adresse verborgen bleibt und dein Internetanbieter deine Online-Aktivitäten nicht einsehen kann.
-
-* **Mesh-VPN (z.B. Tailscale):** Eine moderne Form des VPN, die es ermöglicht, ein sicheres, dezentrales Netzwerk zu erstellen. Statt alle Geräte über einen zentralen Server zu verbinden, ermöglicht ein Mesh-VPN die direkte, verschlüsselte Kommunikation zwischen deinen Geräten (wie deinem Heimserver und deinem Handy), egal wo sie sich befinden. Das ist besonders nützlich für den sicheren Fernzugriff auf deine Usenet-Tools.
+* **Mini-PCs**: Kompakte Computer (z. B. Intel NUCs) mit Prozessoren wie Intel Core i3 oder i5 (ab der 8. Generation oder neuer) bieten eine integrierte Hardware-Transkodierung (`Intel Quick Sync`), die den Prozessor entlastet.
+* **NAS-Systeme (Synology, QNAP)**: Viele moderne NAS-Geräte haben ebenfalls eine integrierte Hardware-Transkodierung und die Möglichkeit, Docker-Container zu nutzen. Das macht sie zu einer idealen All-in-One-Lösung für einen Medienserver.
+* **Ausrangierte Tower-PCs oder Server**: Ältere PCs mit dedizierter Grafikkarte (falls du keine Intel-CPU mit Quick Sync hast) oder leistungsstarken CPUs sind ebenfalls eine gute und oft kostengünstige Option.
