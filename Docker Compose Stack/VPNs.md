@@ -151,7 +151,7 @@ Nach der Anmeldung befindest du dich in der Tailscale Admin Console. Dein Mesh-N
 
 Jetzt musst du einen speziellen Schlüssel erstellen, damit dein Docker-Container sich automatisch mit deinem neuen Netzwerk verbinden kann.
 
-1. Gehe in der Admin Console zu **Settings > Auth keys**.
+1. Gehe in der Admin Console zu **Settings > Keys > Auth keys > Generate auth key...**.
 2. Erstelle einen neuen Schlüssel. Ein **"one-time key"** ist für diesen Zweck die sicherste und beste Option.
 3. Kopiere den generierten Schlüssel.
 
@@ -182,3 +182,4 @@ Der große Vorteil von **Tailscale** ist, dass es native Anwendungen für alle g
 2. **Mit deinem Konto anmelden:** Öffne die App auf deinem Gerät und melde dich mit demselben Konto an, das du für die Registrierung deines Servers verwendet hast.
 
 Sobald du angemeldet bist, stellt die App automatisch eine sichere, verschlüsselte Verbindung zu deinem Mesh-Netzwerk her. Dein Gerät kann nun über die private Tailscale-IP-Adresse direkt auf die Dienste auf deinem Server zugreifen.
+
