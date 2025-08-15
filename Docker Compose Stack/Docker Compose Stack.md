@@ -1,4 +1,4 @@
-# 3.1 Der Docker-Compose Stack
+# 3.0 Der Docker-Compose Stack
 
 ## Was sind Docker-Container und wie funktionieren sie?
 
@@ -21,7 +21,7 @@ Für unseren Usenet-Guide definieren wir in dieser zentralen Datei alle Dienste 
 
 ---
 
-## 3.2 Das System vorbereiten
+## 3.1 Das System vorbereiten
 
 Bevor wir mit der Konfiguration der `docker-compose.yml` beginnen, müssen die notwendigen Abhängigkeiten auf deinem System installiert werden: Docker und Docker Compose. Wir haben hier die Befehle für die gängigsten Linux-Distributionen zusammengefasst.
 
