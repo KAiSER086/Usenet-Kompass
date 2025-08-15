@@ -55,7 +55,7 @@ Obwohl Docker auf Windows und macOS läuft, wurde es ursprünglich **nativ für 
 
 Daher empfehlen wir für dieses Projekt die Verwendung einer schlanken Linux-Distribution wie **DietPi** oder **Debian**. Diese Systeme sind ideal für den 24/7-Betrieb deines Home-Servers. Sie sind ressourcenschonend, stabil und bieten die beste Basis, um deinen Docker-Stack reibungslos zu betreiben.
 
-### Mein System: Raspberry Pi 5 mit DietPi
+#### Mein System: Raspberry Pi 5 mit DietPi
 
 * **Vorteile**: Der Raspberry Pi 5 ist klein, verbraucht extrem wenig Strom und ist daher ideal für einen 24/7-Betrieb. Er ist leistungsstark genug, um alle Usenet-Dienste (Downloader, Indexer) problemlos auszuführen.
 * **Nachteile**: Ein Single-Board-Computer (SBC) wie der Raspberry Pi hat seine Grenzen bei der Rechenleistung, insbesondere bei anspruchsvollen Aufgaben wie der **Transkodierung**.
