@@ -53,9 +53,9 @@ services:
       - NET_ADMIN
     environment:
       - VPN_SERVICE_PROVIDER=dein-vpn-provider # z.B. nordvpn, mullvad, expressvpn
-      - OPENVPN_TYPE=openvpn # oder wireguard, je nach Anbieter
+      - VPN_TYPE=openvpn # oder wireguard, je nach Anbieter
       - OPENVPN_USER=dein-benutzername
-      - VPN_PASSWORD=dein-passwort
+      - OPENVPN_PASSWORD=dein-passwort
       - SERVER_COUNTRIES=Netherlands # Oder ein Land deiner Wahl
       - TZ=Europe/Berlin
       - PUID=1000 # durch deine PUID ersetzen
