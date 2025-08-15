@@ -40,7 +40,8 @@ In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle, de
 
 **Fazit:**
 
-Zusammenfassend lässt sich sagen, dass Usenet in Deutschland eine Alternative darstellt, die in Bezug auf **Anonymität, Geschwindigkeit** und vor allem der **Rechtssicherheit** deutliche Vorteile gegenüber Torrents bietet. Während das Herunterladen von urheberrechtlich geschützten Inhalten in beiden Systemen illegal ist, ist die Wahrscheinlichkeit einer rechtlichen Verfolgung über Usenet durch die zugrundeliegende Client-Server-Struktur signifikant geringer.
+ZuZusammenfassend lässt sich festhalten, dass Usenet für Nutzer in Deutschland eine klare und überlegene Alternative zu Torrents darstellt. Besonders bei den entscheidenden Punkten Anonymität, Geschwindigkeit und einem besseren Schutz vor Dritten hat das Usenet deutliche Vorteile.
+Dank seiner grundlegenden Client-Server-Struktur, die keine direkte Verbindung zu anderen Nutzern offenlegt, ist man hier deutlich besser geschützt als im Peer-to-Peer-Umfeld von Torrents. Kurz gesagt: Wer Wert auf Privatsphäre legt und dabei von hoher Geschwindigkeit profitieren möchte, findet im Usenet die passendere Lösung.
 
 ---
 
