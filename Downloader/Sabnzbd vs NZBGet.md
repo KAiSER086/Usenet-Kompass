@@ -1,4 +1,4 @@
-# 4.0 Usenet Downloader: SABnzbd vs. NZBGet
+# 5.0 Usenet Downloader: SABnzbd vs. NZBGet
 
 Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier zwei der beliebtesten Optionen vor, **SABnzbd** und **NZBGet**, mit denen du die richtige Wahl für dich treffen kannst.
 
@@ -16,11 +16,11 @@ Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das H
 
 ---
 
-### 4.1 Downloader zur docker-compose.yml hinzufügen
+## 5.1 Downloader zur docker-compose.yml hinzufügen
 
 Wir zeigen dir hier die Konfiguration für beide Downloader. Du msolltest dich für einen der beiden entscheiden und den nicht benötigten Teil aus deiner Datei entfernen oder auskommentieren, kannst aber testweise auch erstmal beide aufsetzen.
 
-#### Konfigurations- und Downloadordner erstellen
+### Konfigurations- und Downloadordner erstellen
 
 Führe diese Befehle im Haupt-Docker-Verzeichnis aus, um die Ordner für deine Konfiguration und deine Downloads anzulegen:
 
@@ -29,7 +29,7 @@ mkdir sabnzbd-config nzbget-config
 mkdir downloads
 ```
 
-##### Wichtiger Hinweis zu Speicherpfaden
+#### Wichtiger Hinweis zu Speicherpfaden
 
 Wenn du deine Downloads auf einem anderen Speicherort ablegen möchtest, z. B. auf einer externen Festplatte, musst du den Pfad in der `docker-compose.yml` anpassen.
 
@@ -43,7 +43,7 @@ volumes:
 
   Stelle sicher, dass der angegebene Ordner (/mnt/ext_drive/downloads) auf deinem Host-System existiert und der Benutzer, unter dem die Container laufen (PUID), die notwendigen Schreibrechte besitzt.
 
-#### Die docker-compose.yml anpassen
+### Die docker-compose.yml anpassen
 
 Füge die folgenden Dienste-Blöcke zu deiner bestehenden docker-compose.yml-Datei hinzu. Achte darauf, dass du deine persönlichen PUID, PGID, TZ und Speicherort einträgst.
 
@@ -100,7 +100,7 @@ Anschließend kannst du über die entsprechende Adresse auf das Webinterface zug
 
 ---
 
-### 4.2 Downloader konfigurieren: Usenet-Provider
+### 5.2 Downloader konfigurieren: Usenet-Provider
 
 Nachdem du den Downloader deiner Wahl gestartet hast, musst du ihn nur mit deinem Usenet-Provider verbinden. Die Indexer-Konfiguration wird später von **Prowlarr** übernommen, welches die Suchanfragen zentral verwaltet und an den Downloader schickt.
 
@@ -122,6 +122,8 @@ In SABnzbd ist die Einrichtung deines Usenet-Providers schnell erledigt. Die Ben
     * **SSL:** Stelle sicher, dass die Box **"SSL verwenden"** angekreuzt ist.
 4. **Teste und speichere:** Klicke auf **"Server testen"**, um zu überprüfen, ob die Verbindung funktioniert. Wenn der Test erfolgreich ist, klicke auf **"Änderungen speichern"**.
 
+![Sabnzbd-Provider](sabnzbd-provider.gif)
+
 ### NZBGet: Usenet-Provider konfigurieren
 
 NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du findest alle relevanten Einstellungen im Konfigurationsmenü.
@@ -138,4 +140,4 @@ NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du 
     * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
 4. **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
 
-![NZBGet-News-Server.png](nzbget-news-server.png)
+![NZBGet-Provider](nzbget-provider.gif)

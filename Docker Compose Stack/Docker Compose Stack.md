@@ -25,8 +25,6 @@ Für unseren Usenet-Guide definieren wir in dieser zentralen Datei alle Dienste 
 
 Bevor wir mit der Konfiguration der `docker-compose.yml` beginnen, müssen die notwendigen Abhängigkeiten auf deinem System installiert werden: Docker und Docker Compose. Wir haben hier die Befehle für die gängigsten Linux-Distributionen zusammengefasst.
 
----
-
 ### Installation für Debian, Ubuntu und Derivate
 
 Öffne ein Terminal und führe die folgenden Befehle aus, um Docker zu installieren. Wir beginnen mit der Quelle für Debian/Bookworm.

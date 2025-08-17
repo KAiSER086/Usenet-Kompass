@@ -1,4 +1,4 @@
-# 3.3 VPN- und Mesh-Konfiguration
+# 4.0 VPN- und Mesh-Konfiguration
 
 Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, beginnen wir mit der grundlegenden Netzwerkkonfiguration deines Stacks. Hierbei konzentrieren wir uns auf die Absicherung deiner Downloads und den sicheren Fernzugriff.
 
@@ -19,7 +19,7 @@ Stell dir vor, deine Geräte (z. B. dein Heimserver, dein Laptop und dein Handy)
 
 ---
 
-## 3.4 Das Netzwerk sichern mit Gluetun
+## 4.1 Das Netzwerk sichern mit Gluetun
 
 Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir den gesamten Datenverkehr über ein VPN. Gluetun ist ein leistungsstarker Docker-Container, der dies extrem einfach macht.
 
@@ -95,7 +95,7 @@ Die angezeigte IP-Adresse sollte mit der eures OVPN-Server übereinstimmen.
 
 ---
 
-### 3.5 Tailscale-Dienst auf dem Host-System hinzufügen
+## 4.2 Tailscale-Dienst auf dem Host-System hinzufügen
 
 Nachdem wir das VPN-Fundament mit Docker Compose und Gluetun geschaffen haben, richten wir den sicheren Fernzugriff ein. Tailscale ist dafür die beste Lösung, da es einen sicheren, verschlüsselten Tunnel zwischen deinen Geräten und deinem Server schafft. Anstatt es in einem Docker-Container laufen zu lassen (um Subnet-Routing zu vermeiden, da wir Einsteigerfreundlich bleiben wollen), installieren wir Tailscale direkt auf dem Host-System. So können wir zuverlässig auf den Server zugreifen, ohne dass es zu Konflikten mit Docker oder Gluetun kommt.
 
@@ -115,9 +115,7 @@ sudo tailscale up
 
 Der Terminal-Ausgabe wird ein Link angezeigt. Kopiere diesen Link und öffne ihn in deinem Webbrowser, um dich bei deinem Tailscale-Konto anzumelden und das Gerät zu autorisieren.
 
----
-
-### 3.6 Verbindung zum Mesh-VPN herstellen
+### Verbindung zum Mesh-VPN herstellen
 
 Nachdem dein Server nun Teil deines Mesh-VPNs ist, musst du deine Endgeräte (Smartphone, Tablet, PC etc.) mit dem Netzwerk verbinden.
 
