@@ -139,5 +139,6 @@ NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du 
     * **Verbindungen:** Die Anzahl der parallelen Verbindungen. `50` ist ein guter Ausgangswert, aber je nach Provider und Abomodell unterschiedlich.
     * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
 4. **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
+5. **Download Ordner anpassen:** Gehe zu **Settings > Paths** und ändere **DestDir** zu **/downloads** und **InterDir** zu **/incomplete**.
 
 ![NZBGet-Provider](nzbget-provider.gif)

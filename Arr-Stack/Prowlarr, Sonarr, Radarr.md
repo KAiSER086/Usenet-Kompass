@@ -122,12 +122,14 @@ Beginne mit Prowlarr, da es das Fundament für die anderen Dienste bildet.
 3. **Indexer hinzufügen:**
     * Navigiere zu **Settings > Indexers**.
     * Klicke auf das **Plus-Symbol (+)** und wähle die Indexer aus, die du verwenden möchtest.
-    * Gib die erforderlichen Daten wie URL und **API-Key** ein. Du findest den API-Key in deinem Benutzerkonto auf der Indexer-Website.
+    * Gib die erforderlichen Daten wie **URL** und **API-Key** ein. Du findest den API-Key in deinem Benutzerkonto auf der Indexer-Website.
+    * Die meisten bekannten Indexer haben eigene Guides oder Wikis in denen das hinzufügen genau beschrieben wird.
 4. **Downloader verbinden:**
     * Navigiere zu **Settings > Download Clients**.
     * Klicke auf das **Plus-Symbol (+)** und wähle **SABnzbd** oder **NZBGet** aus der Liste aus.
     * Trage die Hostadresse und den Port deines Downloaders ein. Die Hostadresse ist die IP-Adresse des Docker-Containers (in der Regel `127.0.0.1` oder `localhost`), und der Port ist derjenige, den du in deiner `docker-compose.yml` festgelegt hast.
-    * Gib deinen **API-Key** des Downloaders ein.
+    * Wenn du **Sabnzbd** nutzt, dib deinen **API-Key, Benutzernamen und Passwort** ein. Den **API-Key** findest du unter **Einstellungen > Allgemein > Sicherheit**. Außerdem musst du unter **Kategorien** einen neuen Eintrag namens **prowlarr** erstellen und speichern.
+    * Wenn du **NZBGet** nutzt, gib deinen **Benutzernamen und Passwort** ein. Hier musst du ebenfalls unter **Settings > Categories** eine neue **Category** namens **Prowlarr** erstellen und speichern.
 
 ### 2. Radarr/Sonarr
 
