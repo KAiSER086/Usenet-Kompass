@@ -72,7 +72,7 @@ services:
     restart: unless-stopped
 ```
 
-**Wichtiger Hinweis zu den Speicherpfaden**
+**Wichtiger Hinweis zu den Speicherpfaden:**
 Die Konfiguration deiner "Arr"-Apps ist direkt mit den Pfaden deines Downloaders verbunden. Die Ordner, die du in der `docker-compose.yml` für SABnzbd oder NZBGet festgelegt hast, müssen auch bei Prowlarr, Radarr und Sonarr korrekt referenziert werden.
 
 **Der Download-Pfad:**
@@ -147,7 +147,7 @@ Als Nächstes richtest du Radarr und Sonarr ein. Die Schritte sind bei beiden fa
 
 ---
 
-**Wichtiger Hinweis zu den Dateiberechtigungen**
+**Wichtiger Hinweis zu den Dateiberechtigungen:**
 Ein häufiges Problem bei Docker-Setups sind die Zugriffsrechte. Deine Docker-Container laufen unter der Benutzer-ID (`PUID`) und Gruppen-ID (`PGID`) deines eigenen Systembenutzers. Damit sie Dateien herunterladen und in die richtigen Ordner verschieben können, benötigt dieser Nutzer die passenden "Schlüssel" – die Lese- und Schreibrechte für deine Festplatte. **Tun wir das nicht, kommt es beim Dateipfade festlegen zu dem sehr bekannten Problem:** `Folder is not writable for user abc`.
 
 Als Beispiel, meine Festplatte ist unter `/mnt/16TB` gemountet und enthält mehrere Ordner:
