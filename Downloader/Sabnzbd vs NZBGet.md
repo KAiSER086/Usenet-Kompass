@@ -66,6 +66,7 @@ services:
     restart: unless-stopped
     network_mode: "service:gluetun"
 ```
+
 ### NZBGet hinzufügen
 
 ```yaml
@@ -118,15 +119,15 @@ Hier sind zwei separate Abschnitte, die du in deinen Guide einfügen kannst.
 
 In SABnzbd ist die Einrichtung deines Usenet-Providers schnell erledigt. Die Benutzeroberfläche ist sehr intuitiv.
 
-+ **Navigiere zu den Einstellungen:** Klicke in der SABnzbd-Oberfläche oben rechts auf das Zahnrad-Symbol, um in die Einstellungen zu gelangen.
-+ **Füge einen neuen Server hinzu:** Wähle im Menü auf der linken Seite **"Server"**. Klicke anschließend auf **"Server hinzufügen"**.
-+ **Trage die Provider-Details ein:** Gib die Informationen deines Usenet-Anbieters in die Felder ein.
-    * **Hostname:** Die Server-Adresse deines Anbieters (z. B. `news.provider.com`).
-    * **Port:** Setze diesen immer auf **`563`** für eine sichere, verschlüsselte Verbindung.
-    * **Benutzername & Passwort:** Deine Anmeldedaten.
-    * **Verbindungen:** Die Anzahl der parallelen Verbindungen. Ein hoher Wert wie **`50`** ist meist optimal.
-    * **SSL:** Stelle sicher, dass die Box **"SSL verwenden"** angekreuzt ist.
-+ **Teste und speichere:** Klicke auf **"Server testen"**, um zu überprüfen, ob die Verbindung funktioniert. Wenn der Test erfolgreich ist, klicke auf **"Änderungen speichern"**.
+* **Navigiere zu den Einstellungen:** Klicke in der SABnzbd-Oberfläche oben rechts auf das Zahnrad-Symbol, um in die Einstellungen zu gelangen.
+* **Füge einen neuen Server hinzu:** Wähle im Menü auf der linken Seite **"Server"**. Klicke anschließend auf **"Server hinzufügen"**.
+* **Trage die Provider-Details ein:** Gib die Informationen deines Usenet-Anbieters in die Felder ein.
+  * **Hostname:** Die Server-Adresse deines Anbieters (z. B. `news.provider.com`).
+  * **Port:** Setze diesen immer auf **`563`** für eine sichere, verschlüsselte Verbindung.
+  * **Benutzername & Passwort:** Deine Anmeldedaten.
+  * **Verbindungen:** Die Anzahl der parallelen Verbindungen. Ein hoher Wert wie **`50`** ist meist optimal.
+  * **SSL:** Stelle sicher, dass die Box **"SSL verwenden"** angekreuzt ist.
+* **Teste und speichere:** Klicke auf **"Server testen"**, um zu überprüfen, ob die Verbindung funktioniert. Wenn der Test erfolgreich ist, klicke auf **"Änderungen speichern"**.
 
 ![Sabnzbd-Provider](sabnzbd-provider.gif)
 
@@ -134,17 +135,17 @@ In SABnzbd ist die Einrichtung deines Usenet-Providers schnell erledigt. Die Ben
 
 NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du findest alle relevanten Einstellungen im Konfigurationsmenü.
 
-+ **Navigiere zu den Einstellungen:** Klicke im NZBGet-Webinterface auf **"Settings"**.
-+ **Füge einen neuen Server hinzu:** Wähle in der linken Leiste den Abschnitt **"NEWS-SERVERS"** aus. Hier kannst du die Daten deines Providers hinzufügen.
-+ **Trage die Provider-Details ein:** Gib die Informationen deines Providers in die entsprechenden Felder ein.
-    * **Name:** Wähle einen beschreibenden Namen (z. B. `Eweka.nl`).
-    * **Host:** Die Server-Adresse deines Anbieters.
-    * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
-    * **Port:** Setze den Wert auf **`563`**.
-    * **Benutzername & Passwort:** Deine Anmeldedaten.
-    * **Verbindungen:** Die Anzahl der parallelen Verbindungen. `50` ist ein guter Ausgangswert, aber je nach Provider und Abomodell unterschiedlich.
-    * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
-+ **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
-+ **Download Ordner anpassen:** Gehe zu **Settings > Paths** und ändere **DestDir** zu **/downloads** und **InterDir** zu **/incomplete**.
+* **Navigiere zu den Einstellungen:** Klicke im NZBGet-Webinterface auf **"Settings"**.
+* **Füge einen neuen Server hinzu:** Wähle in der linken Leiste den Abschnitt **"NEWS-SERVERS"** aus. Hier kannst du die Daten deines Providers hinzufügen.
+* **Trage die Provider-Details ein:** Gib die Informationen deines Providers in die entsprechenden Felder ein.
+  * **Name:** Wähle einen beschreibenden Namen (z. B. `Eweka.nl`).
+  * **Host:** Die Server-Adresse deines Anbieters.
+  * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
+  * **Port:** Setze den Wert auf **`563`**.
+  * **Benutzername & Passwort:** Deine Anmeldedaten.
+  * **Verbindungen:** Die Anzahl der parallelen Verbindungen. `50` ist ein guter Ausgangswert, aber je nach Provider und Abomodell unterschiedlich.
+  * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
+* **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
+* **Download Ordner anpassen:** Gehe zu **Settings > Paths** und ändere **DestDir** zu **/downloads** und **InterDir** zu **/incomplete**.
 
 ![NZBGet-Provider](nzbget-provider.gif)
