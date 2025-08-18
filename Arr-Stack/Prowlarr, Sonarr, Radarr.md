@@ -20,12 +20,9 @@ services:
     # ... Deine bestehende Gluetun-Konfiguration
     # Hier stehen deine gemappten Ports
     
-  sabnzbd:
-    # ... Deine bestehende SABnzbd-Konfiguration
+  sabnzbd: # oder NZBGet
+    # ... Deine bestehende Downloader-Konfiguration
 
-  nzbget:
-    # ... Deine bestehende NZBGet-Konfiguration
-    
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
