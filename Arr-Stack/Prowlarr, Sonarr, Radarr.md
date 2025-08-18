@@ -94,9 +94,9 @@ Die Pfade `tvshows` und `movies` dienen als endgültige Speicherorte. Sobald Rad
     volumes:
       - ./config/sonarr:/config
       # Anpassung des Download-Pfades
-      - /mnt/name-der-festplatte/downloads:/downloads
+      - /mnt/name-deiner-festplatte/dein-medien-ordner/downloads:/downloads
       # Anpassung des Serien-Pfades
-      - /mnt/name-der-festplatte/tvshows:/tvshows
+      - /mnt/name-deiner-festplatte/dein-medien-ordner/tvshows:/tvshows
 ```
 
 Überprüfe noch einmal, dass die Pfade in deiner `docker-compose.yml` korrekt auf deine gewünschten Speicherorte auf dem Host-System verweisen und dass alle Dienste die notwendigen Berechtigungen dafür haben.
@@ -143,6 +143,37 @@ Als Nächstes richtest du Radarr und Sonarr ein. Die Schritte sind bei beiden fa
     * Gehe zu **Einstellungen > Medienverwaltung**.
     * Trage unter **Root Ordner** die Pfade zu deinen Medien-Ordnern ein. Da du in deiner `docker-compose.yml` Volumes verwendet hast, sind die Pfade für die Container `tvshows` und `movies`.
 ![Media Management Pfade](sonarr-radarr-media-paths.gif)
+
+---
+
+**Wichtiger Hinweis zu den Dateiberechtigungen**
+Ein häufiges Problem bei Docker-Setups sind die Zugriffsrechte. Deine Docker-Container laufen unter der Benutzer-ID (`PUID`) und Gruppen-ID (`PGID`) deines eigenen Systembenutzers. Damit sie Dateien herunterladen und in die richtigen Ordner verschieben können, benötigt dieser Nutzer die passenden "Schlüssel" – die Lese- und Schreibrechte für deine Festplatte. Tun wir das nicht, kommt es beim **Dateipfade festlegen** zu dem sehr bekannten Problem `Folder is not writable for user abc`.
+
+Als Beispiel, meine Festplatte ist unter `/mnt/16TB` gemountet und enthält mehrere Ordner:
+
+* `/mnt/16TB/Media` (für Filme, Serien, Downloads)
+* `/mnt/16TB/Backups` (für Backups deiner Daten)
+* ...und möglicherweise andere private Ordner
+
+Der naheliegendste Weg wäre, dem Docker-Benutzer einfach die Rechte für die gesamte Festplatte `/mnt/16TB` zu geben. Das wäre zwar einfach, aber **sicherheitskritisch**. Stell dir vor, du gibst einem Gast den Universalschlüssel für dein ganzes Haus, obwohl er nur Zugang zum Wohnzimmer braucht.
+
+Die beste Lösung ist ein Kompromiss: Wir geben dem Docker-Benutzer die vollständigen Rechte für den übergeordneten Medien-Ordner (`/mnt/16TB/Media`), aber **nichts darüber hinaus**. Das schützt deine anderen privaten Daten, während der gesamte Medien-Workflow reibungslos funktioniert.
+
+Diese Vorgehensweise hat zwei entscheidende Vorteile:
+
+* **Sicherheit:** Deine Backups und andere persönliche Daten außerhalb des `/Media`-Ordners bleiben geschützt.
+* **Einfachheit:** Du musst die Berechtigungen nur für einen einzigen Ordner festlegen, und alle Unterordner (`downloads`, `tvshows`, `movies`) erben automatisch die richtigen Rechte.
+
+Deswegen führen wir im Terminal folgende Befehle aus:
+```bash
+id # Zeigt dir wieder die PUID und PGID deines Benutzers
+chown -R 1000:1000 /mnt/name-deiner-festplatte/dein-medien-ordner # bei 1000:1000 die Nummer aus dem id Befehl eintragen
+chown -R 755 /mnt/name-deiner-festplatte/dein-medien-ordner # 755 gewährt dem Besitzer (deinem Docker-Benutzer) volle Lese-, Schreib- und Ausführrechte, während andere Nutzer nur Leserechte haben
+```
+
+Hiermit sollten die Benutzerrechte für deinen Medien-Ordner korrekt gesetzt sein.
+
+---
 
 3. **Downloader verbinden:**
     * Navigiere zu **Einstellungen > Download Clients**.
