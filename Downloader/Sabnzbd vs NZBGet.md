@@ -38,21 +38,20 @@ Der Standardpfad `downloads` verweist auf einen Ordner im selben Verzeichnis wie
 ```yaml
 volumes:
   - ./sabnzbd-config:/config 
-  - /mnt/name-der-festplatte/downloads:/downloads # Hier wird der Pfad angepasst
+  - /mnt/name-der-festplatte/name-des-medien-ordners/downloads:/downloads # Hier wird der Pfad angepasst
 ```
 
   Stelle sicher, dass der angegebene Ordner (/mnt/ext_drive/downloads) auf deinem Host-System existiert und der Benutzer, unter dem die Container laufen (PUID), die notwendigen Schreibrechte besitzt.
 
-### Die docker-compose.yml anpassen
+### Sabnzbd hinzufügen
 
-Füge die folgenden Dienste-Blöcke zu deiner bestehenden docker-compose.yml-Datei hinzu. Achte darauf, dass du deine persönlichen PUID, PGID, TZ und Speicherort einträgst.
+Füge den folgenden Block zu deiner bestehenden `docker-compose.yml` hinzu. Achte darauf, dass du deine persönlichen PUID, PGID, TZ und Speicherort einträgst.
 
 ```yaml
 services:
   tailscale:
     # ... dein Tailscale-Dienst ...
 
-  # Optional: SABnzbd Downloader
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
@@ -66,8 +65,15 @@ services:
       - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
     network_mode: "service:gluetun"
+```
+### NZBGet hinzufügen
 
-  # Optional: NZBGet Downloader
+```yaml
+services:
+  tailscale:
+    # ... dein Tailscale-Dienst ...
+
+
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
     container_name: nzbget
@@ -112,15 +118,15 @@ Hier sind zwei separate Abschnitte, die du in deinen Guide einfügen kannst.
 
 In SABnzbd ist die Einrichtung deines Usenet-Providers schnell erledigt. Die Benutzeroberfläche ist sehr intuitiv.
 
-1. **Navigiere zu den Einstellungen:** Klicke in der SABnzbd-Oberfläche oben rechts auf das Zahnrad-Symbol, um in die Einstellungen zu gelangen.
-2. **Füge einen neuen Server hinzu:** Wähle im Menü auf der linken Seite **"Server"**. Klicke anschließend auf **"Server hinzufügen"**.
-3. **Trage die Provider-Details ein:** Gib die Informationen deines Usenet-Anbieters in die Felder ein.
++ **Navigiere zu den Einstellungen:** Klicke in der SABnzbd-Oberfläche oben rechts auf das Zahnrad-Symbol, um in die Einstellungen zu gelangen.
++ **Füge einen neuen Server hinzu:** Wähle im Menü auf der linken Seite **"Server"**. Klicke anschließend auf **"Server hinzufügen"**.
++ **Trage die Provider-Details ein:** Gib die Informationen deines Usenet-Anbieters in die Felder ein.
     * **Hostname:** Die Server-Adresse deines Anbieters (z. B. `news.provider.com`).
     * **Port:** Setze diesen immer auf **`563`** für eine sichere, verschlüsselte Verbindung.
     * **Benutzername & Passwort:** Deine Anmeldedaten.
     * **Verbindungen:** Die Anzahl der parallelen Verbindungen. Ein hoher Wert wie **`50`** ist meist optimal.
     * **SSL:** Stelle sicher, dass die Box **"SSL verwenden"** angekreuzt ist.
-4. **Teste und speichere:** Klicke auf **"Server testen"**, um zu überprüfen, ob die Verbindung funktioniert. Wenn der Test erfolgreich ist, klicke auf **"Änderungen speichern"**.
++ **Teste und speichere:** Klicke auf **"Server testen"**, um zu überprüfen, ob die Verbindung funktioniert. Wenn der Test erfolgreich ist, klicke auf **"Änderungen speichern"**.
 
 ![Sabnzbd-Provider](sabnzbd-provider.gif)
 
@@ -128,9 +134,9 @@ In SABnzbd ist die Einrichtung deines Usenet-Providers schnell erledigt. Die Ben
 
 NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du findest alle relevanten Einstellungen im Konfigurationsmenü.
 
-1. **Navigiere zu den Einstellungen:** Klicke im NZBGet-Webinterface auf **"Settings"**.
-2. **Füge einen neuen Server hinzu:** Wähle in der linken Leiste den Abschnitt **"NEWS-SERVERS"** aus. Hier kannst du die Daten deines Providers hinzufügen.
-3. **Trage die Provider-Details ein:** Gib die Informationen deines Providers in die entsprechenden Felder ein.
++ **Navigiere zu den Einstellungen:** Klicke im NZBGet-Webinterface auf **"Settings"**.
++ **Füge einen neuen Server hinzu:** Wähle in der linken Leiste den Abschnitt **"NEWS-SERVERS"** aus. Hier kannst du die Daten deines Providers hinzufügen.
++ **Trage die Provider-Details ein:** Gib die Informationen deines Providers in die entsprechenden Felder ein.
     * **Name:** Wähle einen beschreibenden Namen (z. B. `Eweka.nl`).
     * **Host:** Die Server-Adresse deines Anbieters.
     * **Verschlüsselung:** Setze diese Einstellung auf **`ja`**, um SSL zu aktivieren.
@@ -138,7 +144,7 @@ NZBGet ist minimalistischer, aber die Einrichtung ist genauso unkompliziert. Du 
     * **Benutzername & Passwort:** Deine Anmeldedaten.
     * **Verbindungen:** Die Anzahl der parallelen Verbindungen. `50` ist ein guter Ausgangswert, aber je nach Provider und Abomodell unterschiedlich.
     * **Retention:** Keine Pflichtangabe, kann man der Vollständigkeit halber aber trotzdem eintragen.
-4. **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
-5. **Download Ordner anpassen:** Gehe zu **Settings > Paths** und ändere **DestDir** zu **/downloads** und **InterDir** zu **/incomplete**.
++ **Teste und speichere:** Klicke unten auf **"Save all changes"**. Anschließend kannst du über **"Test Connection"** überprüfen, ob die Verbindung erfolgreich ist.
++ **Download Ordner anpassen:** Gehe zu **Settings > Paths** und ändere **DestDir** zu **/downloads** und **InterDir** zu **/incomplete**.
 
 ![NZBGet-Provider](nzbget-provider.gif)
