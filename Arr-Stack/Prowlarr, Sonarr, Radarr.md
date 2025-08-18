@@ -120,33 +120,35 @@ Beginne mit Prowlarr, da es das Fundament für die anderen Dienste bildet.
     * Benutzername und Passwort wählen
     * Login-Pflicht kann für Lokale Adressen deaktiviert werden, da wir durch Tailscale tunneln
 3. **Indexer hinzufügen:**
-    * Navigiere zu **Settings > Indexers**.
+    * Navigiere zu **Indexer**.
     * Klicke auf das **Plus-Symbol (+)** und wähle die Indexer aus, die du verwenden möchtest.
     * Gib die erforderlichen Daten wie **URL** und **API-Key** ein. Du findest den API-Key in deinem Benutzerkonto auf der Indexer-Website.
     * Die meisten bekannten Indexer haben eigene Guides oder Wikis in denen das hinzufügen genau beschrieben wird.
 4. **Downloader verbinden:**
-    * Navigiere zu **Settings > Download Clients**.
+    * Navigiere zu **Einstellungen > Download Clients**.
     * Klicke auf das **Plus-Symbol (+)** und wähle **SABnzbd** oder **NZBGet** aus der Liste aus.
     * Trage die Hostadresse und den Port deines Downloaders ein. Die Hostadresse ist die IP-Adresse des Docker-Containers (in der Regel `127.0.0.1` oder `localhost`), und der Port ist derjenige, den du in deiner `docker-compose.yml` festgelegt hast.
     * Wenn du **Sabnzbd** nutzt, dib deinen **API-Key, Benutzernamen und Passwort** ein. Den **API-Key** findest du unter **Einstellungen > Allgemein > Sicherheit**. Außerdem musst du unter **Kategorien** einen neuen Eintrag namens **prowlarr** erstellen und speichern.
     * Wenn du **NZBGet** nutzt, gib deinen **Benutzernamen und Passwort** ein. Hier musst du ebenfalls unter **Settings > Categories** eine neue **Category** namens **Prowlarr** erstellen und speichern.
+5. **Sonarr und Radarr verbinden:** Navigiere in **Prowlarr** zu **Einstellungen > Anwendungen** und füge **Sonarr/Radarr** hinzu. Die Einstellungen dort sollten alle bereits passen. Die **API-Keys von Sonarr/Radarr** findet ihr jeweils unter **Einstellungen > Allgemein > Sicherheit**.
 
-### 2. Radarr/Sonarr
+### 2. Sonarr/Radarr
 
 Als Nächstes richtest du Radarr und Sonarr ein. Die Schritte sind bei beiden fast identisch.
 
-1. **Öffne Radarr/Sonarr:**
+1. **Öffne Sonarr/Radarr:**
     * Radarr: `http://<deine-tailscale-ip>:7878`
     * Sonarr: `http://<deine-tailscale-ip>:8989`
 2. **Dateipfade festlegen:**
-    * Gehe zu **Settings > Media Management**.
-    * Trage unter **Root Folders** die Pfade zu deinen Medien-Ordnern ein. Da du in deiner `docker-compose.yml` Volumes verwendet hast, sind die Pfade für die Container `tvshows` und `movies`.
+    * Gehe zu **Einstellungen > Medienverwaltung**.
+    * Trage unter **Root Ordner** die Pfade zu deinen Medien-Ordnern ein. Da du in deiner `docker-compose.yml` Volumes verwendet hast, sind die Pfade für die Container `tvshows` und `movies`.
+![Media Management Pfade](sonarr-radarr-media-paths.gif)
+
 3. **Downloader verbinden:**
-    * Navigiere zu **Settings > Download Clients**.
-    * Klicke auf das **Plus-Symbol (+)**, wähle **SABnzbd** oder **NZBGet** aus und gib die Details ein.
-4. **Prowlarr verbinden:**
-    * Navigiere zu **Settings > Indexers**.
-    * Klicke auf das **Plus-Symbol (+)** und wähle **Prowlarr**.
-    * Gib die Hostadresse von Prowlarr ein (`http://prowlarr:9696`) und den API-Key, den du in Prowlarr unter **Settings > General > Security** findest.
+    * Navigiere zu **Einstellungen > Download Clients**.
+    * Klicke auf das **Plus-Symbol (+)**, wähle **SABnzbd** oder **NZBGet** aus und wiederhole die Schritte wie bereits oben bei **Prowlarr**.
+    * Wenn ihr **Sabnzbd** verwendet, passen die Einstellungen bereits.
+    * Wenn ihr **NZBGet** verwendet, müsst ihr unter in den **NZBGet Settings > Categories** die **Category2** von **Series auf TVShows umbennen**, speichern und **NZBGet neu laden**. Anschließend müsst ihr, beim einrichten von **NZBGet als Downloader für Sonarr** die **Category TVShows nennen**.
+![NZBGet Sonarr Category](nzbget-sonarr-category.png)
 
 Sobald diese Schritte abgeschlossen sind, sind deine Dienste vollständig miteinander verbunden und bereit, automatisiert Inhalte für dich zu finden und herunterzuladen.
