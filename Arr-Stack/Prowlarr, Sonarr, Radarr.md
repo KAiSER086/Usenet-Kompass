@@ -22,7 +22,7 @@ services:
     
   sabnzbd: # oder NZBGet
     # ... Deine bestehende Downloader-Konfiguration
-
+    
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
@@ -208,4 +208,4 @@ In meinem Fall entspricht das folgenden Pfaden aus meiner `docker-compose.yml`:
 
 ![Remote-Mapping](remote-mapping.gif)
 
-Sobald diese Schritte abgeschlossen sind, sind deine Dienste vollständig miteinander verbunden und bereit, automatisiert Inhalte für dich zu finden und herunterzuladen.
+Sobald diese Schritte abgeschlossen sind, sind deine Dienste vollständig miteinander verbunden und bereit, automatisiert Inhalte für dich zu finden und herunterzuladen. Der nächste Schritt wird Jellyfin.
