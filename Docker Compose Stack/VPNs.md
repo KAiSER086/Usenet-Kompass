@@ -64,7 +64,7 @@ services:
       # Port-Mappings für die Dienste, die über Gluetun erreichbar sein sollen
       - 8080:8080   # Sabnzbd
       - 6789:6789   # NZBGet
-      - 8686:8686   # Radarr
+      - 7878:7878   # Radarr
       - 8989:8989   # Sonarr
       - 9696:9696   # Prowlarr
     volumes:
