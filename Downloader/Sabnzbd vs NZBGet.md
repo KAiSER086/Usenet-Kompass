@@ -64,6 +64,8 @@ services:
       - ./downloads:/downloads # Ordner für fertige Downloads
       - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
+    depends_on:
+      - gluetun
     network_mode: "service:gluetun"
 ```
 
@@ -87,6 +89,8 @@ services:
       - ./downloads:/downloads # Ordner für Downloads
       - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
+    depends_on:
+      - gluetun
     network_mode: "service:gluetun"
 ```
 
