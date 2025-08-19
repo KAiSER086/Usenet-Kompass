@@ -77,7 +77,7 @@ Füge den folgenden Codeblock in deine `docker-compose.yml` ein, idealerweise un
 
 ```yaml
 jellyseerr:
-    image: sct/jellyseerr:latest
+    image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     environment:
       - PUID=1000
