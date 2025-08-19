@@ -68,8 +68,8 @@ In den allermeisten Fällen ist eine Transkodierung bei modernen Geräten **nich
 
 Transkodierung kommt in zwei Hauptszenarien ins Spiel:
 
-1. **Format-Inkompatibilität**: Wenn dein Wiedergabegerät das Format der Mediendatei nicht unterstützt (was heute selten vorkommt).
-2. **Unzureichende Upload-Bandbreite**: Dies ist der häufigste Grund. Wenn du von unterwegs auf deine Mediensammlung zugreifst und deine Upload-Geschwindigkeit nicht ausreicht, um den Stream in voller Qualität zu übertragen, transkodiert der Server die Datei in eine geringere Bitrate. Dies ermöglicht unterbrechungsfreies Streaming ohne Pufferung.
+* **Format-Inkompatibilität**: Wenn dein Wiedergabegerät das Format der Mediendatei nicht unterstützt (was heute selten vorkommt).
+* **Unzureichende Upload-Bandbreite**: Dies ist der häufigste Grund. Wenn du von unterwegs auf deine Mediensammlung zugreifst und deine Upload-Geschwindigkeit nicht ausreicht, um den Stream in voller Qualität zu übertragen, transkodiert der Server die Datei in eine geringere Bitrate. Dies ermöglicht unterbrechungsfreies Streaming ohne Pufferung.
 
 Da die CPU des Raspberry Pi 5 nicht für diese anspruchsvolle Echtzeit-Transkodierung ausgelegt ist, kann es in solchen Fällen zu Problemen kommen.
 
@@ -80,3 +80,4 @@ Wenn du weißt, dass du häufig Medien mit hohen Bitraten von unterwegs streamen
 * **Mini-PCs**: Kompakte Computer (z. B. Intel NUCs) mit Prozessoren wie Intel Core i3 oder i5 (ab der 8. Generation oder neuer) bieten eine integrierte Hardware-Transkodierung (`Intel Quick Sync`), die den Prozessor entlastet.
 * **NAS-Systeme (Synology, QNAP)**: Viele moderne NAS-Geräte haben ebenfalls eine integrierte Hardware-Transkodierung und die Möglichkeit, Docker-Container zu nutzen. Das macht sie zu einer idealen All-in-One-Lösung für einen Medienserver.
 * **Ausrangierte Tower-PCs oder Server**: Ältere PCs mit dedizierter Grafikkarte (falls du keine Intel-CPU mit Quick Sync hast) oder leistungsstarken CPUs sind ebenfalls eine gute und oft kostengünstige Option.
+
