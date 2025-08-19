@@ -42,18 +42,12 @@ jellyfin:
 
 ### Jellyfin konfigurieren
 
-Sobald du deine docker-compose.yml aktualisiert hast, starte deinen Stack neu, damit der neue Dienst erstellt wird:
-
-```bash
-docker compose up -d
-```
-
-Nachdem der Container gestartet ist, kannst du mit der Einrichtung beginnen:
+Sobald du deine docker-compose.yml aktualisiert hast, starte deinen Stack neu mit `docker compose up -d`, damit der neue Dienst erstellt wird. Nachdem der Container gestartet ist, kannst du mit der Einrichtung beginnen:
 
 * **Öffne das Webinterface:** Gehe in deinem Browser zu `http://<deine-tailscale-ip>:8096`.
 * **Mediathek hinzufügen:** Folge dem Einrichtungsassistenten und füge deine Mediatheken hinzu. Wähle als Pfade die internen Container-Pfade, die du in deiner docker-compose.yml festgelegt hast:
-  * Für Filme: /data/movies
-  * Für Serien: /data/tvshows
+  * Für Filme: /movies
+  * Für Serien: /tvshows
 
 Jellyfin scannt nun deine Ordner und organisiert automatisch deine gesamte Mediensammlung.
 
@@ -99,11 +93,13 @@ jellyseerr:
 Nachdem du den Docker-Stack mit `docker compose up -d` aktualisiert hast, ist die Einrichtung von Jellyseerr in wenigen Schritten erledigt.
 
 * **Öffne das Webinterface:** Gehe in deinem Browser zu `http://<deine-tailscale-ip>:5055`.
-* **Verbinde Jellyfin:** Folge dem Assistenten und verbinde Jellyseerr mit deinem Jellyfin-Server. Dies ermöglicht Jellyseerr, die Inhalte deiner Mediathek zu sehen und zu synchronisieren.
+* **Verbinde Jellyfin:**
+  * Hostname `jellyfin` und Port `8096`
+  * Folge dem Assistenten und verbinde Jellyseerr mit deinem Jellyfin-Server. Dies ermöglicht Jellyseerr, die Inhalte deiner Mediathek zu sehen und zu synchronisieren.
 * **Verbinde Radarr & Sonarr:** Dies ist der entscheidende Schritt. Gib die Hostnamen deiner Radarr- und Sonarr-Container ein, gefolgt von ihren jeweiligen Ports.
   * Für **Radarr**: Hostname `radarr` und Port `8686`.
   * Für **Sonarr**: Hostname `sonarr` und Port `8989`.
-  * **Wichtig**: Da die Container im selben Docker-Netzwerk laufen, kannst du die Containernamen (`radarr`, `sonarr`) anstelle von IP-Adressen verwenden.
+  * Da die Container im selben Docker-Netzwerk laufen, kannst du die Containernamen (`radarr`, `sonarr`) anstelle von IP-Adressen verwenden.
 * **Konfiguriere Anfragen & Nutzer**: Lege in den Einstellungen fest, welche Nutzer Anfragen stellen dürfen und welche Mediathek sie sehen können.
 
 Sobald du diese Schritte abgeschlossen hast, ist dein vollautomatisierter Stack einsatzbereit. Deine Nutzer können Filme und Serien anfragen, die dann automatisch heruntergeladen und zu deiner Jellyfin-Mediathek hinzugefügt werden.
