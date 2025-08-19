@@ -170,7 +170,7 @@ Deswegen führen wir im Terminal folgende Befehle aus:
 ```bash
 id # Zeigt dir wieder die PUID und PGID deines Benutzers
 chown -R 1000:1000 /mnt/name-deiner-festplatte/dein-medien-ordner # bei 1000:1000 die Nummer aus dem id Befehl eintragen
-chown -R 755 /mnt/name-deiner-festplatte/dein-medien-ordner # 755 gewährt dem Besitzer (deinem Docker-Benutzer) volle Lese-, Schreib- und Ausführrechte, während andere Nutzer nur Leserechte haben
+chmod -R 755 /mnt/name-deiner-festplatte/dein-medien-ordner # 755 gewährt dem Besitzer (deinem Docker-Benutzer) volle Lese-, Schreib- und Ausführrechte, während andere Nutzer nur Leserechte haben
 ```
 
 Hiermit sollten die Benutzerrechte für deinen Medien-Ordner korrekt gesetzt sein.
