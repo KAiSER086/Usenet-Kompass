@@ -6,8 +6,6 @@ Der deutsche Guide zur vollständigen Usenet-Automatisierung als Docker Compose 
 
 ## Inhaltsverzeichnis
 
-### Inhaltsverzeichnis
-
 * 1.0 **[Grundlagen]([#10-grundlagen](https://github.com/KAiSER086/Usenet-Kompass/blob/main/Grundlagen/Grundlagen.md#10-grundlagen))**
   * 1.1 [Was ist Usenet?]([#11-was-ist-usenet](https://github.com/KAiSER086/Usenet-Kompass/blob/main/Grundlagen/Grundlagen.md#10-grundlagen))
   * 1.2 [Systemvoraussetzungen & Hardware-Wahl]([#12-systemvoraussetzungen--hardware-wahl](https://github.com/KAiSER086/Usenet-Kompass/blob/main/Grundlagen/Grundlagen.md#12-systemvoraussetzungen--hardware-wahl))
