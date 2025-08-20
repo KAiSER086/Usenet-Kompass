@@ -51,6 +51,8 @@ services:
     container_name: gluetun
     cap_add:
       - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
     environment:
       - VPN_SERVICE_PROVIDER=dein-vpn-provider # z.B. nordvpn, mullvad, expressvpn
       - VPN_TYPE=openvpn # oder wireguard, je nach Anbieter
