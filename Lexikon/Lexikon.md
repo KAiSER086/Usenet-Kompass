@@ -1,7 +1,5 @@
 # Usenet-Lexikon
 
----
-
 ## Grundlegende Begriffe
 
 * **Usenet:** Ein dezentrales, weltweites Diskussionsnetzwerk, das den Austausch von Texten und Dateien in Newsgroups ermöglicht. Es ist ein Vorläufer des Internets.
