@@ -25,7 +25,7 @@ Wir zeigen dir hier die Konfiguration für beide Downloader. Du msolltest dich f
 Führe diese Befehle im Haupt-Docker-Verzeichnis aus, um die Ordner für deine Konfiguration und deine Downloads anzulegen:
 
 ```bash
-mkdir sabnzbd-config nzbget-config
+mkdir config
 mkdir downloads
 ```
 
@@ -37,7 +37,7 @@ Der Standardpfad `downloads` verweist auf einen Ordner im selben Verzeichnis wie
 
 ```yaml
 volumes:
-  - ./sabnzbd-config:/config 
+  - ./config/sabnzbd:/config 
   - /mnt/name-der-festplatte/name-des-medien-ordners/downloads:/downloads # Hier wird der Pfad angepasst
 ```
 
@@ -60,7 +60,7 @@ services:
       - PGID=1000 # Ersetze 1000 mit deiner PGID
       - TZ=Europe/Berlin
     volumes:
-      - ./sabnzbd-config:/config # Speichert die Konfiguration
+      - ./config/sabnzbd:/config # Speichert die Konfiguration
       - ./downloads:/downloads # Ordner für fertige Downloads
       - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
@@ -85,7 +85,7 @@ services:
       - PGID=1000 # Ersetze 1000 mit deiner PGID
       - TZ=Europe/Berlin
     volumes:
-      - ./nzbget-config:/config # Speichert die Konfiguration
+      - ./config/nzbget:/config # Speichert die Konfiguration
       - ./downloads:/downloads # Ordner für Downloads
       - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
     restart: unless-stopped
