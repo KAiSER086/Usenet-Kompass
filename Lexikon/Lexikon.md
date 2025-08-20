@@ -1,39 +1,44 @@
-# X.X Usenet Lexikon
+# Usenet-Lexikon
+
+---
 
 ## Grundlegende Begriffe
 
-* **Newsgroup:** Das ist das Kernstück des Usenets. Eine Newsgroup ist ein themenspezifisches Diskussionsforum, vergleichbar mit einem Unterforum auf Reddit oder einem Kanal auf Discord. Sie sind hierarchisch geordnet, z.B. `alt.binaries.games`.
+* **Usenet:** Ein dezentrales, weltweites Diskussionsnetzwerk, das den Austausch von Texten und Dateien in Newsgroups ermöglicht. Es ist ein Vorläufer des Internets.
+* **Newsgroup:** Ein themenspezifisches Forum im Usenet, in dem Beiträge ausgetauscht werden. Man kann es sich wie einen Kanal auf Discord oder ein Subreddit vorstellen.
+* **Provider:** Ein Unternehmen, das dir gegen eine Gebühr Zugang zu seinen News-Servern gewährt. Ohne einen Account hast du keinen Zugriff auf das Usenet.
+* **Indexer:** Eine Suchmaschine für das Usenet, die NZB-Dateien bereitstellt. Ohne einen Indexer ist es schwierig, bestimmte Dateien zu finden.
+* **PVR (Personal Video Recorder):** Ein Sammelbegriff für Automatisierungstools wie Sonarr und Radarr. Diese verwalten deine Mediensammlung, suchen nach neuen Inhalten, laden sie herunter und sortieren sie.
 
-* **News-Server:** Der Server, der die Inhalte der Newsgroups speichert und mit anderen Servern weltweit synchronisiert. Um auf Usenet zugreifen zu können, brauchst du einen Zugang zu einem solchen Server, der meist von einem Usenet-Provider bereitgestellt wird.
-
-* **Newsreader:** Die Software (Client), die du auf deinem Computer installierst, um dich mit dem News-Server zu verbinden, Newsgroups zu durchsuchen und Dateien herunterzuladen.
-
-* **Provider:** Das Unternehmen, das dir gegen eine monatliche Gebühr Zugang zu seinen News-Servern gewährt. Ohne einen Provider-Account hast du keinen Zugriff.
-
-* **Indexer:** Eine Website, die Usenet-Inhalte durchsucht und die entsprechenden NZB-Dateien bereitstellt. Ohne einen Indexer ist es sehr schwierig, bestimmte Dateien zu finden.
+---
 
 ## Begriffe rund um Dateien und Downloads
 
-* **Binärdateien (Binaries):** Bezeichnet alle Dateien, die keine reinen Textnachrichten sind, also z. B. Filme, Musik, Software oder Bilder.
+* **NZB-Datei:** Eine kleine XML-basierte Datei, die alle notwendigen Informationen (wie Dateinamen und Speicherorte) enthält, die ein Downloader zum Herunterladen einer Datei benötigt. Sie ist vergleichbar mit einer Torrent-Datei.
+* **Downloader (SABnzbd/NZBGet):** Die Software, die mit den News-Servern kommuniziert, um die Dateien basierend auf der NZB-Datei herunterzuladen.
+* **Retention:** Die Zeitspanne, für die ein Provider eine Datei auf seinen Servern speichert. Moderne Provider bieten eine Retention von 15 Jahren oder mehr.
+* **Binärdateien (Binaries):** Bezeichnet alle Dateien, die keine reinen Textnachrichten sind, wie z. B. Filme, Musik oder Software.
+* **PAR2-Dateien (Parität):** Dateien, die zur Reparatur von beschädigten oder fehlenden Teilen eines Downloads verwendet werden. Sie stellen sicher, dass auch bei einem fehlerhaften Download alle Teile wiederhergestellt werden können.
+* **RAR-Dateien:** Archivdateien, in denen die meisten Binärdateien im Usenet verpackt sind. Dein Downloader entpackt diese automatisch nach dem Download.
 
-* **Retention:** Die Speicherdauer der Dateien auf dem News-Server. Eine höhere Retention bedeutet, dass ältere Inhalte länger verfügbar sind. Bei modernen Providern kann die Retention 15 Jahre oder mehr betragen.
-
-* **NZB-Datei:** Das ist eine kleine XML-basierte Datei, die als "Wegweiser" für den Newsreader dient. Sie enthält alle Informationen, die der Newsreader benötigt, um eine Binärdatei zu finden und herunterzuladen (vergleichbar mit einer `.torrent`-Datei, aber ohne P2P).
-
-* **PAR2-Dateien (Parität):** Dateien, die zusammen mit den eigentlichen Binärdateien gepostet werden. Sie dienen der Reparatur von defekten oder fehlenden Teilen eines Downloads. Wenn ein Teil fehlt, können die PAR2-Dateien den ursprünglichen Download wiederherstellen.
-
-* **RAR-Dateien:** Oft sind Binärdateien in `.rar`-Archive gepackt. Ein Newsreader entpackt diese Archive nach dem Download automatisch.
+---
 
 ## Technische Begriffe
 
-* **PVR (Personal Video Recorder):** Ein Sammelbegriff für Tools wie Sonarr und Radarr, die deine Mediensammlung automatisch verwalten. Sie suchen nach neuen Inhalten, laden sie über den Downloader herunter und sortieren sie.
+* **VPN (Virtual Private Network):** Ein Dienst, der deine Internetverbindung verschlüsselt und deine IP-Adresse verbirgt. Er wird verwendet, um deine Online-Aktivitäten vor Dritten zu schützen.
+* **Mesh-VPN (z.B. Tailscale):** Eine moderne Form des VPN, die eine direkte, sichere Kommunikation zwischen deinen Geräten (z. B. Server und Handy) ermöglicht. Ideal für den Fernzugriff, ohne Ports am Router freigeben zu müssen.
+* **SSL-Verschlüsselung:** Ein Protokoll, das die Verbindung zwischen deinem Downloader und dem Usenet-Server verschlüsselt. Dies ist unerlässlich für deine Privatsphäre.
+* **Docker:** Eine Software, die es dir ermöglicht, Anwendungen und alle ihre Abhängigkeiten in isolierten Umgebungen (Containern) auszuführen. `Docker Compose` wird verwendet, um mehrere Container gleichzeitig zu verwalten.
+* **PUID/PGID:** Steht für **P**rocess **U**ser **ID** und **P**rocess **G**roup **ID**. Diese IDs stellen sicher, dass deine Docker-Container die korrekten Zugriffsrechte auf die Ordner deines Host-Systems haben.
+* **NNTP (Network News Transfer Protocol):** Das Kommunikationsprotokoll, das für die Übertragung von Daten im Usenet verwendet wird.
 
-* **SSL-Verschlüsselung:** Ein Sicherheitsstandard, der die Verbindung zwischen deinem Newsreader und dem News-Server verschlüsselt. Dies sorgt für Anonymität und verhindert, dass dein Internetanbieter oder andere Dritte deine Aktivitäten einsehen können.
+---
 
-* **NNTP (Network News Transfer Protocol):** Das Standardprotokoll, das Usenet verwendet, um Nachrichten und Dateien zwischen den News-Servern und zu deinem Newsreader zu übertragen.
+## Release-Begriffe
 
-* **Bandbreite (Bandwidth):** Die maximale Geschwindigkeit deiner Internetverbindung. Beim Usenet kannst du diese in der Regel voll ausschöpfen, da die Server extrem hohe Geschwindigkeiten liefern können.
-
-* **VPN (Virtual Private Network):** Eine Technologie, die eine sichere und verschlüsselte Verbindung über das Internet herstellt. Sie leitet deinen gesamten Datenverkehr über einen externen Server, sodass deine eigene IP-Adresse verborgen bleibt und dein Internetanbieter deine Online-Aktivitäten nicht einsehen kann.
-
-* **Mesh-VPN (z.B. Tailscale):** Eine moderne Form des VPN, die es ermöglicht, ein sicheres, dezentrales Netzwerk zu erstellen. Statt alle Geräte über einen zentralen Server zu verbinden, ermöglicht ein Mesh-VPN die direkte, verschlüsselte Kommunikation zwischen deinen Geräten (wie deinem Heimserver und deinem Handy), egal wo sie sich befinden. Das ist besonders nützlich für den sicheren Fernzugriff auf deine Usenet-Tools.
+* **DVDRip / BDRip:** Eine Kopie von einer DVD oder Blu-ray. **BDRips** bieten die höchste Qualität.
+* **HDRip / WEB-DL:** Ein direkter Mitschnitt von einem Streaming-Dienst (z. B. Netflix oder Amazon). Die Qualität ist in der Regel sehr hoch.
+* **TS (Telesync) / CAM:** Ein Film, der im Kino aufgenommen wurde. Die Qualität ist oft sehr schlecht.
+* **AC3 / AAC:** **AC3** ist ein Standard-Audioformat (Dolby Digital). **AAC** ist ein moderneres Format, das bei gleicher Qualität oft eine kleinere Dateigröße hat.
+* **x264 / x265 (HEVC):** **x264** ist ein sehr weit verbreiteter Videocodec. **x265** ist sein Nachfolger und bietet eine bessere Kompression, was zu kleineren Dateien bei gleicher Qualität führt.
+* **mkv (Matroska):** Ein flexibles Containerformat, das Video, Audio und Untertitelspuren in einer einzigen Datei speichert.
