@@ -193,7 +193,7 @@ In meinem Fall entspricht das folgenden Pfaden aus meiner `docker-compose.yml`:
 
 ```yaml
     volumes:
-      - ./sabnzbd-config:/config
+      - ./config/sabnzbd:/config
       - /mnt/16TB/Media/downloads:/downloads
       - /mnt/16TB/Media/incomplete-downloads:/incomplete-downloads
 ```
