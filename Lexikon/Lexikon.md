@@ -8,8 +8,6 @@
 * **Indexer:** Eine Suchmaschine für das Usenet, die NZB-Dateien bereitstellt. Ohne einen Indexer ist es schwierig, bestimmte Dateien zu finden.
 * **PVR (Personal Video Recorder):** Ein Sammelbegriff für Automatisierungstools wie Sonarr und Radarr. Diese verwalten deine Mediensammlung, suchen nach neuen Inhalten, laden sie herunter und sortieren sie.
 
----
-
 ## Begriffe rund um Dateien und Downloads
 
 * **NZB-Datei:** Eine kleine XML-basierte Datei, die alle notwendigen Informationen (wie Dateinamen und Speicherorte) enthält, die ein Downloader zum Herunterladen einer Datei benötigt. Sie ist vergleichbar mit einer Torrent-Datei.
@@ -19,8 +17,6 @@
 * **PAR2-Dateien (Parität):** Dateien, die zur Reparatur von beschädigten oder fehlenden Teilen eines Downloads verwendet werden. Sie stellen sicher, dass auch bei einem fehlerhaften Download alle Teile wiederhergestellt werden können.
 * **RAR-Dateien:** Archivdateien, in denen die meisten Binärdateien im Usenet verpackt sind. Dein Downloader entpackt diese automatisch nach dem Download.
 
----
-
 ## Technische Begriffe
 
 * **VPN (Virtual Private Network):** Ein Dienst, der deine Internetverbindung verschlüsselt und deine IP-Adresse verbirgt. Er wird verwendet, um deine Online-Aktivitäten vor Dritten zu schützen.
@@ -29,8 +25,6 @@
 * **Docker:** Eine Software, die es dir ermöglicht, Anwendungen und alle ihre Abhängigkeiten in isolierten Umgebungen (Containern) auszuführen. `Docker Compose` wird verwendet, um mehrere Container gleichzeitig zu verwalten.
 * **PUID/PGID:** Steht für **P**rocess **U**ser **ID** und **P**rocess **G**roup **ID**. Diese IDs stellen sicher, dass deine Docker-Container die korrekten Zugriffsrechte auf die Ordner deines Host-Systems haben.
 * **NNTP (Network News Transfer Protocol):** Das Kommunikationsprotokoll, das für die Übertragung von Daten im Usenet verwendet wird.
-
----
 
 ## Release-Begriffe
 
