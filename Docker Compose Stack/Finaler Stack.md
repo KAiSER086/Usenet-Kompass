@@ -25,7 +25,7 @@ services:
       - 8989:8989 # Sonarr
       - 9696:9696 # Prowlarr
     volumes:
-      - ./gluetun-config:/gluetun
+      - ./config/gluetun:/gluetun
     restart: unless-stopped
 
   # Wähle EINEN Downloader aus und kommentiere den anderen aus oder entferne ihn.
