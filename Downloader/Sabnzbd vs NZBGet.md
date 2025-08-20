@@ -106,9 +106,9 @@ docker compose up -d
 
 Anschließend kannst du über die entsprechende Adresse auf das Webinterface zugreifen:
 
-* **SABnzbd:** `http://deine-server-ip:8080` oder über deine Tailscale-IP-Adresse
-  * Wenn du Sabnzbd beim ersten Start über die Tailscale IP erreichen möchtest, musst du unter `./config/sabnzbd/sabnzbd.ini` die Variable `inet_exposure = 0` zu `inet_exposure = 5` ändern, da externer Zugriff ansonsten blockiert wird.
-* **NZBGet:** `http://deine-server-ip:6789` oder über deine Tailscale-IP-Adresse
+* **SABnzbd:** `http://deine-server-ip:8080` oder über `http://tailscale-ip:8080`
+  * Wenn du Sabnzbd beim ersten Start über die Tailscale-IP erreichen möchtest, musst du unter `./config/sabnzbd/sabnzbd.ini` die Variable `inet_exposure = 0` zu `inet_exposure = 5` ändern, da externer Zugriff ansonsten blockiert wird.
+* **NZBGet:** `http://deine-server-ip:6789` oder über `http://tailscale-ip:6789`
 
 ---
 
