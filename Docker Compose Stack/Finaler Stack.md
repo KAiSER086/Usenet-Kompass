@@ -19,11 +19,11 @@ services:
       - PUID=1000
       - PGID=1000
     ports:
-      - 8080:8080 # Sabnzbd
-      - 6789:6789 # NZBGet
-      - 7878:7878 # Radarr
-      - 8989:8989 # Sonarr
-      - 9696:9696 # Prowlarr
+      - "8080:8080" # Sabnzbd
+      - "6789:6789" # NZBGet
+      - "7878:7878" # Radarr
+      - "8989:8989" # Sonarr
+      - "9696:9696" # Prowlarr
     volumes:
       - ./config/gluetun:/gluetun
     restart: unless-stopped
