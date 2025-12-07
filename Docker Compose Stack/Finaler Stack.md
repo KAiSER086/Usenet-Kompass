@@ -56,7 +56,7 @@ services:
   #   volumes:
   #     - ./config/nzbget:/config
   #     - ./downloads:/downloads
-  #     - ./incomplete-downloads:/incomplete-downloads
+  #     - ./incomplete-downloads:/incomplete
   #   restart: unless-stopped
   #   depends_on:
   #     - gluetun
