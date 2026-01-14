@@ -49,8 +49,8 @@ Füge den folgenden Block zu deiner bestehenden `docker-compose.yml` hinzu. Acht
 
 ```yaml
 services:
-  tailscale:
-    # ... dein Tailscale-Dienst ...
+  gluetun:
+    # ... dein Gluetun-Dienst ...
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
