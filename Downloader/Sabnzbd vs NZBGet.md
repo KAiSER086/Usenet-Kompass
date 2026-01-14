@@ -73,8 +73,8 @@ services:
 
 ```yaml
 services:
-  tailscale:
-    # ... dein Tailscale-Dienst ...
+  gluetun:
+    # ... dein Gluetun-Dienst ...
 
 
   nzbget:
