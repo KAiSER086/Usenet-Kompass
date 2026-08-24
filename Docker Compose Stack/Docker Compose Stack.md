@@ -1,4 +1,4 @@
-# 3.0 Der Docker-Compose Stack
+﻿# 3.0 Der Docker-Compose Stack
 
 ## Was sind Docker-Container und wie funktionieren sie?
 
@@ -17,7 +17,7 @@ Der Container läuft in einer isolierten Umgebung, die das Host-Betriebssystem u
 
 Ein **Docker-Compose-Stack** ist eine Ansammlung von mehreren Docker-Containern, die in einer einzigen Datei (`docker-compose.yml`) definiert werden. Diese Datei ist die Bauanleitung für dein gesamtes System. Sie beschreibt, welche Container zusammengehören, wie sie miteinander kommunizieren sollen und welche Konfigurationen sie benötigen.
 
-Für unseren Usenet-Guide definieren wir in dieser zentralen Datei alle Dienste wie **Gluetun (VPN)**, **NZBGet/Sabnzbd (Downloader)**, **Sonarr, Radarr, Prowlarr (PVR)** und **Jellyseer (Requests)**. Mit einem einzigen Befehl startest du dann das gesamte System als einen zusammenhängenden "Stack".
+Für unseren Usenet-Guide definieren wir in dieser zentralen Datei alle Dienste wie **Gluetun (VPN)**, **NZBGet/Sabnzbd (Downloader)**, **Sonarr, Radarr, Prowlarr (PVR)** und **Jellyseerr (Requests)**. Mit einem einzigen Befehl startest du dann das gesamte System als einen zusammenhängenden "Stack".
 
 ---
 
