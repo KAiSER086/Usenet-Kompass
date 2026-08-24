@@ -23,6 +23,11 @@ Stell dir vor, deine Geräte (z. B. dein Heimserver, dein Laptop und dein Smartp
 
 Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir den Datenverkehr des Downloaders und der Arr-Apps über ein VPN. Gluetun ist ein schlanker, leistungsstarker Docker-Container, der dies extrem einfach macht.
 
+### ⚡ Performance-Tipp: OpenVPN vs. WireGuard
+
+* **OpenVPN:** Sehr weit verbreitet und einfach mit Benutzername/Passwort einzurichten. Erzeugt auf Single-Board-Computern (Raspberry Pi 5) bei hohen Bandbreiten jedoch spürbare CPU-Last.
+* **WireGuard:** Deutlich moderner, schlanker und extrem CPU-schonend. Wenn dein VPN-Provider WireGuard anbietet (z. B. Mullvad, ProtonVPN, NordVPN, Custom), erreichst du auch an Gigabit-Leitungen spielend den vollen Durchsatz bei minimaler Prozessorlast.
+
 Bevor wir den Dienst in der `docker-compose.yml` definieren, erstellen wir einen Ordner auf deinem Host-System, in dem die Container ihre Konfigurationsdateien ablegen:
 
 ```bash
@@ -40,7 +45,7 @@ id
 nano docker-compose.yml
 ```
 
-Dort fügen wir folgenden Code ein:
+Dort fügen wir folgenden Code ein (hier beispielhaft mit OpenVPN):
 
 ```yaml
 services:
@@ -53,7 +58,7 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       - VPN_SERVICE_PROVIDER=dein-vpn-provider # z. B. nordvpn, mullvad, expressvpn, custom
-      - VPN_TYPE=openvpn # oder wireguard, je nach Anbieter
+      - VPN_TYPE=openvpn # oder wireguard
       - OPENVPN_USER=dein-benutzername
       - OPENVPN_PASSWORD=dein-passwort
       - SERVER_COUNTRIES=Netherlands # Oder ein Land deiner Wahl
@@ -72,7 +77,9 @@ services:
     restart: unless-stopped
 ```
 
-Folgende VPN-Anbieter haben volle OVPN-Integration in Gluetun:
+*(Für die WireGuard-Nutzung ersetzt du `VPN_TYPE=openvpn` durch `VPN_TYPE=wireguard` und trägst den WireGuard Private Key sowie die Server-Adresse gemäß [Gluetun Wiki](https://github.com/qdm12/gluetun-wiki) ein).*
+
+Folgende VPN-Anbieter haben volle Integration in Gluetun:
 
 ```text
 AirVPN, Cyberghost, ExpressVPN, FastestVPN, Giganews, HideMyAss, IPVanish, IVPN, Mullvad, NordVPN, Perfect Privacy, Privado, Private Internet Access, PrivateVPN, ProtonVPN, PureVPN, SlickVPN, Surfshark, TorGuard, VPNSecure.me, VPNUnlimited, Vyprvpn, WeVPN, Windscribe

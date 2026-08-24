@@ -1,18 +1,29 @@
 ﻿# 5.0 Usenet Downloader: SABnzbd vs. NZBGet
 
-Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier die beiden beliebtesten Optionen vor, **SABnzbd** und **NZBGet**, damit du die passende Wahl für dein System treffen kannst.
+Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier die beiden beliebtesten Optionen vor, **SABnzbd** und **NZBGet**, damit du die passende Wahl für dein System und deine Internet-Bandbreite treffen kannst.
 
 ---
 
-## SABnzbd vs. NZBGet: Der Vergleich
+## SABnzbd vs. NZBGet: Der Performance-Vergleich
 
-| | SABnzbd | NZBGet |
+Gerade beim Betrieb auf einem **Raspberry Pi 5** oder stromsparenden Mini-PCs spielt die Programmiersprache und Architektur des Downloaders eine entscheidende Rolle für die erreichbare Geschwindigkeit.
+
+| Kriterium | SABnzbd | NZBGet |
 | :--- | :--- | :--- |
-| **Codebasis** | **Interpretiert (Python)**. Sehr modern, aktiv gepflegt und modular. | **Kompiliert (C++)**. Extrem performant und ressourcenschonend. |
-| **Vorteile** | - Sehr benutzerfreundliche, moderne Oberfläche.  <br>- Riesige, aktive Community & regelmäßige Updates.  <br>- Exzellente Automatisierungs- und Reparaturfunktionen (PAR2). | - Extrem niedrige CPU- und RAM-Auslastung.  <br>- Ideal für stromsparende Single-Board-Computer.  <br>- Sehr hoher Durchsatz bei minimalem Overhead. |
-| **Nachteile** | - Bei extrem hohen Gigabit-Raten etwas höhere CPU-Last. | - Webinterface funktional, aber etwas altbackener.  <br>- Konfiguration erfordert etwas mehr technisches Verständnis. |
+| **Codebasis** | **Interpretiert (Python)**. Sehr modern, aktiv gepflegt und modular. | **Kompiliert (C++)**. Extrem performant, Multi-Threaded und nativ optimiert. |
+| **Max. Durchsatz (Raspberry Pi 5)** | **Ca. 400–500 Mbit/s** (~50–60 MB/s). Durch den Python-Overhead (GIL & Dekodierung) bremst die CPU bei hohen Gigabit-Raten ab. | **1.000 Mbit/s+ (Volles Gigabit)**. Reizt auch Gigabit-Leitungen auf dem Pi 5 spielend aus (~115 MB/s). |
+| **CPU- & RAM-Auslastung** | Mittel bis hoch bei schnellen Downloads. | Extrem niedrig (< 15–20 % CPU-Last bei Gigabit-Download). |
+| **Benutzeroberfläche** | Sehr modern, intuitiv und einsteigerfreundlich. | Funktional und minimalistisch, aber etwas altbackener. |
+| **Automatisierung** | Hervorragende Fehlerreparatur (Auto-PAR2) & Direktes Entpacken. | Sehr zuverlässig mit geringem Speicherbedarf. |
 
-**Empfehlung:** Beide Downloader eignen sich hervorragend für den Betrieb auf einem **Raspberry Pi 5**. Wenn du Wert auf die modernste Oberfläche und den größten Funktionsumfang legst, ist **SABnzbd** die Standardempfehlung. Suchst du maximale Ressourceneffizienz, ist **NZBGet** eine erstklassige Wahl.
+### 🎯 Entscheidungshilfe: Welcher Downloader für dich?
+
+* **Wähle NZBGet, wenn:**
+  * Du eine **schnelle Internetleitung (500 bis 1.000 Mbit/s Gigabit)** hast und diese auf deinem **Raspberry Pi 5** voll ausnutzen willst.
+  * Du maximale Ressourceneffizienz und minimalen Stromverbrauch anstrebst.
+* **Wähle SABnzbd, wenn:**
+  * Deine Leitung **bis zu 400–500 Mbit/s** beträgt oder du einen leistungsstärkeren x86-Server (z. B. Intel N100 oder Core i3/i5) nutzt.
+  * Du die modernste Weboberfläche mit vielen Komfortfunktionen bevorzugst.
 
 ---
 
@@ -22,7 +33,7 @@ Wir zeigen dir hier die Konfiguration für beide Downloader. Du solltest dich f�
 
 ### Konfigurations- und Downloadordner erstellen
 
-Führe diese Befehle im Docker-Verzeichnis aus, um die Ordner für Konfiguration und Downloads anzulegen:
+Führe diese Befehle im Docker-Verzeichnis aus:
 
 ```bash
 mkdir -p config/sabnzbd config/nzbget
@@ -46,8 +57,6 @@ Stelle sicher, dass der angegebene Ordner auf deinem Host-System existiert und d
 
 ### Option A: SABnzbd hinzufügen
 
-Füge den folgenden Block zu deiner `docker-compose.yml` hinzu:
-
 ```yaml
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
@@ -57,9 +66,9 @@ Füge den folgenden Block zu deiner `docker-compose.yml` hinzu:
       - PGID=1000 # Ersetze mit deiner PGID
       - TZ=Europe/Berlin
     volumes:
-      - ./config/sabnzbd:/config # Speichert die Konfiguration
-      - ./downloads:/downloads # Ordner für fertige Downloads
-      - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
+      - ./config/sabnzbd:/config
+      - ./downloads:/downloads
+      - ./incomplete-downloads:/incomplete-downloads
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -79,9 +88,9 @@ Füge den folgenden Block zu deiner `docker-compose.yml` hinzu:
       - PGID=1000 # Ersetze mit deiner PGID
       - TZ=Europe/Berlin
     volumes:
-      - ./config/nzbget:/config # Speichert die Konfiguration
-      - ./downloads:/downloads # Ordner für Downloads
-      - ./incomplete-downloads:/incomplete-downloads # Ordner für laufende Downloads
+      - ./config/nzbget:/config
+      - ./downloads:/downloads
+      - ./incomplete-downloads:/incomplete-downloads
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -101,14 +110,22 @@ docker compose up -d
 Anschließend erreichst du das Webinterface:
 
 * **SABnzbd:** `http://deine-server-ip:8080` oder `http://<tailscale-ip>:8080`
-  * *Tipp:* Wenn du SABnzbd über Tailscale aufrufst und eine Zugriffsmeldung erhältst, kannst du in der Datei `./config/sabnzbd/sabnzbd.ini` die Option `inet_exposure = 5` setzen oder deine Tailscale-IP als Host eintragen.
+  * *Tipp:* Wenn du SABnzbd über Tailscale aufrufst und eine Zugriffsmeldung erhältst, kannst du in der Datei `./config/sabnzbd/sabnzbd.ini` die Option `inet_exposure = 5` setzen.
 * **NZBGet:** `http://deine-server-ip:6789` oder `http://<tailscale-ip>:6789`
 
 ---
 
-## 5.2 Downloader konfigurieren: Usenet-Provider
+## 5.2 Downloader konfigurieren: Usenet-Provider & Server-Prioritäten
 
-Nach dem ersten Start verbindest du deinen Downloader mit deinem Usenet-Provider-Account.
+### 💡 Wichtig: Haupt-Provider vs. Backup-Blockaccount richtig einrichten
+
+Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. NewsgroupDirect) als Backup nutzt, musst du **Prioritäten** vergeben, damit dein bezahltes Datenvolumen nicht unnötig verbraucht wird:
+
+* **Haupt-Provider (Flatrate):** Priorität auf **`0`** setzen.
+* **Block-Account (Backup):** Priorität auf **`1`** (oder höher) setzen bzw. als **„Backup-Server“ / „Optional Server“** markieren.
+* *Effekt:* Der Downloader lädt 100 % der Daten vom Hauptprovider. Nur wenn dort ein Segment durch DMCA gelöscht wurde, holt er genau diesen fehlenden Teil vom Backup-Blockaccount.
+
+---
 
 ### SABnzbd: Usenet-Provider einrichten
 
@@ -119,8 +136,11 @@ Nach dem ersten Start verbindest du deinen Downloader mit deinem Usenet-Provider
    * **Port:** **`563`** (oder `443`) für verschlüsseltes SSL/TLS.
    * **SSL:** Haken bei **"SSL verwenden"** setzen.
    * **Benutzername & Passwort:** Deine Zugangsdaten vom Provider.
-   * **Verbindungen:** Starte mit **`15–25`** Verbindungen. (Mehr Verbindungen sind nicht immer schneller und belasten die CPU unnötig).
-4. **Testen & Speichern:** Klicke auf **"Server testen"** und danach auf **"Änderungen speichern"**.
+   * **Verbindungen:** Starte mit **`15–25`** Verbindungen.
+   * **Priorität:** `0` für Hauptserver, `1` für Block-Account.
+4. **Performance-Tipp (Direct Unpack):**
+   * Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken** (*Direct Unpack*). Dateien werden bereits während des Herunterladens entpackt – das spart viel Zeit und Speicherplatz.
+5. **Testen & Speichern:** Klicke auf **"Server testen"** und danach auf **"Änderungen speichern"**.
 
 ![Sabnzbd-Provider](sabnzbd-provider.gif)
 
@@ -136,7 +156,8 @@ Nach dem ersten Start verbindest du deinen Downloader mit deinem Usenet-Provider
    * **Port:** **`563`**.
    * **Encryption:** Auf **`yes`** (SSL aktivieren) setzen.
    * **User & Password:** Deine Anmeldedaten.
-   * **Connections:** Starte mit ca. **`20`** Verbindungen.
+   * **Connections:** Starte mit ca. **`20`** Verbindungen (bei Gigabit-Leitungen bis zu 30–40).
+   * **Level:** Setze `0` für den Hauptserver und `1` für Blockaccounts.
 4. **Pfade anpassen:** Unter **Settings > Paths** überprüfe, dass **DestDir** auf `/downloads` und **InterDir** auf `/incomplete-downloads` eingestellt ist.
 5. **Speichern:** Klicke auf **"Save all changes"** und teste mit **"Test Connection"**.
 

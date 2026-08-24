@@ -169,4 +169,17 @@ Prowlarr verwaltet zentral deine Indexer und verbindet sie mit Sonarr/Radarr:
 
 ![Sabnzbd Pfad](sabnzbd-download-paths.gif)
 
-Sobald diese Schritte abgeschlossen sind, ist dein gesamter Download-Stack vernetzt und bereit für automatisierte Suchen!
+---
+
+## 6.4 Deutsche Tonspuren & German DL einstellen (TRaSH Guides)
+
+Standardmäßig laden Sonarr und Radarr englischsprachige Originalversionen herunter. Wenn du bevorzugt deutschsprachige oder zweisprachige Releases (**German DL** = Dual Language) möchtest, nutzt du das Punkte-System (*Custom Formats*):
+
+1. **Custom Formats einbinden:**
+   * Gehe in Sonarr/Radarr zu **Settings > Custom Formats**.
+   * Importiere die offiziellen deutschen Formate aus den [TRaSH Guides (German Audio)](https://trash-guides.info/Radarr/Radarr-collection-of-custom-formats/#german).
+2. **Punktzahl (Score) im Qualitätsprofil zuweisen:**
+   * Navigiere zu **Settings > Profiles** und wähle dein Standard-Profil (z. B. `HD-1080p`).
+   * Vergib für Formate wie **`German DL`** oder **`German`** eine hohe Punktzahl (z. B. **`+1000`**).
+   * Formate ohne deutsche Tonspur erhalten `0` Punkte.
+   * *Ergebnis:* Sonarr und Radarr sortieren Suchtreffer automatisch so, dass immer die deutsche Sprachfassung gewählt und geladen wird.

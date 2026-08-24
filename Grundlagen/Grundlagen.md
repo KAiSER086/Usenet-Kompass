@@ -1,4 +1,4 @@
-# 1.0 Grundlagen
+﻿# 1.0 Grundlagen
 
 ## 1.1 Was ist Usenet?
 
@@ -8,76 +8,57 @@ Anders als bei zentralisierten Diensten wie Webseiten oder Cloud-Speichern gibt 
 
 ### Usenet vs. Torrent: Die grundlegenden Unterschiede
 
-Obwohl sowohl Usenet als auch Torrent (BitTorrent) zum Austausch von Dateien genutzt werden, unterscheiden sie sich grundlegend in ihrer Funktionsweise und den damit verbundenen Konsequenzen.
+Obwohl sowohl Usenet als auch Torrent (BitTorrent) zum Austausch von Dateien genutzt werden, unterscheiden sie sich grundlegend in ihrer Funktionsweise und den damit verbundenen Konsequenzen:
 
 * **Usenet**
-  * **Technologie:** Usenet basiert auf dem Client-Server-Prinzip. Nutzer laden Dateien von einem News-Server herunter, zu dem sie über einen Provider Zugang haben.
-  * **Anonymität:** Die Anonymität im Usenet ist relativ hoch. Da die Verbindung nur zwischen dem Nutzer und dem News-Server besteht, ist es für Dritte schwer, die Herkunft einer Datei zurückzuverfolgen. Oft wird die Verbindung zusätzlich über SSL verschlüsselt.
-  * **Geschwindigkeit:** Die Download-Geschwindigkeit hängt stark vom News-Server und der eigenen Internetverbindung ab. Da der Server die Dateien zentral vorhält, können sehr hohe und konstante Geschwindigkeiten erreicht werden.
-  * **Verfügbarkeit:** Die Verfügbarkeit von Dateien wird durch die sogenannte „**Retention**“ bestimmt – die Zeitspanne, in der ein News-Server eine Datei speichert. Einige Anbieter bieten Retention-Zeiten von über 15 Jahren, wodurch auch sehr alte Inhalte noch verfügbar sind.
-  * **Nutzung:** Für die Nutzung ist meist ein kostenpflichtiger Zugang zu einem News-Server erforderlich.
+  * **Technologie:** Usenet basiert auf dem **Client-Server-Prinzip**. Du lädst Daten verschlüsselt direkt von den Servern deines Providers herunter – du lädst selbst nichts für andere Nutzer hoch.
+  * **Anonymität:** Sehr hoch. Die Verbindung besteht ausschließlich zwischen dir und dem News-Server und wird über SSL/TLS (Port 563/443) verschlüsselt. Dritte oder andere Nutzer sehen deine IP-Adresse nicht.
+  * **Geschwindigkeit:** Konstant maximale Bandbreite deiner Internetverbindung, unabhängig von anderen Nutzern.
+  * **Verfügbarkeit:** Wird durch die sogenannte **Retention (Vorhaltezeit)** bestimmt. Führende Provider speichern Uploads über 15 Jahre (5.800+ Tage) verlässlich auf ihren Servern.
+  * **Nutzung:** Erfordert einen (meist kostenpflichtigen) Zugang zu einem Usenet-Provider.
 
 * **Torrent**
-  * **Technologie:** Torrent ist ein **Peer-to-Peer (P2P)-System**. Dateien werden nicht von einem zentralen Server geladen, sondern in kleinen Teilen von vielen anderen Nutzern (Peers) herunter- und gleichzeitig hochgeladen.
-  * **Anonymität:** Die Anonymität bei Torrents ist deutlich geringer. Jeder, der eine Datei herunterlädt, teilt seine IP-Adresse mit allen anderen Nutzern im Schwarm (Swarm). Diese IP-Adressen sind öffentlich sichtbar und können leicht von Dritten erfasst werden.
-  * **Geschwindigkeit:** Die Geschwindigkeit ist abhängig von der Anzahl der „**Seeder**“ (Nutzer, die die komplette Datei zur Verfügung stellen) und „**Leecher**“ (Nutzer, die noch Teile der Datei herunterladen). Bei vielen Seedern kann die Geschwindigkeit sehr hoch sein, bei wenigen jedoch sehr langsam oder der Download bricht ab.
-  * **Verfügbarkeit:** Die Verfügbarkeit ist an die Nutzer gebunden. Wenn niemand mehr eine Datei teilt, ist sie nicht mehr verfügbar.
-  * **Nutzung:** Die Nutzung ist in der Regel kostenlos, es gibt aber auch private Tracker, die eine Registrierung erfordern.
+  * **Technologie:** Torrent ist ein **Peer-to-Peer (P2P)-System**. Dateien werden nicht von einem Server geladen, sondern in kleinen Teilen von vielen anderen Nutzern (Peers) herunter- und gleichzeitig hochgeladen.
+  * **Anonymität:** Sehr gering. Jeder Teilnehmer im Download-Schwarm (Swarm) sieht öffentlich die IP-Adressen aller anderen Teilnehmer.
+  * **Geschwindigkeit:** Stark abhängig von der Anzahl der „Seeder“ (Upload-Quellen).
+  * **Verfügbarkeit:** Sobald niemand mehr eine Datei aktiv bereitstellt (seetet), ist sie verloren.
+  * **Nutzung:** Meist kostenlos, birgt aber ohne komplexe Absicherung hohe Risiken.
 
 ### Warum Usenet gerade in Deutschland besser ist
 
-In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle, der Usenet gegenüber Torrent oft vorteilhafter macht:
+In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle:
 
-* **Rechtssicherheit und Abmahnungen:**
-  * **Torrent:** Das deutsche Urheberrecht schützt die Werke von Rechteinhabern. Da bei Torrents das Herunterladen und gleichzeitige Hochladen (**Filesharing**) in der Regel gegen dieses Recht verstößt, sind **Abmahnungen** durch spezialisierte Anwaltskanzleien weit verbreitet. Die öffentlich sichtbaren IP-Adressen im P2P-Netzwerk werden von diesen Kanzleien erfasst und zur Identifizierung der Nutzer verwendet.
-  * **Usenet:** Beim Usenet findet kein Filesharing im eigentlichen Sinne statt. Man lädt die Dateien lediglich von einem News-Server herunter. Solange man die Dateien nicht selbst über den News-Server hochlädt (was bei den meisten Nutzern nicht der Fall ist), gibt es keine direkte Möglichkeit, die eigene IP-Adresse öffentlich mit dem Herunterladen in Verbindung zu bringen. Die Verbindung zum News-Server ist eine private, oft verschlüsselte Verbindung, die sich rechtlich deutlich von der P2P-Nutzung unterscheidet. Das Herunterladen von urheberrechtlich geschütztem Material bleibt zwar auch hier illegal, aber die Rechtsverfolgung ist um ein Vielfaches schwieriger, und Abmahnungen wie bei Torrents sind nahezu unbekannt.
-
-* **Anonymität und Privatsphäre:**
-  * Die hohe Anonymität und die **SSL-Verschlüsselung**, die viele News-Provider anbieten, machen es für Dritte (inklusive Behörden und Rechteinhaber) extrem schwer, die Aktivitäten eines Nutzers zu überwachen. Im Gegensatz dazu sind Torrent-Nutzer im Prinzip „offen“ für jeden, der im selben Schwarm aktiv ist.
-
-* **Zuverlässigkeit und Geschwindigkeit:**
-  * Die konstant hohen Download-Geschwindigkeiten, die bei Usenet-Anbietern möglich sind, stellen einen klaren Vorteil dar. Im Gegensatz zu Torrents, bei denen die Geschwindigkeit stark schwankt, kann man sich auf Usenet meist auf die volle Bandbreite verlassen.
-
-**Fazit:**
-
-Zusammenfassend lässt sich festhalten, dass Usenet für Nutzer in Deutschland eine klare und überlegene Alternative zu Torrents darstellt. Besonders bei den entscheidenden Punkten Anonymität, Geschwindigkeit und einem besseren Schutz vor Dritten hat das Usenet deutliche Vorteile.
-Dank seiner grundlegenden Client-Server-Struktur, die keine direkte Verbindung zu anderen Nutzern offenlegt, ist man hier deutlich besser geschützt als im Peer-to-Peer-Umfeld von Torrents. Kurz gesagt: Wer Wert auf Privatsphäre legt und dabei von hoher Geschwindigkeit profitieren möchte, findet im Usenet die passendere Lösung.
+* **Rechtssicherheit und Schutz vor Abmahnungen:**
+  * **Torrent:** Da bei Torrents das Herunterladen und gleichzeitige Hochladen (**Filesharing**) untrennbar verknüpft ist, erfassen spezialisierte Kanzleien die öffentlich sichtbaren IP-Adressen im P2P-Schwarm für teure Abmahnungen.
+  * **Usenet:** Beim Usenet lädst du ausschließlich herunter (reiner Client-Server-Traffic). Deine IP-Adresse ist im Netzwerk nicht öffentlich sichtbar, und der Transfer zum Server ist TLS-verschlüsselt. Abmahnungen, wie sie bei Torrents an der Tagesordnung sind, gibt es im Usenet nicht.
 
 ---
 
 ## 1.2 Systemvoraussetzungen & Hardware-Wahl
 
-Bevor du beginnst, solltest du dir überlegen, welche Hardware du verwenden möchtest. Mein Setup ist darauf ausgelegt, auf einem **Raspberry Pi 5** zu laufen, da dieser eine gute Balance aus Leistung und Energieeffizienz bietet.
+Bevor du beginnst, solltest du dir überlegen, welche Hardware du verwenden möchtest. Unser Setup ist ideal für stromsparende 24/7-Homeserver konzipiert.
 
 ### Warum Linux die beste Wahl ist
 
-Obwohl Docker auf Windows und macOS läuft, wurde es ursprünglich **nativ für Linux entwickelt**. Das bedeutet, dass Docker auf Linux-Systemen am besten funktioniert, die wenigsten Probleme verursacht und in der Regel auch die höchste Performance bietet.
+Obwohl Docker auch auf Windows und macOS läuft, wurde es **nativ für Linux entwickelt**. Auf Linux-Systemen arbeitet Docker am stabilsten, ressourcenschonendsten und ohne Virtualisierungs-Overhead.
 
-Daher empfehlen wir für dieses Projekt die Verwendung einer schlanken Linux-Distribution wie **DietPi** oder **Debian**. Diese Systeme sind ideal für den 24/7-Betrieb deines Home-Servers. Sie sind ressourcenschonend, stabil und bieten die beste Basis, um deinen Docker-Stack reibungslos zu betreiben.
+Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi** oder **Debian**. Diese Systeme sind extrem stabil, booten in Sekunden und sind ideal für den Dauerbetrieb.
 
-#### Mein System: Raspberry Pi 5 mit DietPi
+#### 🍓 Option 1: Raspberry Pi 5 mit DietPi (Der stromsparende Klassiker)
 
-* **Vorteile**: Der Raspberry Pi 5 ist klein, verbraucht extrem wenig Strom und ist daher ideal für einen 24/7-Betrieb. Er ist leistungsstark genug, um alle Usenet-Dienste (Downloader, Indexer) problemlos auszuführen.
-* **Nachteile**: Ein Single-Board-Computer (SBC) wie der Raspberry Pi hat seine Grenzen bei der Rechenleistung, insbesondere bei anspruchsvollen Aufgaben wie der **Transkodierung**.
+* **Vorteile:** Sehr geringer Stromverbrauch (ca. 3–5 Watt), geräuschlos, kompakt und vollkommen ausreichend für Downloader (NZBGet/SABnzbd), *arr-Apps und Direct-Play-Streaming.
+* **Beachte:** Ein Single-Board-Computer (ARM CPU) stößt an Grenzen bei rechenintensiver Video-Transkodierung in Echtzeit.
+
+#### 💻 Option 2: Intel N100 / N97 Mini-PC (Die moderne Allround-Empfehlung)
+
+* **Vorteile:** Kompakte x86-Mini-PCs mit Intel N100 Prozessor kosten oft nur 120–150 € und verbrauchen im Leerlauf ebenfalls nur ca. 6 Watt. Sie verfügen über **Intel Quick Sync Video (QSV)** und können mehrere 4K-Videostreams in Jellyfin mühelos in Hardware transkodieren.
+* **Ideal für:** Nutzer, die häufig von unterwegs mit begrenzter mobiler Bandbreite auf ihre Mediathek zugreifen möchten.
+
+---
 
 ### Was ist Transkodierung und wann ist sie nötig?
 
-**Transkodierung** ist der Prozess, bei dem eine Mediendatei von einem Format in ein anderes umgewandelt wird.
+**Transkodierung** ist das Umwandeln eines Videos in Echtzeit in ein anderes Format oder eine geringere Bitrate:
 
-In den allermeisten Fällen ist eine Transkodierung bei modernen Geräten **nicht notwendig**. Aktuelle Smart-TVs, Smartphones und Tablets unterstützen in der Regel das direkte Abspielen (`Direct Play`) der gängigsten Videoformate.
-
-Transkodierung kommt in zwei Hauptszenarien ins Spiel:
-
-* **Format-Inkompatibilität**: Wenn dein Wiedergabegerät das Format der Mediendatei nicht unterstützt (was heute selten vorkommt).
-* **Unzureichende Upload-Bandbreite**: Dies ist der häufigste Grund. Wenn du von unterwegs auf deine Mediensammlung zugreifst und deine Upload-Geschwindigkeit nicht ausreicht, um den Stream in voller Qualität zu übertragen, transkodiert der Server die Datei in eine geringere Bitrate. Dies ermöglicht unterbrechungsfreies Streaming ohne Pufferung.
-
-Da die CPU des Raspberry Pi 5 nicht für diese anspruchsvolle Echtzeit-Transkodierung ausgelegt ist, kann es in solchen Fällen zu Problemen kommen.
-
-### Bessere Alternativen & Empfehlungen
-
-Wenn du weißt, dass du häufig Medien mit hohen Bitraten von unterwegs streamen möchtest, solltest du eine leistungsstärkere Hardware in Betracht ziehen:
-
-* **Mini-PCs**: Kompakte Computer (z. B. Intel NUCs) mit Prozessoren wie Intel Core i3 oder i5 (ab der 8. Generation oder neuer) bieten eine integrierte Hardware-Transkodierung (`Intel Quick Sync`), die den Prozessor entlastet.
-* **NAS-Systeme (Synology, QNAP)**: Viele moderne NAS-Geräte haben ebenfalls eine integrierte Hardware-Transkodierung und die Möglichkeit, Docker-Container zu nutzen. Das macht sie zu einer idealen All-in-One-Lösung für einen Medienserver.
-* **Ausrangierte Tower-PCs oder Server**: Ältere PCs mit dedizierter Grafikkarte (falls du keine Intel-CPU mit Quick Sync hast) oder leistungsstarken CPUs sind ebenfalls eine gute und oft kostengünstige Option.
-
+* **Direct Play (Standard):** Moderne Smart-TVs, Apple TV, Fire TV Sticks und Smartphones spielen nahezu alle Videoformate (H.264, HEVC, MKV) direkt ab – der Server reicht die Datei ohne CPU-Last weiter.
+* **Transkodierung:** Wird nur nötig, wenn du von unterwegs streamst und dein Upload zu langsam für die volle 4K-Bitrate ist, oder wenn ein alter Browser ein Videoformat nicht nativ unterstützt.
