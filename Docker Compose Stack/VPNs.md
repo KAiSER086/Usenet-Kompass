@@ -9,7 +9,7 @@ Ein **VPN (Virtual Private Network)** ist eine Technologie, die eine sichere und
 Für Usenet-Downloads ist ein VPN aus folgenden Gründen nützlich:
 
 * **Anonymität:** Deine tatsächliche IP-Adresse wird verborgen, da der gesamte Traffic über die IP-Adresse des VPN-Servers läuft. Das schützt deine Privatsphäre.
-* **Sicherheit:** Die Daten werden verschlüsselt, sodass dein Internetanbieter (oder andere Dritte) nicht einsehen können, welche Server du kontaktierst.
+* **Sicherheit:** Die Daten werden zusätzlich getunnelt, sodass dein Internetanbieter (oder andere Dritte) nicht einsehen können, welche Server du kontaktierst.
 
 ## Was ist ein Mesh-VPN und warum nutzen wir Tailscale?
 
@@ -21,12 +21,20 @@ Stell dir vor, deine Geräte (z. B. dein Heimserver, dein Laptop und dein Smartp
 
 ## 4.1 Das Netzwerk sichern mit Gluetun
 
-Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir den Datenverkehr des Downloaders und der Arr-Apps über ein VPN. Gluetun ist ein schlanker, leistungsstarker Docker-Container, der dies extrem einfach macht.
+Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir den Datenverkehr des Downloaders und der Arr-Apps über ein VPN. **Gluetun** ist ein extrem schlanker, sicherer Docker-Container mit integriertem Kill-Switch.
 
-### ⚡ Performance-Tipp: OpenVPN vs. WireGuard
+---
 
-* **OpenVPN:** Sehr weit verbreitet und einfach mit Benutzername/Passwort einzurichten. Erzeugt auf Single-Board-Computern (Raspberry Pi 5) bei hohen Bandbreiten jedoch spürbare CPU-Last.
-* **WireGuard:** Deutlich moderner, schlanker und extrem CPU-schonend. Wenn dein VPN-Provider WireGuard anbietet (z. B. Mullvad, ProtonVPN, NordVPN, Custom), erreichst du auch an Gigabit-Leitungen spielend den vollen Durchsatz bei minimaler Prozessorlast.
+### 🚀 Warum wir WireGuard dringend empfehlen (und warum OpenVPN ein alter Onkel ist)
+
+Wir empfehlen dir ganz ausdrücklich, **WireGuard** anstelle von OpenVPN zu nutzen:
+
+* 👴 **OpenVPN (Der alte Onkel):** OpenVPN ist über 20 Jahre alt. Es läuft im sogenannten *Userspace* und hat eine riesige, träge Codebasis. Das bedeutet: Hohe CPU-Last und spürbarer Flaschenhals. Auf einem **Raspberry Pi 5** oder sparsamen Mini-PC bremst OpenVPN schnelle Internetleitungen oft schon ab 200–300 Mbit/s massiv aus, weil die CPU mit dem Verschlüsseln nicht hinterherkommt.
+* ⚡ **WireGuard (Die moderne Rakete):** WireGuard ist der moderne Standard für VPNs. Es ist direkt in den **Linux-Kernel integriert**, extrem schlank (~4.000 Zeilen Code vs. 100.000+ bei OpenVPN) und verbraucht einen Bruchteil der Prozessorleistung. Mit WireGuard lastest du selbst eine **1.000 Mbit/s (Gigabit) Leitung** auf dem Raspberry Pi 5 mühelos voll aus.
+
+---
+
+### Gluetun-Verzeichnis vorbereiten
 
 Bevor wir den Dienst in der `docker-compose.yml` definieren, erstellen wir einen Ordner auf deinem Host-System, in dem die Container ihre Konfigurationsdateien ablegen:
 
@@ -45,7 +53,11 @@ id
 nano docker-compose.yml
 ```
 
-Dort fügen wir folgenden Code ein (hier beispielhaft mit OpenVPN):
+---
+
+### Gluetun mit WireGuard einrichten (Standard-Empfehlung)
+
+Füge folgenden Block in deine `docker-compose.yml` ein. Ersetze die Zugangsdaten durch die WireGuard-Konfigurationsdaten deines VPN-Anbieters (z. B. Mullvad, ProtonVPN, IVPN, NordVPN, Custom):
 
 ```yaml
 services:
@@ -57,35 +69,46 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
-      - VPN_SERVICE_PROVIDER=dein-vpn-provider # z. B. nordvpn, mullvad, expressvpn, custom
-      - VPN_TYPE=openvpn # oder wireguard
-      - OPENVPN_USER=dein-benutzername
-      - OPENVPN_PASSWORD=dein-passwort
-      - SERVER_COUNTRIES=Netherlands # Oder ein Land deiner Wahl
+      - VPN_SERVICE_PROVIDER=mullvad # z. B. mullvad, protonvpn, ivpn, custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
+      - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine zugewiesene WireGuard-IP
+      - SERVER_COUNTRIES=Netherlands # Server-Standort
       - TZ=Europe/Berlin
       - PUID=1000 # durch deine PUID ersetzen
       - PGID=1000 # durch deine PGID ersetzen
     ports:
       # Port-Mappings für alle Dienste, die über Gluetun getunnelt werden
-      - 8080:8080   # SABnzbd
-      - 6789:6789   # NZBGet
-      - 7878:7878   # Radarr
-      - 8989:8989   # Sonarr
-      - 9696:9696   # Prowlarr
+      - 8080:8080   # SABnzbd WebUI
+      - 6789:6789   # NZBGet WebUI
+      - 7878:7878   # Radarr WebUI & API
+      - 8989:8989   # Sonarr WebUI & API
+      - 9696:9696   # Prowlarr WebUI & API
     volumes:
       - ./config/gluetun:/gluetun
     restart: unless-stopped
 ```
 
-*(Für die WireGuard-Nutzung ersetzt du `VPN_TYPE=openvpn` durch `VPN_TYPE=wireguard` und trägst den WireGuard Private Key sowie die Server-Adresse gemäß [Gluetun Wiki](https://github.com/qdm12/gluetun-wiki) ein).*
+<details>
+<summary><b>Fallback: Du möchtest trotzdem den "alten Onkel" OpenVPN nutzen? (Klick hier)</b></summary>
 
-Folgende VPN-Anbieter haben volle Integration in Gluetun:
+Falls dein VPN-Anbieter tatsächlich kein WireGuard unterstützt, kannst du die Umgebungsvariablen wie folgt auf OpenVPN anpassen:
 
-```text
-AirVPN, Cyberghost, ExpressVPN, FastestVPN, Giganews, HideMyAss, IPVanish, IVPN, Mullvad, NordVPN, Perfect Privacy, Privado, Private Internet Access, PrivateVPN, ProtonVPN, PureVPN, SlickVPN, Surfshark, TorGuard, VPNSecure.me, VPNUnlimited, Vyprvpn, WeVPN, Windscribe
+```yaml
+    environment:
+      - VPN_SERVICE_PROVIDER=dein-vpn-provider
+      - VPN_TYPE=openvpn
+      - OPENVPN_USER=dein-benutzername
+      - OPENVPN_PASSWORD=dein-passwort
+      - SERVER_COUNTRIES=Netherlands
 ```
+</details>
 
-Jetzt überprüfen wir, ob die Verbindung erfolgreich aufgebaut wird:
+---
+
+### VPN-Verbindung testen
+
+Überprüfe nach dem Start, ob Gluetun erfolgreich verbunden ist und deine öffentliche IP-Adresse maskiert wird:
 
 ```bash
 # Container starten
@@ -98,7 +121,7 @@ docker exec -it gluetun sh
 curl ipinfo.io/ip
 ```
 
-Die angezeigte IP-Adresse sollte mit der IP deines VPN-Servers übereinstimmen.
+Die angezeigte IP-Adresse muss nun mit der deines gewählten VPN-Servers übereinstimmen.
 
 ---
 

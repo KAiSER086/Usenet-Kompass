@@ -2,6 +2,8 @@
 
 Hier ist die vollständige, harmonisierte `docker-compose.yml` für deinen gesamten Usenet- und Medienserver-Stack.
 
+> ⚡ **Hinweis:** Wir setzen als VPN-Standard auf **WireGuard**, da es im Vergleich zum veralteten OpenVPN massiv CPU-Leistung spart und vollen Gigabit-Durchsatz auf dem Raspberry Pi 5 / Mini-PC liefert.
+
 ```yaml
 services:
   gluetun:
@@ -12,10 +14,11 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
-      - VPN_SERVICE_PROVIDER=dein-vpn-provider # z. B. nordvpn, mullvad, expressvpn, custom
-      - VPN_TYPE=openvpn # oder wireguard
-      - OPENVPN_USER=dein-benutzername
-      - OPENVPN_PASSWORD=dein-passwort
+      # --- WireGuard Konfiguration (Dringend empfohlen!) ---
+      - VPN_SERVICE_PROVIDER=mullvad # z. B. mullvad, protonvpn, ivpn, custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
+      - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine WireGuard-IP
       - SERVER_COUNTRIES=Netherlands
       - TZ=Europe/Berlin
       - PUID=1000 # Deine PUID
@@ -127,6 +130,9 @@ services:
       - ./config/jellyfin:/config
       - ./movies:/movies
       - ./tvshows:/tvshows
+    # Optional für Intel QuickSync Hardware-Transcoding:
+    # devices:
+    #   - /dev/dri:/dev/dri
     ports:
       - "8096:8096"
     restart: unless-stopped
