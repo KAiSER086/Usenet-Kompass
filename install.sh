@@ -1,0 +1,408 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 🧭 USENET-KOMPASS INSTALLER
+# Der umfassende deutsche Leitfaden für automatisierte Usenet-Downloads,
+# Medienserver und Heimkino mit Docker Compose.
+# Repository: https://github.com/KAiSER086/Usenet-Kompass
+# ==============================================================================
+
+set -euo pipefail
+
+# Falls das Skript per Pipe (curl ... | bash) aufgerufen wird,
+# öffnen wir /dev/tty für interaktive Nutzereingaben.
+if [ -t 0 ]; then
+    INTERACTIVE=true
+elif [ -e /dev/tty ]; then
+    exec < /dev/tty
+    INTERACTIVE=true
+else
+    INTERACTIVE=false
+fi
+
+# --- Farben & UI-Elemente ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+clear || true
+
+echo -e "${CYAN}${BOLD}"
+echo "=================================================================="
+echo "          🧭  W I L L K O M M E N   B E I M                      "
+echo "               U S E N E T - K O M P A S S                      "
+echo "=================================================================="
+echo -e "${NC}"
+echo -e "Der automatisierte Docker-Compose Stack für Raspberry Pi 5 & Linux."
+echo ""
+
+# ------------------------------------------------------------------------------
+# 1.0 VORAUSSETZUNGEN & CHECKLISTE
+# ------------------------------------------------------------------------------
+echo -e "${YELLOW}${BOLD}⚠️  WICHTIGER HINWEIS VORAB:${NC}"
+echo -e "Bevor die Installation startet, stelle bitte sicher, dass du folgende"
+echo -e "drei Dinge bereitliegen hast:\n"
+echo -e "  ${BOLD}1. Einen Usenet-Provider Account${NC} (z. B. Eweka, NewsgroupDirect, etc.)"
+echo -e "  ${BOLD}2. Mindestens einen Usenet-Indexer${NC} mit API-Key (z. B. Treasure-Maps, NZBGeek)"
+echo -e "  ${BOLD}3. Einen VPN-Account${NC} mit WireGuard-Support (z. B. Mullvad, ProtonVPN, Surfshark)"
+echo ""
+read -r -p "Hast du diese Zugänge bereit und möchtest fortfahren? [J/n]: " READY_CHOICE
+READY_CHOICE=${READY_CHOICE:-J}
+
+if [[ ! "$READY_CHOICE" =~ ^[jJyY]$ ]]; then
+    echo -e "\n${RED}Installation abgebrochen.${NC}"
+    echo "Besorge dir zuerst die nötigen Zugänge und starte den Installer danach erneut."
+    echo "Tipps zu Providern und Indexern findest du im Guide: https://github.com/KAiSER086/Usenet-Kompass"
+    exit 0
+fi
+
+echo -e "\n${GREEN}✓ Super! Lass uns das System einrichten.${NC}\n"
+
+# ------------------------------------------------------------------------------
+# 2.0 SYSTEM- & DOCKER-PRÜFUNG
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}▶ Prüfe Systemvoraussetzungen...${NC}"
+
+# Docker & Compose prüfen
+if ! command -v docker &> /dev/null; then
+    echo -e "${YELLOW}Docker ist noch nicht installiert.${NC}"
+    read -r -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
+    INSTALL_DOCKER=${INSTALL_DOCKER:-J}
+    if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
+        echo -e "${CYAN}Installiere Docker...${NC}"
+        curl -fsSL https://get.docker.com | sh
+        sudo usermod -aG docker "$USER" || true
+        echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
+    else
+        echo -e "${RED}Docker ist erforderlich. Bitte installiere Docker manuell und starte den Installer erneut.${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✓ Docker ist vorhanden.${NC}"
+fi
+
+# Compose Plugin prüfen
+if docker compose version &> /dev/null; then
+    COMPOSE_CMD="docker compose"
+    echo -e "${GREEN}✓ Docker Compose ist einsatzbereit.${NC}"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    echo -e "${GREEN}✓ docker-compose (Legacy) ist einsatzbereit.${NC}"
+else
+    echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
+    sudo apt update && sudo apt install -y docker-compose-plugin || true
+    COMPOSE_CMD="docker compose"
+fi
+
+# PUID & PGID ermitteln
+CURRENT_UID=$(id -u)
+CURRENT_GID=$(id -g)
+echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
+
+# Lokales Heimnetzwerk / Subnetz automatisch erkennen
+DETECTED_SUBNET=$(ip route | grep -v default | grep -E 'src 192\.168\.|src 10\.|src 172\.' | awk '{print $1}' | head -n 1 || true)
+if [ -z "$DETECTED_SUBNET" ]; then
+    # Fallback Erkennung über Standard-Gateway
+    DEFAULT_GW=$(ip route show default | awk '{print $3}' | head -n 1 || true)
+    if [[ "$DEFAULT_GW" =~ ^192\.168\.[0-9]+\. ]]; then
+        DETECTED_SUBNET="${DEFAULT_GW%.*}.0/24"
+    else
+        DETECTED_SUBNET="192.168.178.0/24"
+    fi
+fi
+
+echo ""
+echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall):${NC}"
+echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
+read -r -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
+LAN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
+echo -e "${GREEN}✓ Lokales Subnetz für Gluetun gesetzt: ${LAN_SUBNET}${NC}"
+
+# Server-IP für die spätere Anzeige ermitteln
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+
+# ------------------------------------------------------------------------------
+# 3.0 DOWNLOADER-AUSWAHL
+# ------------------------------------------------------------------------------
+echo ""
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "${BOLD}▶ SCHRITT 1: Welchen Usenet-Downloader möchtest du nutzen?${NC}"
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "  ${BOLD}[1] NZBGet${NC}  ${GREEN}(⭐ Dringend empfohlen für Raspberry Pi 5 & Gigabit)${NC}"
+echo -e "      Kompiliert in nativem C++. Extrem ressourcenschonend, reizt Gigabit"
+echo -e "      auch auf ARM-Prozessoren spielend aus bei minimaler CPU-Auslastung."
+echo ""
+echo -e "  ${BOLD}[2] SABnzbd${NC} (Sehr beliebt & modern)"
+echo -e "      Python-basiert mit erstklassiger, moderner Weboberfläche, integrierter"
+echo -e "      Auto-PAR2-Reparatur und Direkt-Entpacken."
+echo ""
+read -r -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
+DOWNLOADER_CHOICE=${DOWNLOADER_CHOICE:-1}
+
+if [ "$DOWNLOADER_CHOICE" = "2" ]; then
+    SELECTED_DOWNLOADER="sabnzbd"
+    DOWNLOADER_PORT="8080"
+    DOWNLOADER_SERVICE_NAME="SABnzbd"
+else
+    SELECTED_DOWNLOADER="nzbget"
+    DOWNLOADER_PORT="6789"
+    DOWNLOADER_SERVICE_NAME="NZBGet"
+fi
+echo -e "${GREEN}✓ Ausgewählter Downloader: ${DOWNLOADER_SERVICE_NAME}${NC}"
+
+# ------------------------------------------------------------------------------
+# 4.0 VPN-KONFIGURATION (WIREGUARD VS. OPENVPN)
+# ------------------------------------------------------------------------------
+echo ""
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "${BOLD}▶ SCHRITT 2: VPN-Protokoll & Sicherheit (Gluetun)${NC}"
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "  ${BOLD}[1] WireGuard${NC} ${GREEN}(⭐ Dringend empfohlen!)${NC}"
+echo -e "      Modern, direkt im Linux-Kernel integriert. Liefert volle Gigabit-Bandbreite"
+echo -e "      bei minimaler Prozessorlast auf dem Pi 5 / Mini-PC."
+echo ""
+echo -e "  ${BOLD}[2] OpenVPN${NC}   ${YELLOW}(Veraltetes Fallback)${NC}"
+echo -e "      Erzeugt hohe CPU-Last und bremst schnelle Internetleitungen oft aus."
+echo ""
+read -r -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
+VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
+
+echo ""
+echo -e "Welchen VPN-Anbieter nutzt du?"
+echo -e "  [1] Mullvad"
+echo -e "  [2] ProtonVPN"
+echo -e "  [3] Surfshark"
+echo -e "  [4] IVPN"
+echo -e "  [5] Anderer / Custom"
+read -r -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
+VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
+
+case "$VPN_PROV_CHOICE" in
+    1) VPN_PROVIDER="mullvad" ;;
+    2) VPN_PROVIDER="protonvpn" ;;
+    3) VPN_PROVIDER="surfshark" ;;
+    4) VPN_PROVIDER="ivpn" ;;
+    *) VPN_PROVIDER="custom" ;;
+esac
+
+if [ "$VPN_PROTO_CHOICE" = "2" ]; then
+    VPN_TYPE="openvpn"
+    echo ""
+    read -r -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
+    read -r -s -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+    echo ""
+    WIREGUARD_PRIVATE_KEY=""
+    WIREGUARD_ADDRESSES=""
+else
+    VPN_TYPE="wireguard"
+    echo ""
+    read -r -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+    read -r -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+    OPENVPN_USER=""
+    OPENVPN_PASS=""
+fi
+
+read -r -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
+VPN_COUNTRIES=${VPN_COUNTRIES:-"Netherlands,Germany"}
+
+# ------------------------------------------------------------------------------
+# 5.0 VERZEICHNISSTRUKTUR ANLEGEN (TRaSH-GUIDES STANDARD)
+# ------------------------------------------------------------------------------
+echo ""
+echo -e "${CYAN}▶ Erstelle TRaSH-Guides Verzeichnisstruktur für Instant Atomic Moves...${NC}"
+
+INSTALL_DIR="$(pwd)"
+mkdir -p "$INSTALL_DIR/data/usenet/complete"
+mkdir -p "$INSTALL_DIR/data/usenet/incomplete"
+mkdir -p "$INSTALL_DIR/data/media/movies"
+mkdir -p "$INSTALL_DIR/data/media/tv"
+
+mkdir -p "$INSTALL_DIR/config/gluetun"
+mkdir -p "$INSTALL_DIR/config/prowlarr"
+mkdir -p "$INSTALL_DIR/config/sonarr"
+mkdir -p "$INSTALL_DIR/config/radarr"
+mkdir -p "$INSTALL_DIR/config/jellyfin"
+mkdir -p "$INSTALL_DIR/config/jellyseerr"
+mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
+
+# Berechtigungen sicherstellen
+chmod -R 755 "$INSTALL_DIR/data" || true
+echo -e "${GREEN}✓ Ordnerstruktur erfolgreich unter $INSTALL_DIR/data angelegt.${NC}"
+
+# ------------------------------------------------------------------------------
+# 6.0 DOCKER-COMPOSE.YML GENERIEREN
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}▶ Generiere maßgeschneiderte docker-compose.yml...${NC}"
+
+cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+EOF
+
+if [ "$VPN_TYPE" = "wireguard" ]; then
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+EOF
+else
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
+      - OPENVPN_USER=${OPENVPN_USER}
+      - OPENVPN_PASSWORD=${OPENVPN_PASS}
+EOF
+fi
+
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
+      - SERVER_COUNTRIES=${VPN_COUNTRIES}
+      - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
+      - TZ=Europe/Berlin
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+    ports:
+      - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}" # Downloader (${DOWNLOADER_SERVICE_NAME}) WebUI
+      - "7878:7878" # Radarr WebUI & API
+      - "8989:8989" # Sonarr WebUI & API
+      - "9696:9696" # Prowlarr WebUI & API
+    volumes:
+      - ./config/gluetun:/gluetun
+    restart: unless-stopped
+
+  # --- Downloader: ${DOWNLOADER_SERVICE_NAME} ---
+  ${SELECTED_DOWNLOADER}:
+    image: lscr.io/linuxserver/${SELECTED_DOWNLOADER}:latest
+    container_name: ${SELECTED_DOWNLOADER}
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/${SELECTED_DOWNLOADER}:/config
+      - ./data:/data
+    restart: unless-stopped
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+
+  # --- Arr-Stack (Automation & Indexer) ---
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/prowlarr:/config
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/sonarr:/config
+      - ./data:/data
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+      - ${SELECTED_DOWNLOADER}
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/radarr:/config
+      - ./data:/data
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+      - ${SELECTED_DOWNLOADER}
+    restart: unless-stopped
+
+  # --- Frontend (Medienserver & Anfragen) ---
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/jellyfin:/config
+      - ./data/media:/data/media
+    ports:
+      - "8096:8096"
+    restart: unless-stopped
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/jellyseerr:/app/config
+    ports:
+      - "5055:5055"
+    depends_on:
+      - radarr
+      - sonarr
+      - gluetun
+    restart: unless-stopped
+EOF
+
+echo -e "${GREEN}✓ docker-compose.yml wurde erfolgreich erstellt!${NC}\n"
+
+# ------------------------------------------------------------------------------
+# 7.0 STARTEN DES STACKS
+# ------------------------------------------------------------------------------
+read -r -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
+START_NOW=${START_NOW:-J}
+
+if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
+    echo -e "${CYAN}Starte Docker Stack via '$COMPOSE_CMD up -d'...${NC}"
+    $COMPOSE_CMD up -d
+    echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
+else
+    echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$COMPOSE_CMD up -d${NC}\n"
+fi
+
+# ------------------------------------------------------------------------------
+# 8.0 ÜBERSICHT DER WEB-INTERFACES
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}=================================================================="
+echo -e "                   DEINE WEB-INTERFACES                           "
+echo -e "==================================================================${NC}"
+echo -e "🍿 ${BOLD}Jellyseerr (Medien-Anfragen):${NC}    http://${SERVER_IP}:5055"
+echo -e "🎬 ${BOLD}Jellyfin (Medienserver):${NC}         http://${SERVER_IP}:8096"
+echo -e "⚡ ${BOLD}${DOWNLOADER_SERVICE_NAME} (Downloader):${NC}         http://${SERVER_IP}:${DOWNLOADER_PORT}"
+echo -e "📺 ${BOLD}Sonarr (Serien-Manager):${NC}         http://${SERVER_IP}:8989"
+echo -e "🎬 ${BOLD}Radarr (Film-Manager):${NC}           http://${SERVER_IP}:7878"
+echo -e "🔍 ${BOLD}Prowlarr (Indexer-Hub):${NC}          http://${SERVER_IP}:9696"
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "📌 Nächste Schritte: Richte deinen Indexer in Prowlarr ein und hinterlege"
+echo -e "   deinen Provider in ${DOWNLOADER_SERVICE_NAME}."
+echo -e "   Vollständige Anleitung: ${BOLD}https://github.com/KAiSER086/Usenet-Kompass${NC}\n"

@@ -105,21 +105,34 @@ flowchart LR
 
 ---
 
-## ⚡ Schnellstart in 3 Schritten
+## ⚡ Schnellstart: In 2 Minuten einsatzbereit
+
+### Option A: Der interaktive 1-Befehl-Installer (⭐ Empfohlen)
+Führe folgenden Befehl im Terminal deines Linux-Servers oder Raspberry Pi aus. Der Assistent führt dich schrittweise durch die Einrichtung, erkennt dein Router-Heimnetzwerk vollautomatisch, lässt dich deinen bevorzugten Downloader (NZBGet oder SABnzbd) wählen und startet deinen Stack schlüsselfertig:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/install.sh | bash
+```
+
+<details>
+<summary><b>Option B: Manuelle Einrichtung mit Vorlage (Klick hier)</b></summary>
+
+Falls du den Stack lieber ohne Skript manuell konfigurieren möchtest:
 
 ```bash
 # 1. Repository klonen
 git clone https://github.com/KAiSER086/Usenet-Kompass.git
 cd Usenet-Kompass
 
-# 2. Empfohlene TRaSH-Guides Verzeichnisstruktur anlegen
-mkdir -p data/usenet/complete data/usenet/incomplete data/media/movies data/media/tv
+# 2. TRaSH-Guides Ordnerstruktur anlegen
+mkdir -p data/usenet/complete data/usenet/incomplete data/media/movies data/media/tv config
 
-# 3. Finalen Stack anpassen und starten
-cd "Docker Compose Stack"
-# Passe deine Zugangsdaten in der docker-compose.yml an:
-nano "Finaler Stack.md"
+# 3. Vorlage kopieren, Zugangsdaten anpassen und starten
+cp docker-compose.example.yml docker-compose.yml
+nano docker-compose.yml
+docker compose up -d
 ```
+</details>
 
 ---
 

@@ -1,0 +1,154 @@
+# ==============================================================================
+# 🧭 USENET-KOMPASS - DOCKER COMPOSE TEMPLATE
+# Schlüsselfertige Vorlage für deinen automatisierten Medienserver-Stack
+# Dokumentation: https://github.com/KAiSER086/Usenet-Kompass
+# ==============================================================================
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      # --- VPN Konfiguration (WireGuard dringend empfohlen!) ---
+      - VPN_SERVICE_PROVIDER=mullvad # z. B. mullvad, protonvpn, surfshark, ivpn, custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
+      - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine WireGuard-IP
+      - SERVER_COUNTRIES=Netherlands,Germany
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24 # Erlaube Zugriff aus dem lokalen Heimnetz (anpassen!)
+      - TZ=Europe/Berlin
+      - PUID=1000 # Deine PUID (Terminal: 'id -u')
+      - PGID=1000 # Deine PGID (Terminal: 'id -g')
+    ports:
+      - "6789:6789" # NZBGet WebUI
+      - "8080:8080" # SABnzbd WebUI (falls SABnzbd genutzt wird)
+      - "7878:7878" # Radarr WebUI & API
+      - "8989:8989" # Sonarr WebUI & API
+      - "9696:9696" # Prowlarr WebUI & API
+    volumes:
+      - ./config/gluetun:/gluetun
+    restart: unless-stopped
+
+  # --- Usenet Downloader (Wähle NZBGet ODER SABnzbd) ---
+
+  # Option A: NZBGet (C++ Performance-Rakete, empfohlen für Raspberry Pi 5 & Gigabit)
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/nzbget:/config
+      - ./data:/data
+    restart: unless-stopped
+    depends_on:
+      - gluetun
+    network_mode: "service:gluetun"
+
+  # Option B: SABnzbd (Python Allrounder mit moderner UI)
+  # sabnzbd:
+  #   image: lscr.io/linuxserver/sabnzbd:latest
+  #   container_name: sabnzbd
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Berlin
+  #   volumes:
+  #     - ./config/sabnzbd:/config
+  #     - ./data:/data
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - gluetun
+  #   network_mode: "service:gluetun"
+
+  # --- Arr-Stack (Automatisierung & Indexer-Management) ---
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/prowlarr:/config
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/sonarr:/config
+      - ./data:/data
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+      - nzbget # oder sabnzbd
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/radarr:/config
+      - ./data:/data
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+      - nzbget # oder sabnzbd
+    restart: unless-stopped
+
+  # --- Frontend (Streaming & Media Requests) ---
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/jellyfin:/config
+      - ./data/media:/data/media
+    # Optional für Intel QuickSync Hardware-Transcoding:
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # group_add:
+    #   - "107" # GID der Gruppe 'render' auf dem Host ('getent group render | cut -d: -f3')
+    ports:
+      - "8096:8096"
+    restart: unless-stopped
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/jellyseerr:/app/config
+    ports:
+      - "5055:5055"
+    depends_on:
+      - radarr
+      - sonarr
+      - gluetun
+    restart: unless-stopped
