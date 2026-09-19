@@ -102,11 +102,16 @@ CURRENT_UID=$(id -u)
 CURRENT_GID=$(id -g)
 echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
 
-# Lokales Heimnetzwerk / Subnetz automatisch erkennen
-DETECTED_SUBNET=$(ip route | grep -v default | grep -E 'src 192\.168\.|src 10\.|src 172\.' | awk '{print $1}' | head -n 1 || true)
+# Lokales Heimnetzwerk / Subnetz über das physische Interface der Default Route ermitteln
+DEFAULT_IFACE=$(ip route show default 2>/dev/null | awk '{print $5}' | head -n 1 || true)
+DETECTED_SUBNET=""
+if [ -n "$DEFAULT_IFACE" ]; then
+    # Nur das Subnetz des physischen Interfaces abfragen (ignoriert docker0, br-xxx etc.)
+    DETECTED_SUBNET=$(ip route show dev "$DEFAULT_IFACE" 2>/dev/null | grep -v default | grep -E '192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.' | awk '{print $1}' | head -n 1 || true)
+fi
+
 if [ -z "$DETECTED_SUBNET" ]; then
-    # Fallback Erkennung über Standard-Gateway
-    DEFAULT_GW=$(ip route show default | awk '{print $3}' | head -n 1 || true)
+    DEFAULT_GW=$(ip route show default 2>/dev/null | awk '{print $3}' | head -n 1 || true)
     if [[ "$DEFAULT_GW" =~ ^192\.168\.[0-9]+\. ]]; then
         DETECTED_SUBNET="${DEFAULT_GW%.*}.0/24"
     else
@@ -379,15 +384,46 @@ echo -e "${GREEN}✓ docker-compose.yml wurde erfolgreich erstellt!${NC}\n"
 # ------------------------------------------------------------------------------
 # 7.0 STARTEN DES STACKS
 # ------------------------------------------------------------------------------
-read -r -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
-START_NOW=${START_NOW:-J}
+# Prüfe, ob Docker-Befehle ohne sudo ausgeführt werden können (z. B. direkt nach Neuinstallation)
+RUN_DOCKER_CMD="$COMPOSE_CMD"
+DOCKER_BIN="docker"
+if ! docker ps &>/dev/null; then
+    if sudo docker ps &>/dev/null; then
+        RUN_DOCKER_CMD="sudo $COMPOSE_CMD"
+        DOCKER_BIN="sudo docker"
+    fi
+fi
+
+# Prüfe vorab auf Namenskonflikte mit bestehenden Containern
+CONFLICTING_CONTAINERS=$($DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -E "^(gluetun|sonarr|radarr|prowlarr|jellyfin|jellyseerr|${SELECTED_DOWNLOADER})$" || true)
+
+START_NOW="J"
+if [ -n "$CONFLICTING_CONTAINERS" ]; then
+    echo -e "${YELLOW}⚠️  ACHTUNG: Auf diesem System existieren bereits Container mit identischen Namen:${NC}"
+    echo -e "${BOLD}${CONFLICTING_CONTAINERS}${NC}"
+    read -r -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
+    REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-N}
+    if [[ "$REMOVE_CONFLICTS" =~ ^[jJyY]$ ]]; then
+        echo -e "${CYAN}Stoppe und entferne kollidierende Container...${NC}"
+        echo "$CONFLICTING_CONTAINERS" | xargs -r $DOCKER_BIN rm -f
+    else
+        echo -e "\n${YELLOW}Hinweis: Die neue docker-compose.yml wurde erstellt, wird aber wegen der bestehenden Container nicht gestartet.${NC}"
+        START_NOW="n"
+    fi
+fi
+
+if [ "$START_NOW" != "n" ]; then
+    read -r -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
+    START_NOW=${START_NOW:-J}
+fi
 
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
-    echo -e "${CYAN}Starte Docker Stack via '$COMPOSE_CMD up -d'...${NC}"
-    $COMPOSE_CMD up -d
+    echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
+    $RUN_DOCKER_CMD up -d
+    sudo chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 else
-    echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$COMPOSE_CMD up -d${NC}\n"
+    echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$RUN_DOCKER_CMD up -d${NC}\n"
 fi
 
 # ------------------------------------------------------------------------------
