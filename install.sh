@@ -419,8 +419,9 @@ fi
 
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
-    $RUN_DOCKER_CMD up -d
-    sudo chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
+    if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]]; then
+        sudo chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
+    fi
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 else
     echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$RUN_DOCKER_CMD up -d${NC}\n"
