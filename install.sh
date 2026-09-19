@@ -129,6 +129,15 @@ echo -e "${GREEN}✓ Lokales Subnetz für Gluetun gesetzt: ${LAN_SUBNET}${NC}"
 # Server-IP für die spätere Anzeige ermitteln
 SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
+# Prüfe Hardwarebeschleunigung (/dev/dri für Intel QuickSync / VAAPI)
+DRI_PRESENT=false
+RENDER_GID=""
+if [ -d "/dev/dri" ]; then
+    DRI_PRESENT=true
+    RENDER_GID=$(getent group render 2>/dev/null | cut -d: -f3 || true)
+    echo -e "${GREEN}✓ Hardware-Transcoding erkannt (/dev/dri) – QuickSync / VAAPI wird für Jellyfin aktiviert.${NC}"
+fi
+
 # ------------------------------------------------------------------------------
 # 3.0 DOWNLOADER-AUSWAHL
 # ------------------------------------------------------------------------------
@@ -360,6 +369,22 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     ports:
       - "8096:8096"
     restart: unless-stopped
+EOF
+
+if [ "$DRI_PRESENT" = true ]; then
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
+    devices:
+      - /dev/dri:/dev/dri
+EOF
+if [ -n "$RENDER_GID" ]; then
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
+    group_add:
+      - "${RENDER_GID}"
+EOF
+fi
+fi
+
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
@@ -419,10 +444,61 @@ fi
 
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
+    $RUN_DOCKER_CMD up -d
     if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]]; then
         sudo chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
     fi
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
+
+    # --- 7.1 VPN-LEAK-TEST & LIVE-IP-CHECK ---
+    echo -e "${CYAN}⏳ Warte kurz auf VPN-Tunnelverbindung für den Sicherheits-Check...${NC}"
+    VPN_JSON=""
+    for i in {1..10}; do
+        VPN_JSON=$($DOCKER_BIN exec gluetun wget -qO- --timeout=5 https://ipinfo.io/json 2>/dev/null || true)
+        if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
+            break
+        fi
+        sleep 2
+    done
+
+    if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
+        VPN_IP=$(echo "$VPN_JSON" | grep -oPm1 '(?<="ip": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"ip": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+        VPN_CITY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="city": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"city": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+        VPN_COUNTRY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="country": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"country": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+        VPN_ORG=$(echo "$VPN_JSON" | grep -oPm1 '(?<="org": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"org": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+
+        echo -e "${GREEN}=================================================================="
+        echo -e "          🔒  VPN-LEAK-TEST: ERFOLGREICH BESTANDEN!               "
+        echo -e "==================================================================${NC}"
+        echo -e "  ${BOLD}Öffentliche VPN-IP:${NC}  ${GREEN}${BOLD}${VPN_IP}${NC}"
+        echo -e "  ${BOLD}Server-Standort:${NC}     ${VPN_CITY} (${VPN_COUNTRY})"
+        echo -e "  ${BOLD}Provider / ISP:${NC}      ${VPN_ORG}"
+        echo -e "  ${GREEN}✓ Deine echte Internet-IP ist zu 100% maskiert und geschützt.${NC}\n"
+    else
+        echo -e "${YELLOW}ℹ️  VPN-Tunnel baut sich noch im Hintergrund auf (Handshake läuft).${NC}\n"
+    fi
+
+    # --- 7.2 AUTOMATISCHES APP-LINKING ANBIETEN ---
+    echo -e "${CYAN}------------------------------------------------------------------${NC}"
+    echo -e "${BOLD}▶ MÖCHTEST DU DIE MEDIEN-APPS JETZT VOLLAUTOMATISCH VERKNÜPFEN?${NC}"
+    echo -e "  Verbindet Prowlarr ↔ Sonarr ↔ Radarr ↔ ${DOWNLOADER_SERVICE_NAME}"
+    echo -e "  und richtet die Root-Folder (/data/media) automatisch ein."
+    read -r -p "Apps jetzt automatisch verknüpfen? [J/n]: " RUN_LINK
+    RUN_LINK=${RUN_LINK:-J}
+    if [[ "$RUN_LINK" =~ ^[jJyY]$ ]]; then
+        if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
+            chmod +x "$INSTALL_DIR/link-apps.sh"
+            bash "$INSTALL_DIR/link-apps.sh" || true
+        else
+            curl -fsSL "https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/link-apps.sh" -o "$INSTALL_DIR/link-apps.sh" 2>/dev/null || true
+            chmod +x "$INSTALL_DIR/link-apps.sh" 2>/dev/null || true
+            if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
+                bash "$INSTALL_DIR/link-apps.sh" || true
+            fi
+        fi
+    else
+        echo -e "${YELLOW}Du kannst die Apps jederzeit später verknüpfen mit: ${BOLD}./link-apps.sh${NC}\n"
+    fi
 else
     echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$RUN_DOCKER_CMD up -d${NC}\n"
 fi

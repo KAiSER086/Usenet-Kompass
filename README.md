@@ -108,16 +108,34 @@ flowchart LR
 ## ⚡ Schnellstart: In 2 Minuten einsatzbereit
 
 ### Option A: Der interaktive 1-Befehl-Installer (⭐ Empfohlen)
-Führe folgenden Befehl im Terminal deines Linux-Servers oder Raspberry Pi aus. Der Assistent führt dich schrittweise durch die Einrichtung, erkennt dein Router-Heimnetzwerk vollautomatisch, lässt dich deinen bevorzugten Downloader (NZBGet oder SABnzbd) wählen und startet deinen Stack schlüsselfertig:
+Führe folgenden Befehl im Terminal deines Linux-Servers oder Raspberry Pi aus:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/install.sh | bash
 ```
 
+**Was der Installer für dich automatisiert:**
+* 🔍 **Hardwarebeschleunigung:** Erkennt Intel QuickSync / VAAPI (`/dev/dri`) und bindet sie automatisch für Jellyfin ein.
+* 🌐 **Zero-Config Router-Erkennung:** Findet dein physikalisches Heimnetzwerk (z. B. Fritz!Box `192.168.178.0/24`) und schützt dich vor LAN-Sperren in der Gluetun-Firewall.
+* ⚡ **Wahlfreiheit:** Wähle flexibel zwischen **NZBGet** (High-Performance C++) oder **SABnzbd** (Komfort).
+* 🛡️ **WireGuard & Live-Leak-Test:** Richtet Gluetun ein und prüft direkt nach dem Start per Live-Check die maskierte VPN-IP & den Standort im Terminal.
+* 🪄 **Vollautomatisches App-Linking (`link-apps.sh`):** Liest die API-Keys von Sonarr, Radarr und Prowlarr automatisch aus, verknüpft die Apps untereinander und richtet die Root-Folder (`/data/media`) ein. Kein manuelles API-Key-Kopieren mehr nötig!
+
+---
+
+### 🪄 Bestehende Installation automatisch verknüpfen
+Falls du den Stack bereits manuell laufen hast und das Verknüpfen von Prowlarr, Sonarr, Radarr und Downloader automatisieren möchtest:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/link-apps.sh | bash
+```
+
+---
+
 <details>
 <summary><b>Option B: Manuelle Einrichtung mit Vorlage (Klick hier)</b></summary>
 
-Falls du den Stack lieber ohne Skript manuell konfigurieren möchtest:
+Falls du den Stack lieber komplett manuell konfigurieren möchtest:
 
 ```bash
 # 1. Repository klonen
@@ -131,6 +149,10 @@ mkdir -p data/usenet/complete data/usenet/incomplete data/media/movies data/medi
 cp docker-compose.example.yml docker-compose.yml
 nano docker-compose.yml
 docker compose up -d
+
+# 4. Apps automatisch verknüpfen
+chmod +x link-apps.sh
+./link-apps.sh
 ```
 </details>
 
