@@ -1,4 +1,4 @@
-﻿# 8.0 Der komplette Docker-Stack
+# 8.0 Der komplette Docker-Stack
 
 Hier ist die vollständige, harmonisierte `docker-compose.yml` für deinen gesamten Usenet- und Medienserver-Stack.
 
@@ -20,6 +20,7 @@ services:
       - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
       - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine WireGuard-IP
       - SERVER_COUNTRIES=Netherlands
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24 # Erlaube Zugriff aus dem lokalen Heimnetz (an dein Subnetz anpassen)
       - TZ=Europe/Berlin
       - PUID=1000 # Deine PUID
       - PGID=1000 # Deine PGID
@@ -44,8 +45,7 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/sabnzbd:/config
-      - ./downloads:/downloads
-      - ./incomplete-downloads:/incomplete-downloads
+      - ./data:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -60,8 +60,7 @@ services:
   #     - TZ=Europe/Berlin
   #   volumes:
   #     - ./config/nzbget:/config
-  #     - ./downloads:/downloads
-  #     - ./incomplete-downloads:/incomplete-downloads
+  #     - ./data:/data
   #   restart: unless-stopped
   #   depends_on:
   #     - gluetun
@@ -92,8 +91,7 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/sonarr:/config
-      - ./downloads:/downloads
-      - ./tvshows:/tvshows
+      - ./data:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -109,8 +107,7 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/radarr:/config
-      - ./downloads:/downloads
-      - ./movies:/movies
+      - ./data:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -128,11 +125,12 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/jellyfin:/config
-      - ./movies:/movies
-      - ./tvshows:/tvshows
+      - ./data/media:/data/media
     # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
+    # group_add:
+    #   - "107" # GID der Gruppe 'render' auf dem Host (getent group render | cut -d: -f3)
     ports:
       - "8096:8096"
     restart: unless-stopped
@@ -154,6 +152,12 @@ services:
       - gluetun
     restart: unless-stopped
 ```
+
+> 📁 **Hinweis zur TRaSH-Guides Speicherstruktur (`/data`):**
+> Durch das einheitliche Mapping von `./data:/data` (bzw. deiner externen Festplatte nach `/data`) nutzen Downloader und Medien-Apps dasselbe Dateisystem.
+> * **Downloads:** SABnzbd/NZBGet legt fertige Dateien unter `/data/usenet/complete` ab (temporär: `/data/usenet/incomplete`).
+> * **Medien:** Sonarr importiert Serien nach `/data/media/tv`, Radarr Filme nach `/data/media/movies`, und Jellyfin streamt aus `/data/media`.
+> * **Der entscheidende Vorteil:** Sonarr und Radarr verschieben fertige Dateien per **Instant Atomic Move (`rename()`) in Millisekunden** – komplett ohne doppelte Schreiblast oder lange Wartezeiten auf der Festplatte.
 
 > 📌 **Hinweis zur internen Kommunikation:**
 > Da `sabnzbd`, `prowlarr`, `sonarr` und `radarr` über das Gluetun-Netzwerk laufen (`network_mode: "service:gluetun"`), können sie untereinander per `127.0.0.1` (localhost) kommunizieren.

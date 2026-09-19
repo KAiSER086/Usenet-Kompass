@@ -1,4 +1,4 @@
-﻿# 6.0 Prowlarr, Sonarr und Radarr
+# 6.0 Prowlarr, Sonarr und Radarr
 
 ## 6.1 Was ist der "Arr"-Stack?
 
@@ -48,8 +48,7 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/sonarr:/config
-      - ./downloads:/downloads
-      - ./tvshows:/tvshows
+      - ./data:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -65,8 +64,7 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/radarr:/config
-      - ./downloads:/downloads
-      - ./movies:/movies
+      - ./data:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -74,30 +72,29 @@ services:
     restart: unless-stopped
 ```
 
-### Wichtiger Hinweis zu den Speicherpfaden
+### Wichtiger Hinweis zu den Speicherpfaden (TRaSH-Guides Standard)
 
-Die Konfiguration deiner *arr-Apps ist direkt mit den Pfaden deines Downloaders verbunden.
+Die Konfiguration deiner *arr-Apps ist direkt mit den Pfaden deines Downloaders verbunden. Wir setzen konsequent auf den **TRaSH-Guides Standard**:
 
-* **Der Download-Pfad (`/downloads`):** Der Ort, an dem SABnzbd/NZBGet die entpackten Dateien nach dem Download ablegt. Dieser Volume-Pfad muss für den Downloader sowie für Sonarr und Radarr identisch sein.
-* **Die Medien-Pfade (`/movies` und `/tvshows`):** Dies sind die endgültigen Zielordner für deine Mediathek. Radarr verschiebt fertige Filme nach `/movies`, Sonarr sortiert Serien nach `/tvshows` ein.
+* Alle Container binden denselben zentralen Pfad ein: `- ./data:/data`.
+* **Download-Pfade:** SABnzbd/NZBGet speichert fertige Downloads unter `/data/usenet/complete`.
+* **Medien-Pfade:** Sonarr sortiert Serien nach `/data/media/tv` ein, Radarr verschiebt Filme nach `/data/media/movies`.
 
-Wenn du eine externe Festplatte nutzt (z. B. gemountet unter `/mnt/name-deiner-festplatte/medien`), passe die Volumes entsprechend an:
+> ⚡ **Warum ein einziges `/data`-Volume so wichtig ist (Instant Atomic Moves):**
+> Werden Downloads und Medien als getrennte Volumes eingebunden (z. B. `/downloads` und `/movies`), behandelt Docker sie im Container als zwei unterschiedliche Festplatten. Beim Import muss jede Datei mühsam **vollständig kopiert und danach gelöscht** werden (Slow I/O Copy).
+> Durch das gemeinsame Root-Volume `/data` können Sonarr und Radarr die Dateien per **Atomic Move (`rename()`) in Millisekunden** an ihren Zielort verschieben – ohne Schreiblast, ohne CPU-Stress und ohne Verzögerung.
+
+Wenn du eine externe Festplatte nutzt (z. B. gemountet unter `/mnt/name-deiner-festplatte/medien`), passe die Volumes einfach wie folgt an:
 
 ```yaml
     volumes:
       - ./config/sonarr:/config
-      - /mnt/name-deiner-festplatte/medien/downloads:/downloads
-      - /mnt/name-deiner-festplatte/medien/tvshows:/tvshows
+      - /mnt/name-deiner-festplatte/medien:/data
 
     volumes:
       - ./config/radarr:/config
-      - /mnt/name-deiner-festplatte/medien/downloads:/downloads
-      - /mnt/name-deiner-festplatte/medien/movies:/movies
+      - /mnt/name-deiner-festplatte/medien:/data
 ```
-
-> 💡 **Best-Practice-Tipp (Instant Moves & Hardlinks):**
-> Wenn `downloads` und `movies` als separate Volumes eingebunden werden, muss Docker beim Importieren großer Dateien die Daten auf der Festplatte komplett neu kopieren.
-> Wenn du stattdessen den übergeordneten Medienordner als ein einziges Volume einbindest (z. B. `- /mnt/medien:/data`), können Radarr und Sonarr die Dateien über **Atomic Moves / Hardlinks** in Millisekunden verschieben, ohne Schreiblast auf der Festplatte zu erzeugen.
 
 ---
 
@@ -109,11 +106,11 @@ Damit die Docker-Container Dateien auf deiner Festplatte anlegen und verschieben
 # Zeigt dir die PUID und PGID deines Benutzers
 id
 
-# Besitzer für den Medienordner rekursiv anpassen (Zahlen 1000 durch deine PUID/PGID ersetzen)
-sudo chown -R 1000:1000 /mnt/name-deiner-festplatte/medien
+# Besitzer für den Datenordner rekursiv anpassen (Zahlen 1000 durch deine PUID/PGID ersetzen)
+sudo chown -R 1000:1000 ./data  # bzw. /mnt/name-deiner-festplatte/medien
 
 # Berechtigungen setzen (Lesen & Schreiben für Besitzer)
-sudo chmod -R 755 /mnt/name-deiner-festplatte/medien
+sudo chmod -R 755 ./data        # bzw. /mnt/name-deiner-festplatte/medien
 ```
 
 Speichere die Datei und starte die Dienste:
@@ -159,7 +156,7 @@ Prowlarr verwaltet zentral deine Indexer und verbindet sie mit Sonarr/Radarr:
 * **Root-Ordner für Medien festlegen:**
   * Navigiere zu **Settings > Media Management**.
   * Klicke ganz unten auf **Add Root Folder**.
-  * Wähle für Sonarr `/tvshows` und für Radarr `/movies`.
+  * Wähle für Sonarr `/data/media/tv` und für Radarr `/data/media/movies`.
 
 ![Media Management Pfade](sonarr-radarr-media-paths.gif)
 

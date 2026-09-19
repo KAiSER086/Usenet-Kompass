@@ -1,4 +1,4 @@
-﻿# 5.0 Usenet Downloader: SABnzbd vs. NZBGet
+# 5.0 Usenet Downloader: SABnzbd vs. NZBGet
 
 Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier die beiden beliebtesten Optionen vor, **SABnzbd** und **NZBGet**, damit du die passende Wahl für dein System und deine Internet-Bandbreite treffen kannst.
 
@@ -31,24 +31,26 @@ Gerade beim Betrieb auf einem **Raspberry Pi 5** oder stromsparenden Mini-PCs sp
 
 Wir zeigen dir hier die Konfiguration für beide Downloader. Du solltest dich für einen der beiden entscheiden und den nicht benötigten Teil auskommentieren oder weglassen.
 
-### Konfigurations- und Downloadordner erstellen
+### Konfigurations- und Datenordner erstellen
 
 Führe diese Befehle im Docker-Verzeichnis aus:
 
 ```bash
 mkdir -p config/sabnzbd config/nzbget
-mkdir -p downloads incomplete-downloads
+mkdir -p data/usenet/complete data/usenet/incomplete
+mkdir -p data/media/movies data/media/tv
 ```
 
-#### Wichtiger Hinweis zu Speicherpfaden
+#### Wichtiger Hinweis zu Speicherpfaden (TRaSH-Guides Standard)
 
-Wenn du deine Downloads auf einer externen Festplatte ablegen möchtest (z. B. gemountet unter `/mnt/name-der-festplatte/medien`), passe die `volumes`-Sektion entsprechend an:
+Wir binden den gesamten Datenordner als ein einziges Volume (`./data:/data`) ein. Dadurch können Sonarr und Radarr später fertige Downloads über **Instant Atomic Moves** in Millisekunden in deine Mediathek verschieben, ohne die Festplatte durch zeitaufwendiges Kopieren zu belasten.
+
+Wenn du deine Daten auf einer externen Festplatte ablegen möchtest (z. B. gemountet unter `/mnt/name-der-festplatte/medien`), passe die `volumes`-Sektion entsprechend an:
 
 ```yaml
 volumes:
   - ./config/sabnzbd:/config 
-  - /mnt/name-der-festplatte/medien/downloads:/downloads
-  - /mnt/name-der-festplatte/medien/incomplete-downloads:/incomplete-downloads
+  - /mnt/name-der-festplatte/medien:/data
 ```
 
 Stelle sicher, dass der angegebene Ordner auf deinem Host-System existiert und der Benutzer, unter dem die Container laufen (`PUID`), die notwendigen Schreibrechte besitzt.
@@ -67,8 +69,7 @@ Stelle sicher, dass der angegebene Ordner auf deinem Host-System existiert und d
       - TZ=Europe/Berlin
     volumes:
       - ./config/sabnzbd:/config
-      - ./downloads:/downloads
-      - ./incomplete-downloads:/incomplete-downloads
+      - ./data:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -89,8 +90,7 @@ Stelle sicher, dass der angegebene Ordner auf deinem Host-System existiert und d
       - TZ=Europe/Berlin
     volumes:
       - ./config/nzbget:/config
-      - ./downloads:/downloads
-      - ./incomplete-downloads:/incomplete-downloads
+      - ./data:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -138,8 +138,9 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
    * **Benutzername & Passwort:** Deine Zugangsdaten vom Provider.
    * **Verbindungen:** Starte mit **`15–25`** Verbindungen.
    * **Priorität:** `0` für Hauptserver, `1` für Block-Account.
-4. **Performance-Tipp (Direct Unpack):**
-   * Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken** (*Direct Unpack*). Dateien werden bereits während des Herunterladens entpackt – das spart viel Zeit und Speicherplatz.
+4. **Pfade & Performance einstellen:**
+   * **Pfade anpassen:** Gehe zu **Einstellungen > Ordner** und stelle den **Ordner für fertige Downloads** auf `/data/usenet/complete` sowie den **Temporären Download-Ordner** auf `/data/usenet/incomplete`.
+   * **Direct Unpack:** Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken** (*Direct Unpack*). Dateien werden bereits während des Herunterladens entpackt – das spart viel Zeit und Speicherplatz.
 5. **Testen & Speichern:** Klicke auf **"Server testen"** und danach auf **"Änderungen speichern"**.
 
 ![Sabnzbd-Provider](sabnzbd-provider.gif)
@@ -158,7 +159,7 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
    * **User & Password:** Deine Anmeldedaten.
    * **Connections:** Starte mit ca. **`20`** Verbindungen (bei Gigabit-Leitungen bis zu 30–40).
    * **Level:** Setze `0` für den Hauptserver und `1` für Blockaccounts.
-4. **Pfade anpassen:** Unter **Settings > Paths** überprüfe, dass **DestDir** auf `/downloads` und **InterDir** auf `/incomplete-downloads` eingestellt ist.
+4. **Pfade anpassen:** Unter **Settings > Paths** überprüfe bzw. setze **DestDir** auf `/data/usenet/complete` und **InterDir** auf `/data/usenet/incomplete`.
 5. **Speichern:** Klicke auf **"Save all changes"** und teste mit **"Test Connection"**.
 
 ![NZBGet-Provider](nzbget-provider.gif)

@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🧭 Usenet-Kompass
 
@@ -55,7 +55,7 @@ graph LR
 |:---|:---:|:---:|:---|
 | **[Gluetun](Docker%20Compose%20Stack/VPNs.md#41-das-netzwerk-sichern-mit-gluetun)** | — | 🛡️ Sicherheit | VPN-Client (WireGuard/OpenVPN) mit integriertem Kill-Switch. |
 | **[Tailscale](Docker%20Compose%20Stack/VPNs.md#42-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | 🌐 Netzwerk | Sicheres Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
-| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | ⚡ Downloader | Moderner, komfortabler Usenet-Downloader mit Auto-PAR2-Reparatur. |
+| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | ⚡ Downloader | Moderner, komfortabler Usenet-Downloader mit Auto-PAR2-Reparatur und Direkt-Entpacken. |
 | **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | ⚡ Downloader | Ressourcenschonende C++ Alternative für maximale Performance. |
 | **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | 🔍 Indexer-Hub | Zentrale Schnittstelle zur Verwaltung aller Usenet-Indexer. |
 | **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | 📺 Serien | Automatische Überwachung, Suche und Verwaltung von Serien. |

@@ -1,4 +1,4 @@
-﻿# 7.0 Jellyfin & Jellyseerr: Das Frontend deiner Mediathek
+# 7.0 Jellyfin & Jellyseerr: Das Frontend deiner Mediathek
 
 ## Jellyfin vs. Plex vs. Emby: Warum diese Wahl?
 
@@ -24,22 +24,41 @@ Füge den folgenden Codeblock in deine `docker-compose.yml` ein:
       - TZ=Europe/Berlin
     volumes:
       - ./config/jellyfin:/config
-      - ./movies:/movies
-      - ./tvshows:/tvshows
+      - ./data/media:/data/media
+    # Optional für Intel QuickSync Hardware-Transcoding:
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # group_add:
+    #   - "107" # GID der Gruppe 'render' auf dem Host (siehe Anleitung unten)
     ports:
       - 8096:8096
     restart: unless-stopped
 ```
 
-> **Wichtiger Hinweis zu den Pfaden:** Achte darauf, dass die Volume-Pfade für `movies` und `tvshows` exakt mit denen aus deiner Radarr- und Sonarr-Konfiguration übereinstimmen, damit Jellyfin deine importierten Medien findet.
+> **Wichtiger Hinweis zu den Pfaden (TRaSH-Guides):** Wir binden `./data/media:/data/media` ein. Damit greift Jellyfin direkt auf die von Sonarr und Radarr einsortierten Filme (`/data/media/movies`) und Serien (`/data/media/tv`) zu.
+
+#### ⚡ Optional: Hardware-Transcoding mit Intel QuickSync (QSV) aktivieren
+
+Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, kann Jellyfin Videos extrem stromsparend über die integrierte Grafikeinheit transkodieren. Damit der Container mit deinem Benutzer (`PUID=1000`) auf die GPU zugreifen darf, benötigt er Zugriff auf die Gruppe `render`:
+
+1. **Gruppen-ID (GID) auf deinem Host ermitteln:**
+   ```bash
+   getent group render | cut -d: -f3
+   # Falls 'render' keine Ausgabe liefert, alternativ 'video' prüfen:
+   getent group video | cut -d: -f3
+   ```
+2. Trage die ausgegebene Zahl (z. B. `107`) bei `group_add` ein und aktiviere `devices` sowie `group_add` in der `docker-compose.yml`.
+3. In Jellyfin unter **Dashboard > Wiedergabe > Transkodierung** wählst du als Hardwarebeschleunigung **Intel QuickSync (QSV)** aus.
+
+---
 
 ### Jellyfin konfigurieren
 
 1. **Webinterface aufrufen:** Öffne `http://<deine-tailscale-ip>:8096` oder `http://deine-server-ip:8096` im Browser.
 2. **Einrichtungsassistent:** Erstelle deinen Admin-Benutzer und wähle die Sprache.
 3. **Mediatheken anlegen:**
-   * **Filme:** Ordner `/movies` auswählen.
-   * **Serien:** Ordner `/tvshows` auswählen.
+   * **Filme:** Ordner `/data/media/movies` auswählen.
+   * **Serien:** Ordner `/data/media/tv` auswählen.
 4. **Fertig:** Jellyfin lädt nun automatisch Filmplakate, Beschreibungen und Metadaten herunter.
 
 ---

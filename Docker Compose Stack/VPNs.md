@@ -1,4 +1,4 @@
-﻿# 4.0 VPN- und Mesh-Konfiguration
+# 4.0 VPN- und Mesh-Konfiguration
 
 Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, beginnen wir mit der grundlegenden Netzwerkkonfiguration deines Stacks. Hierbei konzentrieren wir uns auf die Absicherung deiner Downloads und den sicheren Fernzugriff.
 
@@ -74,6 +74,7 @@ services:
       - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
       - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine zugewiesene WireGuard-IP
       - SERVER_COUNTRIES=Netherlands # Server-Standort
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24 # Erlaube Zugriff aus dem lokalen Heimnetz (an dein Subnetz anpassen)
       - TZ=Europe/Berlin
       - PUID=1000 # durch deine PUID ersetzen
       - PGID=1000 # durch deine PGID ersetzen
@@ -88,6 +89,9 @@ services:
       - ./config/gluetun:/gluetun
     restart: unless-stopped
 ```
+
+> 💡 **Wichtig für den lokalen LAN-Zugriff:**
+> Gluetun blockiert standardmäßig durch seine integrierte Firewall alle Verbindungen außerhalb des Docker-Netzwerks. Mit `FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24` erlaubst du deinem lokalen Heimnetzwerk (z. B. PC oder Laptop im WLAN deiner Fritz!Box), direkt über die lokale IP des Servers auf die Webinterfaces zuzugreifen. Falls dein Heimnetz einen anderen IP-Bereich nutzt (z. B. `192.168.1.0/24` oder `10.0.0.0/24`), passe diesen Wert entsprechend an.
 
 <details>
 <summary><b>Fallback: Du möchtest trotzdem den "alten Onkel" OpenVPN nutzen? (Klick hier)</b></summary>
