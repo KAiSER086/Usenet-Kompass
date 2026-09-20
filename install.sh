@@ -282,7 +282,7 @@ mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
 # Falls SELinux aktiv ist (z. B. Fedora, openSUSE Leap 16, RHEL), Container-Berechtigungen setzen
 if command -v getenforce &> /dev/null && [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
     echo -e "${CYAN}SELinux erkannt: Setze Dateiberechtigungen für Container-Volumes...${NC}"
-    sudo chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
+    chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || sudo chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
 fi
 
 # Berechtigungen sicherstellen
