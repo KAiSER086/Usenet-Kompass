@@ -245,7 +245,12 @@ if [ "$VPN_PROTO_CHOICE" = "2" ]; then
 else
     VPN_TYPE="wireguard"
     echo ""
-    read -r -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+    while [ -z "$WIREGUARD_PRIVATE_KEY" ]; do
+        read -r -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+        if [ -z "$WIREGUARD_PRIVATE_KEY" ]; then
+            echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
+        fi
+    done
     read -r -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
     OPENVPN_USER=""
     OPENVPN_PASS=""
@@ -273,6 +278,12 @@ mkdir -p "$INSTALL_DIR/config/radarr"
 mkdir -p "$INSTALL_DIR/config/jellyfin"
 mkdir -p "$INSTALL_DIR/config/jellyseerr"
 mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
+
+# Falls SELinux aktiv ist (z. B. Fedora, openSUSE Leap 16, RHEL), Container-Berechtigungen setzen
+if command -v getenforce &> /dev/null && [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
+    echo -e "${CYAN}SELinux erkannt: Setze Dateiberechtigungen für Container-Volumes...${NC}"
+    sudo chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
+fi
 
 # Berechtigungen sicherstellen
 chmod -R 755 "$INSTALL_DIR/data" || true
