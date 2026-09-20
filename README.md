@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧭 Usenet-Kompass
+# Usenet-Kompass
 
 **Der umfassende deutsche Leitfaden für automatisierte Usenet-Downloads, Medienserver und Heimkino mit Docker Compose.**
 
@@ -14,117 +14,120 @@
 <br>
 
 <p align="center">
-  <b>🔒 Sicher & Anonym &nbsp;•&nbsp; ⚡ Gigabit-Ready &nbsp;•&nbsp; 🤖 100 % Automatisiert</b><br>
-  <i>Vom ersten Provider-Account bis zur vollautomatischen Mediathek mit Jellyfin & Jellyseerr.</i>
+  <b>Sicher & Anonym &nbsp;•&nbsp; Gigabit-optimiert &nbsp;•&nbsp; Vollautomatisiert</b><br>
+  <i>Vom ersten Provider-Account bis zur einsatzbereiten Mediathek mit Jellyfin & Jellyseerr.</i>
 </p>
 
 ---
 
 </div>
 
-> [!TIP]
-> **Schlüsselfertig & Ressourcenoptimiert:** Dieses Setup ist für den zuverlässigen, lautlosen 24/7-Dauerbetrieb mit minimalem Stromverbrauch konzipiert – optimiert für **Raspberry Pi 5**, stromsparende Mini-PCs (z. B. Intel N100) oder jeden beliebigen Linux-Server (DietPi, Debian, Ubuntu).
+> [!NOTE]
+> **Ressourcenoptimiert für Dauerbetrieb:** Dieses Setup ist für den zuverlässigen, lautlosen 24/7-Betrieb mit minimalem Stromverbrauch konzipiert – optimiert für **Raspberry Pi 5**, stromsparende Mini-PCs (z. B. Intel N100) sowie gängige Linux-Distributionen (Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch Linux).
 
-## 💡 Über dieses Projekt
+## Über dieses Projekt
 
-Der **Usenet-Kompass** führt dich Schritt für Schritt zum perfekten privaten Medien-Setup. Alle Dienste laufen isoliert in Docker-Containern und greifen nahtlos ineinander:
+Der **Usenet-Kompass** führt Schritt für Schritt zum privaten Medien-Setup. Alle Dienste laufen isoliert in Docker-Containern und greifen nahtlos ineinander:
 
-* 🔒 **Maximale Privatsphäre:** VPN-Tunnelung mit Gluetun (WireGuard inkl. Kill-Switch) und SSL/TLS-verschlüsselte NNTP-Verbindungen (Port 563/443).
-* 🌐 **Sicherer Fernzugriff:** Voller Zugriff von unterwegs über Tailscale Mesh-VPN – ganz ohne offene Ports an deinem Router.
-* 🤖 **100 % Automatisierung:** Medienanfragen über Jellyseerr werden automatisch an Sonarr & Radarr übergeben und von NZBGet/SABnzbd geladen.
-* ⚡ **Instant Atomic Moves:** Konsequenter TRaSH-Guides Standard – fertige Medien werden in Millisekunden ohne doppelte Schreiblast verschoben.
-* 🇩🇪 **Fokus auf German Releases:** Vorkonfigurierte Custom Formats für deutsche Tonspuren und zweisprachige Releases (*German DL*).
+* **Privatsphäre & Sicherheit:** VPN-Tunnelung mit Gluetun (WireGuard mit Kill-Switch) und SSL/TLS-verschlüsselte Verbindungen zum Usenet-Provider.
+* **Sicherer Fernzugriff:** Zugriff von unterwegs über Tailscale Mesh-VPN ohne offene Ports oder Portweiterleitungen am Heimrouter.
+* **Vollständige Automatisierung:** Medienanfragen über Jellyseerr werden automatisch an Sonarr & Radarr übergeben und über NZBGet oder SABnzbd heruntergeladen.
+* **Effiziente Dateiverwaltung:** Standardisierte Verzeichnisstruktur nach TRaSH-Guides – fertige Downloads werden verzögerungsfrei und ohne doppelte Schreiblast in die Mediathek verschoben.
+* **Fokus auf deutsche Inhalte:** Vorkonfigurierte Profile und Custom Formats für deutsche Tonspuren und zweisprachige Veröffentlichungen (German DL).
 
 ---
 
-## 🔄 Der automatisierte Workflow
+## Workflow
 
 ```mermaid
 flowchart LR
-    subgraph Clients ["📱 Nutzer & Wiedergabe"]
-        User([👤 Nutzer / Smartphone])
-        Jellyfin[🎬 Jellyfin TV/App]
+    subgraph Clients ["Nutzer & Wiedergabe"]
+        User([Nutzer / Endgerät])
+        Jellyfin[Jellyfin TV/App]
     end
 
-    subgraph Stack ["🐳 Docker Compose Stack"]
-        Jellyseerr[🍿 Jellyseerr]
-        Arrs[⚙️ Sonarr & Radarr]
-        Prowlarr[🔍 Prowlarr]
-        Downloader[⚡ SABnzbd / NZBGet]
-        Gluetun{{🛡️ Gluetun VPN}}
-        Media[(📁 Mediathek /data)]
+    subgraph Stack ["Docker Compose Stack"]
+        Jellyseerr[Jellyseerr]
+        Arrs[Sonarr & Radarr]
+        Prowlarr[Prowlarr]
+        Downloader[SABnzbd / NZBGet]
+        Gluetun{{Gluetun VPN}}
+        Media[(Mediathek /data)]
     end
 
-    subgraph Web ["☁️ Externe Welt"]
-        Indexer[(🗂️ Indexer / API)]
-        Provider[(☁️ Usenet Server)]
+    subgraph Web ["Internet"]
+        Indexer[(Indexer / API)]
+        Provider[(Usenet Server)]
     end
 
-    User -->|1. Wünscht Film/Serie| Jellyseerr
-    Jellyseerr -->|2. Sendet Request| Arrs
-    Arrs -->|3. Sucht Release| Prowlarr
-    Prowlarr <-->|4. Fragt Indexer ab| Indexer
-    Arrs -->|5. Übergibt NZB| Downloader
+    User -->|1. Titel anfragen| Jellyseerr
+    Jellyseerr -->|2. Request weiterleiten| Arrs
+    Arrs -->|3. Release suchen| Prowlarr
+    Prowlarr <-->|4. Indexer abfragen| Indexer
+    Arrs -->|5. NZB übergeben| Downloader
     Downloader -->|6. Download via VPN| Gluetun
-    Gluetun <-->|7. Verschlüsselter Download| Provider
-    Downloader -->|8. Instant Atomic Move| Media
-    Media -->|9. Streamt überall hin| Jellyfin
+    Gluetun <-->|7. Verschlüsselter Transfer| Provider
+    Downloader -->|8. Datei einsortieren| Media
+    Media -->|9. Stream bereitstellen| Jellyfin
 ```
 
 ---
 
-## 📦 Die Dienste im Überblick
+## Dienste im Überblick
 
 | Dienst | Port | Kategorie | Beschreibung |
 |:---|:---:|:---:|:---|
-| **[Gluetun](Docker%20Compose%20Stack/VPNs.md#41-das-netzwerk-sichern-mit-gluetun)** | — | 🛡️ Sicherheit | VPN-Client (WireGuard/OpenVPN) mit integriertem Kill-Switch. |
-| **[Tailscale](Docker%20Compose%20Stack/VPNs.md#42-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | 🌐 Netzwerk | Sicheres Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
-| **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | ⚡ Downloader | Ressourcenschonende C++ Performance-Rakete; reizt Gigabit auf dem Pi 5 voll aus. |
-| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | ⚡ Downloader | Komfortabler Allrounder mit Auto-PAR2-Reparatur und Direkt-Entpacken. |
-| **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | 🔍 Indexer-Hub | Zentrale Schnittstelle zur Verwaltung aller Usenet-Indexer. |
-| **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | 📺 Serien | Automatische Überwachung, Suche und Verwaltung von Serien. |
-| **[Radarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `7878` | 🎬 Filme | Automatischer Film-Manager für Downloads und Qualitäts-Upgrades. |
-| **[Jellyfin](Frontend/Jellyfin%20und%20Jellyseer.md#71-jellyfin-zum-docker-stack-hinzufügen)** | `8096` | 🍿 Streaming | 100 % quelloffener Medienserver für Smart-TV, PC & Smartphone. |
-| **[Jellyseerr](Frontend/Jellyfin%20und%20Jellyseer.md#72-jellyseerr-zum-docker-stack-hinzufügen)** | `5055` | 🎯 Discovery | Modernes Medienanfrage-Portal für dich, Freunde und Familie. |
+| **[Gluetun](Docker%20Compose%20Stack/VPNs.md#41-das-netzwerk-sichern-mit-gluetun)** | — | Sicherheit | VPN-Client (WireGuard/OpenVPN) mit Kill-Switch für Downloader und Indexer. |
+| **[Tailscale](Docker%20Compose%20Stack/VPNs.md#42-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | Netzwerk | Privates Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
+| **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | Downloader | Schlanker, ressourcenschonender C++ Downloader; reizt Gigabit auch auf ARM-Hardware aus. |
+| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | Downloader | Komfortabler Downloader mit automatischer PAR2-Reparatur und Direkt-Entpacken. |
+| **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | Indexer-Hub | Zentrale Verwaltung aller Usenet-Indexer mit nativer Synchronisation. |
+| **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | Serien | Automatisierte Suche, Überwachung und Verwaltung von Serien. |
+| **[Radarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `7878` | Filme | Automatisierte Suche, Verwaltung und Qualitäts-Upgrades für Spielfilme. |
+| **[Jellyfin](Frontend/Jellyfin%20und%20Jellyseer.md#71-jellyfin-zum-docker-stack-hinzufügen)** | `8096` | Streaming | Quelloffener Medienserver für Smart-TVs, Mobilgeräte und Browser. |
+| **[Jellyseerr](Frontend/Jellyfin%20und%20Jellyseer.md#72-jellyseerr-zum-docker-stack-hinzufügen)** | `5055` | Anfragen | Benutzerfreundliche Oberfläche zum Entdecken und Anfragen neuer Medien. |
 
 ---
 
-## 📑 Inhaltsverzeichnis
+## Inhaltsverzeichnis
 
 | Kapitel | Leitfaden | Kerninhalte |
 |:---:|:---|:---|
-| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet vs. Torrent, Rechtslage in DE, Hardware-Wahl (Pi 5 vs. N100), Transkodierung |
+| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Hardware-Wahl (Pi 5 vs. N100), Transkodierung |
 | **`2.0`** | **[Provider & Indexer](Provider%20%26%20Indexer/Provider%20%26%20Indexer.md#20-provider-und-indexer)** | Retention, Backbones, Block-Accounts, deutsche Indexer (*Treasure-Maps*, *NewzBay*) |
-| **`3.0`** | **[Docker Compose Vorbereitung](Docker%20Compose%20Stack/Docker%20Compose%20Stack.md#30-der-docker-compose-stack)** | Grundlagen zu Containern, Installation für Debian, DietPi, Ubuntu, CentOS, Arch |
-| **`4.0`** | **[VPN- & Mesh-Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-vpn--und-mesh-konfiguration)** | Gluetun (WireGuard vs. OpenVPN), LAN-Bypass & Tailscale-Fernzugriff |
-| **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | NZBGet vs. SABnzbd Performance-Vergleich, Direct Unpack & Server-Prioritäten |
-| **`6.0`** | **[Automatisierung (*arr)](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr Sync, TRaSH-Guides Speicherstruktur (`/data`), German DL Custom Formats |
-| **`7.0`** | **[Frontend: Streaming & Requests](Frontend/Jellyfin%20und%20Jellyseer.md#70-jellyfin--jellyseerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Intel QuickSync Hardware-Transcoding & Jellyseerr Portal |
-| **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige, schlüsselfertige `docker-compose.yml` für alle Dienste |
-| **`📖`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Glossar: Retention, Parität (PAR2), Remux, German DL, Newznab, Atomic Moves |
+| **`3.0`** | **[Docker Vorbereitung](Docker%20Compose%20Stack/Docker%20Compose%20Stack.md#30-der-docker-compose-stack)** | Container-Grundlagen, Installation unter Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch |
+| **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-vpn--und-mesh-konfiguration)** | Gluetun (WireGuard / OpenVPN), LAN-Bypass und Tailscale-Einbindung |
+| **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | Vergleich von NZBGet und SABnzbd, Direct Unpack und Prioritäten |
+| **`6.0`** | **[Automatisierung](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr-Sync, standardisierte Speicherpfade (`/data`), German DL Custom Formats |
+| **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Jellyseer.md#70-jellyfin--jellyseerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Jellyseerr |
+| **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige, vorkonfigurierte `docker-compose.yml` für alle Dienste |
+| **`Glossar`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Fachbegriffe verständlich erklärt: Retention, PAR2, Remux, German DL, Newznab |
 
 ---
 
-## ⚡ Schnellstart: In 2 Minuten einsatzbereit
+## Schnellstart
 
-### Option A: Der interaktive 1-Befehl-Installer (⭐ Empfohlen)
+### Option A: Automatischer Installer (Empfohlen)
+
 Führe folgenden Befehl im Terminal deines Linux-Servers oder Raspberry Pi aus:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/install.sh | bash
 ```
 
-**Was der Installer für dich automatisiert:**
-* 🔍 **Hardwarebeschleunigung:** Erkennt Intel QuickSync / VAAPI (`/dev/dri`) und bindet sie automatisch für Jellyfin ein.
-* 🌐 **Zero-Config Router-Erkennung:** Findet dein physikalisches Heimnetzwerk (z. B. Fritz!Box `192.168.178.0/24`) und schützt dich vor LAN-Sperren in der Gluetun-Firewall.
-* ⚡ **Wahlfreiheit:** Wähle flexibel zwischen **NZBGet** (High-Performance C++) oder **SABnzbd** (Komfort).
-* 🛡️ **WireGuard & Live-Leak-Test:** Richtet Gluetun ein und prüft direkt nach dem Start per Live-Check die maskierte VPN-IP & den Standort im Terminal.
-* 🪄 **Vollautomatisches App-Linking (`link-apps.sh`):** Liest die API-Keys von Sonarr, Radarr und Prowlarr automatisch aus, verknüpft die Apps untereinander und richtet die Root-Folder (`/data/media`) ein. Kein manuelles API-Key-Kopieren mehr nötig!
+**Funktionsumfang des Installers:**
+* **Paket- & Dienstprüfung:** Erkennt fehlende Abhängigkeiten (Docker, Compose) und installiert sie automatisch über den systemeigenen Paketmanager (`apt`, `dnf`, `zypper`, `pacman`).
+* **Hardwarebeschleunigung:** Erkennt vorhandene Grafikchipsätze (Intel QuickSync / VAAPI via `/dev/dri`) und bindet sie für Jellyfin ein.
+* **Subnetz-Erkennung:** Ermittelt das lokale Heimnetzwerk (z. B. `192.168.178.0/24`) und hinterlegt es im LAN-Bypass der Firewall.
+* **Downloader-Auswahl:** Ermöglicht die Wahl zwischen NZBGet (C++) und SABnzbd (Python).
+* **VPN-Integration & Leak-Test:** Richtet Gluetun ein, lädt benötigte Kernelmodule und prüft nach dem Start sofort die maskierte externe IP.
+* **Automatisches App-Linking (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander und richtet die Medien-Stammverzeichnisse (`/data/media`) ein.
 
 ---
 
-### 🪄 Bestehende Installation automatisch verknüpfen
-Falls du den Stack bereits manuell laufen hast und das Verknüpfen von Prowlarr, Sonarr, Radarr und Downloader automatisieren möchtest:
+### Option B: Bestehende Installation nachträglich verknüpfen
+
+Falls der Docker-Compose-Stack bereits läuft und lediglich die Verknüpfung von Prowlarr, Sonarr, Radarr und Downloader automatisiert werden soll:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/link-apps.sh | bash
@@ -133,16 +136,16 @@ curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/link-
 ---
 
 <details>
-<summary><b>Option B: Manuelle Einrichtung mit Vorlage (Klick hier)</b></summary>
+<summary><b>Option C: Manuelle Einrichtung mit Vorlage</b></summary>
 
-Falls du den Stack lieber komplett manuell konfigurieren möchtest:
+Falls du den Stack lieber Schritt für Schritt manuell konfigurieren möchtest:
 
 ```bash
 # 1. Repository klonen
 git clone https://github.com/KAiSER086/Usenet-Kompass.git
 cd Usenet-Kompass
 
-# 2. TRaSH-Guides Ordnerstruktur anlegen
+# 2. Verzeichnisstruktur anlegen
 mkdir -p data/usenet/complete data/usenet/incomplete data/media/movies data/media/tv config
 
 # 3. Vorlage kopieren, Zugangsdaten anpassen und starten
@@ -160,6 +163,6 @@ chmod +x link-apps.sh
 
 <div align="center">
 
-⭐ **Gefällt dir das Projekt?** Lass gerne einen Stern da!
+Wenn dir das Projekt hilft, freue ich mich über einen Stern auf GitHub.
 
 </div>
