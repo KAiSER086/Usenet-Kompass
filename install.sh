@@ -8,16 +8,23 @@
 
 set -euo pipefail
 
-# Falls das Skript per Pipe (curl ... | bash) aufgerufen wird,
-# öffnen wir /dev/tty für interaktive Nutzereingaben.
-if [ -t 0 ]; then
-    INTERACTIVE=true
-elif [ -e /dev/tty ]; then
-    exec < /dev/tty
-    INTERACTIVE=true
-else
-    INTERACTIVE=false
-fi
+# Interaktive Benutzereingaben sicherstellen – auch wenn das Skript
+# per Pipe (curl -fsSL ... | bash) ausgeführt wird:
+read_input() {
+    if [ -e /dev/tty ]; then
+        read -r "$@" < /dev/tty
+    else
+        read -r "$@"
+    fi
+}
+
+read_secret() {
+    if [ -e /dev/tty ]; then
+        read -r -s "$@" < /dev/tty
+    else
+        read -r -s "$@"
+    fi
+}
 
 # --- Farben & UI-Elemente ---
 RED='\033[0;31m'
@@ -49,7 +56,7 @@ echo -e "  ${BOLD}1. Einen Usenet-Provider Account${NC} (z. B. Eweka, NewsgroupD
 echo -e "  ${BOLD}2. Mindestens einen Usenet-Indexer${NC} mit API-Key (z. B. Treasure-Maps, NZBGeek)"
 echo -e "  ${BOLD}3. Einen VPN-Account${NC} mit WireGuard-Support (z. B. Mullvad, ProtonVPN, Surfshark)"
 echo ""
-read -r -p "Hast du diese Zugänge bereit und möchtest fortfahren? [J/n]: " READY_CHOICE
+read_input -p "Hast du diese Zugänge bereit und möchtest fortfahren? [J/n]: " READY_CHOICE
 READY_CHOICE=${READY_CHOICE:-J}
 
 if [[ ! "$READY_CHOICE" =~ ^[jJyY]$ ]]; then
@@ -69,7 +76,7 @@ echo -e "${CYAN}▶ Prüfe Systemvoraussetzungen...${NC}"
 # Docker & Compose prüfen
 if ! command -v docker &> /dev/null; then
     echo -e "${YELLOW}Docker ist noch nicht installiert.${NC}"
-    read -r -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
+    read_input -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
     INSTALL_DOCKER=${INSTALL_DOCKER:-J}
     if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Installiere Docker...${NC}"
@@ -163,7 +170,7 @@ fi
 echo ""
 echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall):${NC}"
 echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
-read -r -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
+read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
 LAN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
 echo -e "${GREEN}✓ Lokales Subnetz für Gluetun gesetzt: ${LAN_SUBNET}${NC}"
 
@@ -194,7 +201,7 @@ echo -e "  ${BOLD}[2] SABnzbd${NC} (Sehr beliebt & modern)"
 echo -e "      Python-basiert mit erstklassiger, moderner Weboberfläche, integrierter"
 echo -e "      Auto-PAR2-Reparatur und Direkt-Entpacken."
 echo ""
-read -r -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
+read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
 DOWNLOADER_CHOICE=${DOWNLOADER_CHOICE:-1}
 
 if [ "$DOWNLOADER_CHOICE" = "2" ]; then
@@ -222,7 +229,7 @@ echo ""
 echo -e "  ${BOLD}[2] OpenVPN${NC}   ${YELLOW}(Veraltetes Fallback)${NC}"
 echo -e "      Erzeugt hohe CPU-Last und bremst schnelle Internetleitungen oft aus."
 echo ""
-read -r -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
+read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
 VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
 
 echo ""
@@ -232,7 +239,7 @@ echo -e "  [2] ProtonVPN"
 echo -e "  [3] Surfshark"
 echo -e "  [4] IVPN"
 echo -e "  [5] Anderer / Custom"
-read -r -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
+read_input -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
 VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
 
 case "$VPN_PROV_CHOICE" in
@@ -251,22 +258,22 @@ OPENVPN_PASS=""
 if [ "$VPN_PROTO_CHOICE" = "2" ]; then
     VPN_TYPE="openvpn"
     echo ""
-    read -r -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
-    read -r -s -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+    read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
+    read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
     echo ""
 else
     VPN_TYPE="wireguard"
     echo ""
     while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
-        read -r -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+        read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
         if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
             echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
         fi
     done
-    read -r -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+    read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
 fi
 
-read -r -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
+read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
 VPN_COUNTRIES=${VPN_COUNTRIES:-"Netherlands,Germany"}
 
 # ------------------------------------------------------------------------------
@@ -488,7 +495,7 @@ START_NOW="J"
 if [ -n "$CONFLICTING_CONTAINERS" ]; then
     echo -e "${YELLOW}⚠️  ACHTUNG: Auf diesem System existieren bereits Container mit identischen Namen:${NC}"
     echo -e "${BOLD}${CONFLICTING_CONTAINERS}${NC}"
-    read -r -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
+    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
     REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-N}
     if [[ "$REMOVE_CONFLICTS" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Stoppe und entferne kollidierende Container...${NC}"
@@ -500,7 +507,7 @@ if [ -n "$CONFLICTING_CONTAINERS" ]; then
 fi
 
 if [ "$START_NOW" != "n" ]; then
-    read -r -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
+    read_input -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
     START_NOW=${START_NOW:-J}
 fi
 
@@ -545,7 +552,7 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${BOLD}▶ MÖCHTEST DU DIE MEDIEN-APPS JETZT VOLLAUTOMATISCH VERKNÜPFEN?${NC}"
     echo -e "  Verbindet Prowlarr ↔ Sonarr ↔ Radarr ↔ ${DOWNLOADER_SERVICE_NAME}"
     echo -e "  und richtet die Root-Folder (/data/media) automatisch ein."
-    read -r -p "Apps jetzt automatisch verknüpfen? [J/n]: " RUN_LINK
+    read_input -p "Apps jetzt automatisch verknüpfen? [J/n]: " RUN_LINK
     RUN_LINK=${RUN_LINK:-J}
     if [[ "$RUN_LINK" =~ ^[jJyY]$ ]]; then
         if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
