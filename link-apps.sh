@@ -70,9 +70,19 @@ extract_xml_key() {
     fi
 }
 
-PROWLARR_KEY=$(extract_xml_key "$CONFIG_DIR/prowlarr/config.xml")
-SONARR_KEY=$(extract_xml_key "$CONFIG_DIR/sonarr/config.xml")
-RADARR_KEY=$(extract_xml_key "$CONFIG_DIR/radarr/config.xml")
+PROWLARR_KEY=""
+SONARR_KEY=""
+RADARR_KEY=""
+
+for i in {1..20}; do
+    PROWLARR_KEY=$(extract_xml_key "$CONFIG_DIR/prowlarr/config.xml")
+    SONARR_KEY=$(extract_xml_key "$CONFIG_DIR/sonarr/config.xml")
+    RADARR_KEY=$(extract_xml_key "$CONFIG_DIR/radarr/config.xml")
+    if [ -n "$PROWLARR_KEY" ] && [ -n "$SONARR_KEY" ] && [ -n "$RADARR_KEY" ]; then
+        break
+    fi
+    sleep 2
+done
 
 if [ -z "$PROWLARR_KEY" ] || [ -z "$SONARR_KEY" ] || [ -z "$RADARR_KEY" ]; then
     echo -e "${RED}Fehler: Konnte nicht alle API-Keys finden.${NC}"

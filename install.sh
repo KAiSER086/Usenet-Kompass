@@ -95,6 +95,10 @@ if ! docker ps &>/dev/null && ! sudo docker ps &>/dev/null; then
     sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
 fi
 
+# VPN- & TUN-Kernelmodule laden, falls nicht aktiv (z. B. minimales openSUSE Leap / Debian)
+sudo modprobe tun 2>/dev/null || true
+sudo modprobe wireguard 2>/dev/null || true
+
 # Compose Plugin prüfen
 if docker compose version &> /dev/null; then
     COMPOSE_CMD="docker compose"
@@ -281,8 +285,17 @@ mkdir -p "$INSTALL_DIR/config/jellyseerr"
 mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
 
 # Falls SELinux aktiv ist (z. B. Fedora, openSUSE Leap 16, RHEL), Container-Berechtigungen setzen
-if command -v getenforce &> /dev/null && [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
-    echo -e "${CYAN}SELinux erkannt: Setze Dateiberechtigungen für Container-Volumes...${NC}"
+SELINUX_ENFORCING=false
+if [ -f /sys/fs/selinux/enforce ] && [ "$(cat /sys/fs/selinux/enforce 2>/dev/null)" = "1" ]; then
+    SELINUX_ENFORCING=true
+elif command -v getenforce &> /dev/null && [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
+    SELINUX_ENFORCING=true
+elif [ -x /usr/sbin/getenforce ] && [ "$(/usr/sbin/getenforce 2>/dev/null)" = "Enforcing" ]; then
+    SELINUX_ENFORCING=true
+fi
+
+if [ "$SELINUX_ENFORCING" = true ]; then
+    echo -e "${CYAN}SELinux (Enforcing) erkannt: Setze Dateiberechtigungen für Container-Volumes...${NC}"
     chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || sudo chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
 fi
 
