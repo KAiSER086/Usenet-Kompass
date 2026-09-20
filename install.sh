@@ -75,6 +75,7 @@ if ! command -v docker &> /dev/null; then
         echo -e "${CYAN}Installiere Docker...${NC}"
         curl -fsSL https://get.docker.com | sh
         sudo usermod -aG docker "$USER" || true
+        sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
         echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
     else
         echo -e "${RED}Docker ist erforderlich. Bitte installiere Docker manuell und starte den Installer erneut.${NC}"
@@ -82,6 +83,11 @@ if ! command -v docker &> /dev/null; then
     fi
 else
     echo -e "${GREEN}✓ Docker ist vorhanden.${NC}"
+fi
+
+# Stelle sicher, dass der Docker-Daemon aktiv ist
+if ! docker ps &>/dev/null && ! sudo docker ps &>/dev/null; then
+    sudo systemctl start docker 2>/dev/null || true
 fi
 
 # Compose Plugin prüfen
@@ -93,7 +99,11 @@ elif command -v docker-compose &> /dev/null; then
     echo -e "${GREEN}✓ docker-compose (Legacy) ist einsatzbereit.${NC}"
 else
     echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
-    sudo apt update && sudo apt install -y docker-compose-plugin || true
+    if command -v dnf &> /dev/null; then
+        sudo dnf install -y docker-compose-plugin || true
+    elif command -v apt &> /dev/null; then
+        sudo apt update && sudo apt install -y docker-compose-plugin || true
+    fi
     COMPOSE_CMD="docker compose"
 fi
 
