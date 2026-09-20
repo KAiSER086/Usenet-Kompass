@@ -73,7 +73,10 @@ if ! command -v docker &> /dev/null; then
     INSTALL_DOCKER=${INSTALL_DOCKER:-J}
     if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Installiere Docker...${NC}"
-        if command -v zypper &> /dev/null; then
+        if command -v pacman &> /dev/null; then
+            echo -e "${CYAN}Arch Linux erkannt: Installiere Docker via pacman...${NC}"
+            sudo pacman -Sy --noconfirm docker docker-compose || true
+        elif command -v zypper &> /dev/null; then
             echo -e "${CYAN}openSUSE erkannt: Installiere Docker via zypper...${NC}"
             sudo zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker docker-compose || true
         else
@@ -108,7 +111,9 @@ elif command -v docker-compose &> /dev/null; then
     echo -e "${GREEN}✓ docker-compose (Legacy) ist einsatzbereit.${NC}"
 else
     echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
-    if command -v zypper &> /dev/null; then
+    if command -v pacman &> /dev/null; then
+        sudo pacman -Sy --noconfirm docker-compose || true
+    elif command -v zypper &> /dev/null; then
         sudo zypper --non-interactive install docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker-compose || true
     elif command -v dnf &> /dev/null; then
         sudo dnf install -y docker-compose-plugin || true
