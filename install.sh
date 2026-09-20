@@ -73,7 +73,12 @@ if ! command -v docker &> /dev/null; then
     INSTALL_DOCKER=${INSTALL_DOCKER:-J}
     if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Installiere Docker...${NC}"
-        curl -fsSL https://get.docker.com | sh
+        if command -v zypper &> /dev/null; then
+            echo -e "${CYAN}openSUSE erkannt: Installiere Docker via zypper...${NC}"
+            sudo zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker docker-compose || true
+        else
+            curl -fsSL https://get.docker.com | sh
+        fi
         sudo usermod -aG docker "$USER" || true
         sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
         echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
@@ -87,7 +92,7 @@ fi
 
 # Stelle sicher, dass der Docker-Daemon aktiv ist
 if ! docker ps &>/dev/null && ! sudo docker ps &>/dev/null; then
-    sudo systemctl start docker 2>/dev/null || true
+    sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
 fi
 
 # Compose Plugin prüfen
@@ -99,12 +104,29 @@ elif command -v docker-compose &> /dev/null; then
     echo -e "${GREEN}✓ docker-compose (Legacy) ist einsatzbereit.${NC}"
 else
     echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
-    if command -v dnf &> /dev/null; then
+    if command -v zypper &> /dev/null; then
+        sudo zypper --non-interactive install docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker-compose || true
+    elif command -v dnf &> /dev/null; then
         sudo dnf install -y docker-compose-plugin || true
     elif command -v apt &> /dev/null; then
         sudo apt update && sudo apt install -y docker-compose-plugin || true
     fi
-    COMPOSE_CMD="docker compose"
+
+    # Universeller Fallback auf offizielles Standalone-Binary falls Paketmanager kein v2 bereitstellt
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+        ARCH=$(uname -m)
+        DOCKER_PLUGIN_DIR="${HOME}/.docker/cli-plugins"
+        mkdir -p "$DOCKER_PLUGIN_DIR"
+        curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${ARCH}" -o "${DOCKER_PLUGIN_DIR}/docker-compose" 2>/dev/null && chmod +x "${DOCKER_PLUGIN_DIR}/docker-compose" || true
+    fi
+
+    if docker compose version &> /dev/null; then
+        COMPOSE_CMD="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="docker-compose"
+    else
+        COMPOSE_CMD="docker compose"
+    fi
 fi
 
 # PUID & PGID ermitteln
