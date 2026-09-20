@@ -234,26 +234,27 @@ case "$VPN_PROV_CHOICE" in
     *) VPN_PROVIDER="custom" ;;
 esac
 
+WIREGUARD_PRIVATE_KEY=""
+WIREGUARD_ADDRESSES=""
+OPENVPN_USER=""
+OPENVPN_PASS=""
+
 if [ "$VPN_PROTO_CHOICE" = "2" ]; then
     VPN_TYPE="openvpn"
     echo ""
     read -r -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
     read -r -s -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
     echo ""
-    WIREGUARD_PRIVATE_KEY=""
-    WIREGUARD_ADDRESSES=""
 else
     VPN_TYPE="wireguard"
     echo ""
-    while [ -z "$WIREGUARD_PRIVATE_KEY" ]; do
+    while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
         read -r -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
-        if [ -z "$WIREGUARD_PRIVATE_KEY" ]; then
+        if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
             echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
         fi
     done
     read -r -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
-    OPENVPN_USER=""
-    OPENVPN_PASS=""
 fi
 
 read -r -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
