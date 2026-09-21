@@ -35,7 +35,7 @@ services:
 
   # --- Usenet Downloader (Wähle NZBGet ODER SABnzbd) ---
 
-  # Option A: NZBGet (C++ Performance-Rakete, empfohlen für Raspberry Pi 5 & Gigabit)
+  # Option A: NZBGet (C++ Performance, empfohlen für Raspberry Pi & sparsame Server)
   nzbget:
     image: lscr.io/linuxserver/nzbget:latest
     container_name: nzbget

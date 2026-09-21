@@ -73,24 +73,46 @@ echo -e "\n${GREEN}✓ Super! Lass uns das System einrichten.${NC}\n"
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}▶ Prüfe Systemvoraussetzungen...${NC}"
 
+# Betriebssystem / Distribution ermitteln
+DISTRO_NAME="Linux"
+DISTRO_ID=""
+DISTRO_LIKE=""
+if [ -f /etc/os-release ]; then
+    DISTRO_NAME=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d= -f2- | tr -d '"')
+    DISTRO_ID=$(grep -E '^ID=' /etc/os-release | cut -d= -f2- | tr -d '"')
+    DISTRO_LIKE=$(grep -E '^ID_LIKE=' /etc/os-release | cut -d= -f2- | tr -d '"')
+fi
+[ -z "$DISTRO_NAME" ] && DISTRO_NAME="$(uname -s) ($(uname -m))"
+
+echo -e "${GREEN}✓ Betriebssystem erkannt: ${BOLD}${DISTRO_NAME}${NC}"
+
 # Docker & Compose prüfen
 if ! command -v docker &> /dev/null; then
     echo -e "${YELLOW}Docker ist noch nicht installiert.${NC}"
     read_input -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
     INSTALL_DOCKER=${INSTALL_DOCKER:-J}
     if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
-        echo -e "${CYAN}Installiere Docker...${NC}"
+        echo -e "${CYAN}Installiere Docker für ${DISTRO_NAME}...${NC}"
         if command -v pacman &> /dev/null; then
-            echo -e "${CYAN}Arch Linux erkannt: Installiere Docker via pacman...${NC}"
+            echo -e "${CYAN}Arch Linux Familie erkannt: Installiere Docker via pacman...${NC}"
             sudo pacman -Sy --noconfirm docker docker-compose || true
         elif command -v zypper &> /dev/null; then
-            echo -e "${CYAN}openSUSE erkannt: Installiere Docker via zypper...${NC}"
+            echo -e "${CYAN}openSUSE Familie erkannt: Installiere Docker via zypper...${NC}"
             sudo zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker docker-compose || true
+        elif command -v apk &> /dev/null; then
+            echo -e "${CYAN}Alpine Linux erkannt: Installiere Docker via apk...${NC}"
+            sudo apk add --no-cache docker docker-cli-compose || true
         else
+            echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
             curl -fsSL https://get.docker.com | sh
         fi
-        sudo usermod -aG docker "$USER" || true
-        sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+        sudo usermod -aG docker "$USER" 2>/dev/null || true
+        if command -v systemctl &>/dev/null; then
+            sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+        elif command -v rc-service &>/dev/null; then
+            sudo rc-service docker start 2>/dev/null || true
+            sudo rc-update add docker default 2>/dev/null || true
+        fi
         echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
     else
         echo -e "${RED}Docker ist erforderlich. Bitte installiere Docker manuell und starte den Installer erneut.${NC}"
@@ -102,7 +124,11 @@ fi
 
 # Stelle sicher, dass der Docker-Daemon aktiv ist
 if ! docker ps &>/dev/null && ! sudo docker ps &>/dev/null; then
-    sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+    if command -v systemctl &>/dev/null; then
+        sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+    elif command -v rc-service &>/dev/null; then
+        sudo rc-service docker start 2>/dev/null || true
+    fi
 fi
 
 # VPN- & TUN-Kernelmodule laden, falls nicht aktiv (z. B. minimales openSUSE Leap / Debian)
@@ -122,8 +148,12 @@ else
         sudo pacman -Sy --noconfirm docker-compose || true
     elif command -v zypper &> /dev/null; then
         sudo zypper --non-interactive install docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker-compose || true
+    elif command -v apk &> /dev/null; then
+        sudo apk add --no-cache docker-cli-compose || true
     elif command -v dnf &> /dev/null; then
         sudo dnf install -y docker-compose-plugin || true
+    elif command -v apt-get &> /dev/null; then
+        sudo apt-get update -qq && sudo apt-get install -y docker-compose-plugin 2>/dev/null || true
     elif command -v apt &> /dev/null; then
         sudo apt update && sudo apt install -y docker-compose-plugin || true
     fi
@@ -193,9 +223,9 @@ echo ""
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${BOLD}▶ SCHRITT 1: Welchen Usenet-Downloader möchtest du nutzen?${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "  ${BOLD}[1] NZBGet${NC}  ${GREEN}(⭐ Dringend empfohlen für Raspberry Pi 5 & Gigabit)${NC}"
-echo -e "      Kompiliert in nativem C++. Extrem ressourcenschonend, reizt Gigabit"
-echo -e "      auch auf ARM-Prozessoren spielend aus bei minimaler CPU-Auslastung."
+echo -e "  ${BOLD}[1] NZBGet${NC}  ${GREEN}(⭐ Dringend empfohlen für sparsame Server & Raspberry Pi)${NC}"
+echo -e "      Kompiliert in nativem C++. Extrem ressourcenschonend, liefert maximale"
+echo -e "      Download-Geschwindigkeit bei minimaler CPU-Auslastung auch auf sparsamer Hardware."
 echo ""
 echo -e "  ${BOLD}[2] SABnzbd${NC} (Sehr beliebt & modern)"
 echo -e "      Python-basiert mit erstklassiger, moderner Weboberfläche, integrierter"
@@ -223,8 +253,8 @@ echo -e "${CYAN}================================================================
 echo -e "${BOLD}▶ SCHRITT 2: VPN-Protokoll & Sicherheit (Gluetun)${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "  ${BOLD}[1] WireGuard${NC} ${GREEN}(⭐ Dringend empfohlen!)${NC}"
-echo -e "      Modern, direkt im Linux-Kernel integriert. Liefert volle Gigabit-Bandbreite"
-echo -e "      bei minimaler Prozessorlast auf dem Pi 5 / Mini-PC."
+echo -e "      Modern, direkt im Linux-Kernel integriert. Liefert maximalen Durchsatz"
+echo -e "      bei minimaler Prozessorlast auf sparsamer Hardware / Mini-PCs."
 echo ""
 echo -e "  ${BOLD}[2] OpenVPN${NC}   ${YELLOW}(Veraltetes Fallback)${NC}"
 echo -e "      Erzeugt hohe CPU-Last und bremst schnelle Internetleitungen oft aus."

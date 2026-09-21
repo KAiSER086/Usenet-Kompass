@@ -14,7 +14,7 @@
 <br>
 
 <p align="center">
-  <b>Sicher & Anonym &nbsp;•&nbsp; Gigabit-optimiert &nbsp;•&nbsp; Vollautomatisiert</b><br>
+  <b>Sicher & Anonym &nbsp;•&nbsp; Ressourceneffizient &nbsp;•&nbsp; Vollautomatisiert</b><br>
   <i>Vom ersten Provider-Account bis zur einsatzbereiten Mediathek mit Jellyfin & Jellyseerr.</i>
 </p>
 
@@ -79,7 +79,7 @@ flowchart LR
 |:---|:---:|:---:|:---|
 | **[Gluetun](Docker%20Compose%20Stack/VPNs.md#41-das-netzwerk-sichern-mit-gluetun)** | — | Sicherheit | VPN-Client (WireGuard/OpenVPN) mit Kill-Switch für Downloader und Indexer. |
 | **[Tailscale](Docker%20Compose%20Stack/VPNs.md#42-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | Netzwerk | Privates Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
-| **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | Downloader | Schlanker, ressourcenschonender C++ Downloader; reizt Gigabit auch auf ARM-Hardware aus. |
+| **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | Downloader | Schlanker, ressourcenschonender C++ Downloader mit minimaler CPU-Last auch auf sparsamer Hardware. |
 | **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | Downloader | Komfortabler Downloader mit automatischer PAR2-Reparatur und Direkt-Entpacken. |
 | **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | Indexer-Hub | Zentrale Verwaltung aller Usenet-Indexer mit nativer Synchronisation. |
 | **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | Serien | Automatisierte Suche, Überwachung und Verwaltung von Serien. |
@@ -116,7 +116,7 @@ curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/insta
 ```
 
 **Funktionsumfang des Installers:**
-* **Paket- & Dienstprüfung:** Erkennt fehlende Abhängigkeiten (Docker, Compose) und installiert sie automatisch über den systemeigenen Paketmanager (`apt`, `dnf`, `zypper`, `pacman`).
+* **Betriebssystem- & Paketprüfung:** Erkennt die Linux-Distribution (Debian, Ubuntu, DietPi, Arch Linux, Fedora, openSUSE, Alpine etc.) und richtet Docker sowie Docker Compose automatisch über den passenden Paketmanager ein.
 * **Hardwarebeschleunigung:** Erkennt vorhandene Grafikchipsätze (Intel QuickSync / VAAPI via `/dev/dri`) und bindet sie für Jellyfin ein.
 * **Subnetz-Erkennung:** Ermittelt das lokale Heimnetzwerk (z. B. `192.168.178.0/24`) und hinterlegt es im LAN-Bypass der Firewall.
 * **Downloader-Auswahl:** Ermöglicht die Wahl zwischen NZBGet (C++) und SABnzbd (Python).
