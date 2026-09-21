@@ -323,7 +323,11 @@ mkdir -p "$INSTALL_DIR/config/prowlarr"
 mkdir -p "$INSTALL_DIR/config/sonarr"
 mkdir -p "$INSTALL_DIR/config/radarr"
 mkdir -p "$INSTALL_DIR/config/jellyfin"
-mkdir -p "$INSTALL_DIR/config/jellyseerr"
+mkdir -p "$INSTALL_DIR/config/seerr"
+# Falls Konfiguration von vorherigem jellyseerr existiert, migriere sie nach seerr
+if [ -d "$INSTALL_DIR/config/jellyseerr" ] && [ ! -f "$INSTALL_DIR/config/seerr/db/db.sqlite" ] && [ -f "$INSTALL_DIR/config/jellyseerr/db/db.sqlite" ]; then
+    cp -rn "$INSTALL_DIR/config/jellyseerr/"* "$INSTALL_DIR/config/seerr/" 2>/dev/null || true
+fi
 mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
 
 # Falls SELinux aktiv ist (z. B. Fedora, openSUSE Leap 16, RHEL), Container-Berechtigungen setzen
@@ -485,15 +489,14 @@ fi
 
 cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
       - TZ=Europe/Berlin
     volumes:
-      - ./config/jellyseerr:/app/config
+      - ./config/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
@@ -519,7 +522,7 @@ if ! docker ps &>/dev/null; then
 fi
 
 # Prüfe vorab auf Namenskonflikte mit bestehenden Containern
-CONFLICTING_CONTAINERS=$($DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -E "^(gluetun|sonarr|radarr|prowlarr|jellyfin|jellyseerr|${SELECTED_DOWNLOADER})$" || true)
+CONFLICTING_CONTAINERS=$($DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -E "^(gluetun|sonarr|radarr|prowlarr|jellyfin|seerr|jellyseerr|${SELECTED_DOWNLOADER})$" || true)
 
 START_NOW="J"
 if [ -n "$CONFLICTING_CONTAINERS" ]; then
@@ -608,7 +611,7 @@ fi
 echo -e "${CYAN}=================================================================="
 echo -e "                   DEINE WEB-INTERFACES                           "
 echo -e "==================================================================${NC}"
-echo -e "🍿 ${BOLD}Jellyseerr (Medien-Anfragen):${NC}    http://${SERVER_IP}:5055"
+echo -e "🍿 ${BOLD}Seerr (Medien-Anfragen):${NC}         http://${SERVER_IP}:5055"
 echo -e "🎬 ${BOLD}Jellyfin (Medienserver):${NC}         http://${SERVER_IP}:8096"
 echo -e "⚡ ${BOLD}${DOWNLOADER_SERVICE_NAME} (Downloader):${NC}         http://${SERVER_IP}:${DOWNLOADER_PORT}"
 echo -e "📺 ${BOLD}Sonarr (Serien-Manager):${NC}         http://${SERVER_IP}:8989"

@@ -135,15 +135,14 @@ services:
       - "8096:8096"
     restart: unless-stopped
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     environment:
-      - PUID=1000
-      - PGID=1000
       - TZ=Europe/Berlin
     volumes:
-      - ./config/jellyseerr:/app/config
+      - ./config/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
@@ -161,4 +160,4 @@ services:
 
 > 📌 **Hinweis zur internen Kommunikation:**
 > Da `sabnzbd`, `prowlarr`, `sonarr` und `radarr` über das Gluetun-Netzwerk laufen (`network_mode: "service:gluetun"`), können sie untereinander per `127.0.0.1` (localhost) kommunizieren.
-> Dienste außerhalb des VPNs wie `jellyseerr` erreichen Sonarr und Radarr innerhalb des Docker-Netzwerks über den Hostnamen **`gluetun`** (z. B. `http://gluetun:7878` und `http://gluetun:8989`).
+> Dienste außerhalb des VPNs wie `seerr` erreichen Sonarr und Radarr innerhalb des Docker-Netzwerks über den Hostnamen **`gluetun`** (z. B. `http://gluetun:7878` und `http://gluetun:8989`).

@@ -1,4 +1,4 @@
-# 7.0 Jellyfin & Jellyseerr: Das Frontend deiner Mediathek
+# 7.0 Jellyfin & Seerr: Das Frontend deiner Mediathek
 
 ## Jellyfin vs. Plex vs. Emby: Warum diese Wahl?
 
@@ -63,33 +63,32 @@ Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, 
 
 ---
 
-## Was ist Jellyseerr?
+## Was ist Seerr?
 
-**Jellyseerr** ist ein modernes Medien-Anfrageportal mit schicker Netflix-ähnlicher Oberfläche. Es dient als Schnittstelle zwischen deinen Nutzern und deinem Download-Stack.
+**Seerr** (der moderne Nachfolger aus der Fusion von Overseerr und Jellyseerr) ist ein komfortables Medien-Anfrageportal mit schicker Netflix-ähnlicher Oberfläche. Es dient als Schnittstelle zwischen deinen Nutzern und deinem Download-Stack.
 
-Anstatt manuell nach Film- oder Serientiteln gefragt zu werden, können Mitnutzer direkt in Jellyseerr suchen, Trailer ansehen und mit einem Klick auf **„Anfragen“** den Download auslösen.
+Anstatt manuell nach Film- oder Serientiteln gefragt zu werden, können Mitnutzer direkt in Seerr suchen, Trailer ansehen und mit einem Klick auf **„Anfragen“** den Download auslösen.
 
 * **Automatisierung:** Neue Anfragen werden automatisch an Radarr (Filme) oder Sonarr (Serien) weitergereicht.
 * **Statusanzeige:** Nutzer sehen direkt, ob ein Titel bereits vorhanden, angefragt oder gerade im Download ist.
 
 ---
 
-## 7.2 Jellyseerr zum Docker-Stack hinzufügen
+## 7.2 Seerr zum Docker-Stack hinzufügen
 
-Füge Jellyseerr zu deiner `docker-compose.yml` hinzu:
+Füge Seerr zu deiner `docker-compose.yml` hinzu:
 
 ```yaml
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     environment:
-      - PUID=1000
-      - PGID=1000
       - TZ=Europe/Berlin
     volumes:
-      - ./config/jellyseerr:/app/config
+      - ./config/seerr:/app/config
     ports:
-      - 5055:5055
+      - "5055:5055"
     depends_on:
       - radarr
       - sonarr
@@ -105,7 +104,7 @@ docker compose up -d
 
 ---
 
-### Jellyseerr konfigurieren
+### Seerr konfigurieren
 
 Öffne `http://<deine-tailscale-ip>:5055` im Browser und folge dem Einrichtungsassistenten:
 

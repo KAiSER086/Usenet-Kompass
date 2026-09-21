@@ -15,7 +15,7 @@
 
 <p align="center">
   <b>Sicher & Anonym &nbsp;•&nbsp; Ressourceneffizient &nbsp;•&nbsp; Vollautomatisiert</b><br>
-  <i>Vom ersten Provider-Account bis zur einsatzbereiten Mediathek mit Jellyfin & Jellyseerr.</i>
+  <i>Vom ersten Provider-Account bis zur einsatzbereiten Mediathek mit Jellyfin & Seerr.</i>
 </p>
 
 ---
@@ -31,7 +31,7 @@ Der **Usenet-Kompass** führt Schritt für Schritt zum privaten Medien-Setup. Al
 
 * **Privatsphäre & Sicherheit:** VPN-Tunnelung mit Gluetun (WireGuard mit Kill-Switch) und SSL/TLS-verschlüsselte Verbindungen zum Usenet-Provider.
 * **Sicherer Fernzugriff:** Zugriff von unterwegs über Tailscale Mesh-VPN ohne offene Ports oder Portweiterleitungen am Heimrouter.
-* **Vollständige Automatisierung:** Medienanfragen über Jellyseerr werden automatisch an Sonarr & Radarr übergeben und über NZBGet oder SABnzbd heruntergeladen.
+* **Vollständige Automatisierung:** Medienanfragen über Seerr werden automatisch an Sonarr & Radarr übergeben und über NZBGet oder SABnzbd heruntergeladen.
 * **Effiziente Dateiverwaltung:** Standardisierte Verzeichnisstruktur nach TRaSH-Guides – fertige Downloads werden verzögerungsfrei und ohne doppelte Schreiblast in die Mediathek verschoben.
 * **Fokus auf deutsche Inhalte:** Vorkonfigurierte Profile und Custom Formats für deutsche Tonspuren und zweisprachige Veröffentlichungen (German DL).
 
@@ -47,7 +47,7 @@ flowchart LR
     end
 
     subgraph Stack ["Docker Compose Stack"]
-        Jellyseerr[Jellyseerr]
+        Seerr[Seerr]
         Arrs[Sonarr & Radarr]
         Prowlarr[Prowlarr]
         Downloader[SABnzbd / NZBGet]
@@ -60,8 +60,8 @@ flowchart LR
         Provider[(Usenet Server)]
     end
 
-    User -->|1. Titel anfragen| Jellyseerr
-    Jellyseerr -->|2. Request weiterleiten| Arrs
+    User -->|1. Titel anfragen| Seerr
+    Seerr -->|2. Request weiterleiten| Arrs
     Arrs -->|3. Release suchen| Prowlarr
     Prowlarr <-->|4. Indexer abfragen| Indexer
     Arrs -->|5. NZB übergeben| Downloader
@@ -84,8 +84,8 @@ flowchart LR
 | **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | Indexer-Hub | Zentrale Verwaltung aller Usenet-Indexer mit nativer Synchronisation. |
 | **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | Serien | Automatisierte Suche, Überwachung und Verwaltung von Serien. |
 | **[Radarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `7878` | Filme | Automatisierte Suche, Verwaltung und Qualitäts-Upgrades für Spielfilme. |
-| **[Jellyfin](Frontend/Jellyfin%20und%20Jellyseer.md#71-jellyfin-zum-docker-stack-hinzufügen)** | `8096` | Streaming | Quelloffener Medienserver für Smart-TVs, Mobilgeräte und Browser. |
-| **[Jellyseerr](Frontend/Jellyfin%20und%20Jellyseer.md#72-jellyseerr-zum-docker-stack-hinzufügen)** | `5055` | Anfragen | Benutzerfreundliche Oberfläche zum Entdecken und Anfragen neuer Medien. |
+| **[Jellyfin](Frontend/Jellyfin%20und%20Seerr.md#71-jellyfin-zum-docker-stack-hinzufügen)** | `8096` | Streaming | Quelloffener Medienserver für Smart-TVs, Mobilgeräte und Browser. |
+| **[Seerr](Frontend/Jellyfin%20und%20Seerr.md#72-seerr-zum-docker-stack-hinzufügen)** | `5055` | Anfragen | Benutzerfreundliche Oberfläche zum Entdecken und Anfragen neuer Medien (Fusion aus Overseerr & Jellyseerr). |
 
 ---
 
@@ -99,7 +99,7 @@ flowchart LR
 | **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-vpn--und-mesh-konfiguration)** | Gluetun (WireGuard / OpenVPN), LAN-Bypass und Tailscale-Einbindung |
 | **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | Vergleich von NZBGet und SABnzbd, Direct Unpack und Prioritäten |
 | **`6.0`** | **[Automatisierung](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr-Sync, standardisierte Speicherpfade (`/data`), German DL Custom Formats |
-| **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Jellyseer.md#70-jellyfin--jellyseerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Jellyseerr |
+| **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Seerr.md#70-jellyfin--seerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Seerr |
 | **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige, vorkonfigurierte `docker-compose.yml` für alle Dienste |
 | **`Glossar`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Fachbegriffe verständlich erklärt: Retention, PAR2, Remux, German DL, Newznab |
 

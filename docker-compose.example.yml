@@ -136,15 +136,14 @@ services:
       - "8096:8096"
     restart: unless-stopped
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    container_name: seerr
+    init: true
     environment:
-      - PUID=1000
-      - PGID=1000
       - TZ=Europe/Berlin
     volumes:
-      - ./config/jellyseerr:/app/config
+      - ./config/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
