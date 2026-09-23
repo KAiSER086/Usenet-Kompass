@@ -1,0 +1,61 @@
+name: CI & Distro Portability Matrix
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: ShellCheck & Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Bash Syntax Check (bash -n)
+        run: |
+          bash -n install.sh
+          bash -n link-apps.sh
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: '.'
+          ignore_paths: '.git'
+          severity: warning
+        continue-on-error: true
+
+  matrix-dry-run:
+    name: Dry-Run Test (${{ matrix.distro }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - debian:bookworm-slim
+          - debian:bullseye-slim
+          - ubuntu:22.04
+          - ubuntu:24.04
+          - fedora:latest
+          - archlinux:latest
+          - alpine:latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Installer Dry-Run Test in Container
+        run: |
+          docker run --rm -v "$PWD":/app -w /app ${{ matrix.distro }} sh -c "
+            if command -v apt-get >/dev/null 2>&1; then
+              apt-get update -qq && apt-get install -y -qq bash >/dev/null
+            elif command -v dnf >/dev/null 2>&1; then
+              dnf install -y bash >/dev/null
+            elif command -v pacman >/dev/null 2>&1; then
+              pacman -Sy --noconfirm bash >/dev/null
+            elif command -v apk >/dev/null 2>&1; then
+              apk add --no-cache bash >/dev/null
+            fi
+            bash install.sh --dry-run
+          "
