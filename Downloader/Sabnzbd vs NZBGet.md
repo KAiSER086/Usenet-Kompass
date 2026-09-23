@@ -147,6 +147,8 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
      * *Warum?* Dateien werden bereits parallel während des Downloads entpackt, sobald Segmente verfügbar sind. Das verhindert drastische I/O-Lastspitzen nach Download-Ende, verkürzt die Wartezeit auf wenige Sekunden und erlaubt Sonarr/Radarr den sofortigen Import per Atomic Move.
 5. **Testen & Speichern:** Klicke auf **"Server testen"** und danach auf **"Änderungen speichern"**.
 
+![Sabnzbd-Provider](sabnzbd-provider.gif)
+
 ---
 
 ### NZBGet: Usenet-Provider einrichten
@@ -165,3 +167,5 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
    * Unter **Settings > Paths** überprüfe bzw. setze **DestDir** auf `/data/usenet/complete` und **InterDir** auf `/data/usenet/incomplete`.
    * Unter **Settings > Categories** die Kategorien `movies` und `tv` mit den jeweiligen Unterverzeichnissen anlegen.
 5. **Speichern:** Klicke auf **"Save all changes"** und teste mit **"Test Connection"**.
+
+![NZBGet-Provider](nzbget-provider.gif)
