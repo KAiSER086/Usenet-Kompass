@@ -36,15 +36,15 @@ In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle:
 
 ## 1.2 Systemvoraussetzungen & Hardware-Wahl
 
-Bevor du beginnst, solltest du dir überlegen, welche Hardware du verwenden möchtest. Unser Setup ist ideal für stromsparende 24/7-Homeserver konzipiert.
+Bevor du beginnst, solltest du dir überlegen, auf welcher Plattform du deinen Stack betreiben möchtest. Unser Setup ist modular aufgebaut und läuft gleichermaßen auf stromsparender lokaler Hardware (Homeserver) sowie auf externen Cloud-Servern (VPS).
 
 ### Warum Linux die beste Wahl ist
 
 Obwohl Docker auch auf Windows und macOS läuft, wurde es **nativ für Linux entwickelt**. Auf Linux-Systemen arbeitet Docker am stabilsten, ressourcenschonendsten und ohne Virtualisierungs-Overhead.
 
-Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi** oder **Debian**. Diese Systeme sind extrem stabil, booten in Sekunden und sind ideal für den Dauerbetrieb.
+Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**, **Debian** oder **Ubuntu Server**. Diese Systeme sind extrem stabil, booten in Sekunden und sind ideal für den Dauerbetrieb.
 
-#### 🍓 Option 1: Raspberry Pi 5 mit DietPi (Der stromsparende Klassiker)
+#### 🍓 Option 1: Raspberry Pi 5 mit DietPi (Der stromsparende Homeserver)
 
 * **Vorteile:** Sehr geringer Stromverbrauch (ca. 3–5 Watt), geräuschlos, kompakt und vollkommen ausreichend für Downloader (SABnzbd/NZBGet), *arr-Apps und Direct-Play-Streaming.
 * **Beachte:** Ein Single-Board-Computer (ARM CPU) stößt an Grenzen bei rechenintensiver Video-Transkodierung in Echtzeit.
@@ -52,7 +52,13 @@ Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**
 #### 💻 Option 2: Intel N100 / N97 Mini-PC (Die moderne Allround-Empfehlung)
 
 * **Vorteile:** Kompakte x86-Mini-PCs mit Intel N100 Prozessor kosten oft nur 120–150 € und verbrauchen im Leerlauf ebenfalls nur ca. 6 Watt. Sie verfügen über **Intel Quick Sync Video (QSV)** und können mehrere 4K-Videostreams in Jellyfin mühelos in Hardware transkodieren.
-* **Ideal für:** Nutzer, die häufig von unterwegs mit begrenzter mobiler Bandbreite auf ihre Mediathek zugreifen möchten.
+* **Ideal für:** Nutzer, die eine vollwertige Multimedia-Zentrale zu Hause suchen und häufig von unterwegs mit Transkodierung streamen möchten.
+
+#### ☁️ Option 3: Cloud VPS (Das flexible Offsite-Setup)
+
+* **Vorteile:** Keine Hardware-Anschaffungskosten, professionelles Hosting im Rechenzentrum mit garantierter Gigabit-Anbindung (oft 1–2,5 Gbit/s symmetrisch) und fester öffentlicher IP. Perfekt, wenn das heimische Internet zu langsam ist oder der private Router nicht durch 24/7-Downloads ausgelastet werden soll.
+* **Typisches Setup:** Günstige Instanzen mit 2–4 vCPUs (z. B. AMD EPYC bei Hetzner Cloud, Netcup etc.) und NVMe-Speicher.
+* **Beachte:** Da sich virtuelle CPUs die Host-Ressourcen teilen, ist eine saubere Konfiguration der Thread- und Verbindungsanzahl (wie im Performance-Tuning in [Kapitel 5.0](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget) gemessen) essenziell. Für größere Mediatheken empfiehlt sich die Anbindung von zusätzlichem Block-Storage oder einer Storage-Box.
 
 ---
 
