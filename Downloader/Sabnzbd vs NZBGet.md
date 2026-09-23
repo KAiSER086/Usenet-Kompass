@@ -140,10 +140,12 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
    * **Priorität:** `0` für Hauptserver, `1` für Block-Account.
 4. **Pfade & Performance einstellen:**
    * **Pfade anpassen:** Gehe zu **Einstellungen > Ordner** und stelle den **Ordner für fertige Downloads** auf `/data/usenet/complete` sowie den **Temporären Download-Ordner** auf `/data/usenet/incomplete`.
-   * **Direct Unpack:** Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken** (*Direct Unpack*). Dateien werden bereits während des Herunterladens entpackt – das spart viel Zeit und Speicherplatz.
+   * **Kategorien für *arr anlegen:** Gehe zu **Einstellungen > Kategorien** und richte zwei Kategorien ein:
+     * **`movies`**: Ordner/Pfad `movies` (ergibt intern `/data/usenet/complete/movies`)
+     * **`tv`**: Ordner/Pfad `tv` (ergibt intern `/data/usenet/complete/tv`)
+   * **Direct Unpack (Dringend empfohlen):** Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken** (*Direct Unpack*).
+     * *Warum?* Dateien werden bereits parallel während des Downloads entpackt, sobald Segmente verfügbar sind. Das verhindert drastische I/O-Lastspitzen nach Download-Ende, verkürzt die Wartezeit auf wenige Sekunden und erlaubt Sonarr/Radarr den sofortigen Import per Atomic Move.
 5. **Testen & Speichern:** Klicke auf **"Server testen"** und danach auf **"Änderungen speichern"**.
-
-![Sabnzbd-Provider](sabnzbd-provider.gif)
 
 ---
 
@@ -159,7 +161,7 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
    * **User & Password:** Deine Anmeldedaten.
    * **Connections:** Starte mit ca. **`20`** Verbindungen (bei Gigabit-Leitungen bis zu 30–40).
    * **Level:** Setze `0` für den Hauptserver und `1` für Blockaccounts.
-4. **Pfade anpassen:** Unter **Settings > Paths** überprüfe bzw. setze **DestDir** auf `/data/usenet/complete` und **InterDir** auf `/data/usenet/incomplete`.
+4. **Pfade & Kategorien anpassen:**
+   * Unter **Settings > Paths** überprüfe bzw. setze **DestDir** auf `/data/usenet/complete` und **InterDir** auf `/data/usenet/incomplete`.
+   * Unter **Settings > Categories** die Kategorien `movies` und `tv` mit den jeweiligen Unterverzeichnissen anlegen.
 5. **Speichern:** Klicke auf **"Save all changes"** und teste mit **"Test Connection"**.
-
-![NZBGet-Provider](nzbget-provider.gif)
