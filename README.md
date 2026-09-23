@@ -4,6 +4,7 @@
 
 **Der umfassende deutsche Leitfaden für automatisierte Usenet-Downloads, Medienserver und Heimkino mit Docker Compose.**
 
+[![CI & Distro Portability Matrix](https://img.shields.io/github/actions/workflow/status/KAiSER086/Usenet-Kompass/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Matrix)](https://github.com/KAiSER086/Usenet-Kompass/actions/workflows/ci.yml)
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Raspberry Pi 5](https://img.shields.io/badge/Raspberry%20Pi-5%20%2F%20Linux-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white)](https://dietpi.com/)
 [![Tailscale](https://img.shields.io/badge/Mesh%20VPN-Tailscale-2C5EAA?style=for-the-badge&logo=tailscale&logoColor=white)](https://tailscale.com/)
