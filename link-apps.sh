@@ -42,7 +42,7 @@ wait_for_api() {
     local name="$1"
     local port="$2"
     local path="$3"
-    local max_wait=60
+    local max_wait=120
     local waited=0
     
     printf "  Warte auf %s (Port %s)... " "$name" "$port"
