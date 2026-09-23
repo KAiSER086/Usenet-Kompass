@@ -8,10 +8,29 @@
 
 set -euo pipefail
 
+# --- CLI Argumente parsen ---
+DRY_RUN=false
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run|--test|-t)
+            DRY_RUN=true
+            ;;
+        --help|-h)
+            echo "Verwendung: bash install.sh [OPTIONEN]"
+            echo "Optionen:"
+            echo "  --dry-run, --test, -t   Führt Syntaxprüfungen und Template-Generierung ohne Container-Start durch."
+            echo "  --help, -h              Zeigt diesen Hilfetext an."
+            exit 0
+            ;;
+    esac
+done
+
 # Interaktive Benutzereingaben sicherstellen – auch wenn das Skript
 # per Pipe (curl -fsSL ... | bash) oder non-tty ausgeführt wird:
 read_input() {
-    if [ -t 0 ]; then
+    if [ "$DRY_RUN" = true ]; then
+        return 0
+    elif [ -t 0 ]; then
         read -r "$@"
     elif (exec < /dev/tty) 2>/dev/null; then
         read -r "$@" < /dev/tty
@@ -21,7 +40,9 @@ read_input() {
 }
 
 read_secret() {
-    if [ -t 0 ]; then
+    if [ "$DRY_RUN" = true ]; then
+        return 0
+    elif [ -t 0 ]; then
         read -r -s "$@"
     elif (exec < /dev/tty) 2>/dev/null; then
         read -r -s "$@" < /dev/tty
@@ -32,7 +53,9 @@ read_secret() {
 
 # --- Root- und Sudo-Erkennung ---
 SUDO=""
-if [ "$(id -u)" -ne 0 ]; then
+if [ "$DRY_RUN" = true ]; then
+    SUDO=""
+elif [ "$(id -u)" -ne 0 ]; then
     if command -v sudo &>/dev/null; then
         SUDO="sudo"
     else
@@ -119,57 +142,63 @@ fi
 
 # Docker & Compose prüfen
 if ! command -v docker &> /dev/null; then
-    echo -e "${YELLOW}Docker ist noch nicht installiert.${NC}"
-    read_input -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
-    INSTALL_DOCKER=${INSTALL_DOCKER:-J}
-    if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
-        echo -e "${CYAN}Installiere Docker für ${DISTRO_NAME}...${NC}"
-        if command -v pacman &> /dev/null; then
-            echo -e "${CYAN}Arch Linux Familie erkannt: Installiere Docker via pacman...${NC}"
-            $SUDO pacman -Sy --noconfirm --overwrite "*" docker docker-compose glibc libseccomp || true
-        elif command -v zypper &> /dev/null; then
-            echo -e "${CYAN}openSUSE Familie erkannt: Installiere Docker via zypper...${NC}"
-            $SUDO zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || $SUDO zypper --non-interactive install docker docker-compose || true
-        elif command -v apk &> /dev/null; then
-            echo -e "${CYAN}Alpine Linux erkannt: Installiere Docker via apk...${NC}"
-            $SUDO apk add --no-cache docker docker-cli-compose || true
-        else
-            echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
-            curl -fsSL https://get.docker.com | sh
-        fi
-        if [ "$USER" != "root" ] && [ -n "${USER:-}" ]; then
-            $SUDO usermod -aG docker "$USER" 2>/dev/null || true
-        fi
-        if command -v systemctl &>/dev/null; then
-            $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
-        elif command -v rc-service &>/dev/null; then
-            $SUDO rc-service docker start 2>/dev/null || true
-            $SUDO rc-update add docker default 2>/dev/null || true
-        fi
-        echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
+    if [ "$DRY_RUN" = true ]; then
+        echo -e "${YELLOW}[DRY-RUN] Docker ist noch nicht installiert (wird im Testmodus simuliert).${NC}"
     else
-        echo -e "${RED}Docker ist erforderlich. Bitte installiere Docker manuell und starte den Installer erneut.${NC}"
-        exit 1
+        echo -e "${YELLOW}Docker ist noch nicht installiert.${NC}"
+        read_input -p "Möchtest du Docker jetzt automatisch offiziell installieren lassen? [J/n]: " INSTALL_DOCKER
+        INSTALL_DOCKER=${INSTALL_DOCKER:-J}
+        if [[ "$INSTALL_DOCKER" =~ ^[jJyY]$ ]]; then
+            echo -e "${CYAN}Installiere Docker für ${DISTRO_NAME}...${NC}"
+            if command -v pacman &> /dev/null; then
+                echo -e "${CYAN}Arch Linux Familie erkannt: Installiere Docker via pacman...${NC}"
+                $SUDO pacman -Sy --noconfirm --overwrite "*" docker docker-compose glibc libseccomp || true
+            elif command -v zypper &> /dev/null; then
+                echo -e "${CYAN}openSUSE Familie erkannt: Installiere Docker via zypper...${NC}"
+                $SUDO zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || $SUDO zypper --non-interactive install docker docker-compose || true
+            elif command -v apk &> /dev/null; then
+                echo -e "${CYAN}Alpine Linux erkannt: Installiere Docker via apk...${NC}"
+                $SUDO apk add --no-cache docker docker-cli-compose || true
+            else
+                echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
+                curl -fsSL https://get.docker.com | sh
+            fi
+            if [ "$USER" != "root" ] && [ -n "${USER:-}" ]; then
+                $SUDO usermod -aG docker "$USER" 2>/dev/null || true
+            fi
+            if command -v systemctl &>/dev/null; then
+                $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
+            elif command -v rc-service &>/dev/null; then
+                $SUDO rc-service docker start 2>/dev/null || true
+                $SUDO rc-update add docker default 2>/dev/null || true
+            fi
+            echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
+        else
+            echo -e "${RED}Docker ist erforderlich. Bitte installiere Docker manuell und starte den Installer erneut.${NC}"
+            exit 1
+        fi
     fi
 else
     echo -e "${GREEN}✓ Docker ist vorhanden.${NC}"
 fi
 
-# Stelle sicher, dass der Docker-Daemon aktiv ist
-if ! docker ps &>/dev/null && ! $SUDO docker ps &>/dev/null; then
-    if command -v systemctl &>/dev/null; then
-        $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
-    elif command -v rc-service &>/dev/null; then
-        $SUDO rc-service docker start 2>/dev/null || true
+# Stelle sicher, dass der Docker-Daemon aktiv ist (im Produktivmodus)
+if [ "$DRY_RUN" = false ]; then
+    if ! docker ps &>/dev/null && ! $SUDO docker ps &>/dev/null; then
+        if command -v systemctl &>/dev/null; then
+            $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
+        elif command -v rc-service &>/dev/null; then
+            $SUDO rc-service docker start 2>/dev/null || true
+        fi
     fi
+
+    # VPN- & TUN-Kernelmodule laden, falls nicht aktiv (z. B. minimales openSUSE Leap / Debian)
+    $SUDO modprobe tun 2>/dev/null || true
+    $SUDO modprobe wireguard 2>/dev/null || true
 fi
 
-# VPN- & TUN-Kernelmodule laden, falls nicht aktiv (z. B. minimales openSUSE Leap / Debian)
-$SUDO modprobe tun 2>/dev/null || true
-$SUDO modprobe wireguard 2>/dev/null || true
-
 # python3 für automatisierte API-Verknüpfungen (link-apps.sh) sicherstellen
-if ! command -v python3 &>/dev/null; then
+if [ "$DRY_RUN" = false ] && ! command -v python3 &>/dev/null; then
     echo -e "${CYAN}python3 wird für Automatisierungsskripte benötigt. Installiere python3...${NC}"
     if command -v pacman &>/dev/null; then $SUDO pacman -S --noconfirm --overwrite "*" python || true;
     elif command -v zypper &>/dev/null; then $SUDO zypper --non-interactive install python3 || true;
@@ -186,6 +215,9 @@ if docker compose version &> /dev/null; then
 elif command -v docker-compose &> /dev/null; then
     COMPOSE_CMD="docker-compose"
     echo -e "${GREEN}✓ docker-compose (Legacy) ist einsatzbereit.${NC}"
+elif [ "$DRY_RUN" = true ]; then
+    COMPOSE_CMD="docker compose"
+    echo -e "${YELLOW}[DRY-RUN] Docker Compose nicht gefunden (wird im Testmodus simuliert).${NC}"
 else
     echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
     if command -v pacman &> /dev/null; then
@@ -203,8 +235,9 @@ else
     fi
 
     # Universeller Fallback auf offizielles Standalone-Binary falls Paketmanager kein v2 bereitstellt
-    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+    if [ "$DRY_RUN" = false ] && ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
         ARCH=$(uname -m)
+        [ "$ARCH" = "arm64" ] && ARCH="aarch64"
         DOCKER_PLUGIN_DIR="${HOME}/.docker/cli-plugins"
         mkdir -p "$DOCKER_PLUGIN_DIR"
         curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${ARCH}" -o "${DOCKER_PLUGIN_DIR}/docker-compose" 2>/dev/null && chmod +x "${DOCKER_PLUGIN_DIR}/docker-compose" || true
@@ -339,16 +372,23 @@ if [ "$VPN_PROTO_CHOICE" = "2" ]; then
     read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
     read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
     echo ""
+    OPENVPN_USER=${OPENVPN_USER:-"dummy_user"}
+    OPENVPN_PASS=${OPENVPN_PASS:-"dummy_pass"}
 else
     VPN_TYPE="wireguard"
     echo ""
-    while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
-        read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
-        if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
-            echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
-        fi
-    done
-    read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+    if [ "$DRY_RUN" = true ]; then
+        WIREGUARD_PRIVATE_KEY="c29tZXJhbmRvbXdpcmVndWFyZHByaXZhdGVrZXkxMjM0NTY="
+        WIREGUARD_ADDRESSES="10.64.0.1/32"
+    else
+        while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
+            read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+            if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
+                echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
+            fi
+        done
+        read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+    fi
 fi
 
 read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
@@ -576,6 +616,27 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
 EOF
 
 echo -e "${GREEN}✓ docker-compose.yml wurde erfolgreich erstellt!${NC}\n"
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${CYAN}==================================================================${NC}"
+    echo -e "${GREEN}${BOLD}✓ [DRY-RUN] Validierung & docker-compose.yml Generierung erfolgreich!${NC}"
+    echo -e "${CYAN}==================================================================${NC}"
+    if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+        if docker compose config -q 2>/dev/null; then
+            echo -e "  ${GREEN}✓ docker-compose.yml ist syntaktisch 100% valide (geprüft via 'docker compose config').${NC}"
+        else
+            echo -e "  ${RED}✗ Fehler bei Validierung von docker-compose.yml via 'docker compose config'.${NC}"
+            docker compose config || true
+            exit 1
+        fi
+    else
+        echo -e "  ${GREEN}✓ docker-compose.yml erfolgreich generiert.${NC}"
+    fi
+    echo -e "  ${GREEN}✓ TRaSH-Guides Verzeichnisstruktur (/data, /config) erfolgreich vorbereitet.${NC}"
+    echo -e "  ${GREEN}✓ API-Keys für Prowlarr, Sonarr & Radarr vorkonfiguriert.${NC}"
+    echo -e "${CYAN}==================================================================${NC}\n"
+    exit 0
+fi
 
 # ------------------------------------------------------------------------------
 # 7.0 STARTEN DES STACKS

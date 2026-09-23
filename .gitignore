@@ -1,0 +1,9 @@
+# Docker runtime files & secrets
+docker-compose.yml
+config/
+data/
+
+# Logs & temp files
+*.log
+*.tmp
+.DS_Store
