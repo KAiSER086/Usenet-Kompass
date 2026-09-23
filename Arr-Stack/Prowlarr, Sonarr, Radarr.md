@@ -194,6 +194,45 @@ Deutsche Indexer strukturieren Releases häufig über spezifische Newznab-Katego
 > *Wann wird Remote Path Mapping überhaupt benötigt? (Troubleshooting/Fallback):*
 > Nur dann, wenn dein Download-Client auf einem **externen physischen Server** oder einer externen Seedbox außerhalb deines Docker-Stacks läuft und Dateipfade zurückmeldet, die lokal an anderer Stelle eingehängt sind.
 
+#### 3. Standardisierte TRaSH-Dateibenennung (*Media Management*)
+
+Standardmäßig belassen Sonarr und Radarr die Dateinamen der Release-Gruppen oft unberührt. Das führt dazu, dass bei einem späteren Re-Scan oder Datenbank-Wiederherstellen essenzielle Metadaten (Audio-Codecs, HDR-Typen, Custom Formats) verloren gehen.
+
+Aktiviere unter **Settings > Media Management**:
+* **Rename Episodes / Rename Movies:** Auf `Yes` (Aktiviert) setzen.
+* **Propers and Repacks:** Auf **`Do Not Prefer`** setzen *(Begründung: Repacks und Propers steuern wir gezielter und sauberer über Custom Formats)*.
+
+**Empfohlene TRaSH-Benennungsformate hinterlegen:**
+
+* **Radarr (Filme):**
+  * **Standard Movie Format:**
+    ```text
+    {Movie CleanTitle} {(Release Year)} [imdbid-{ImdbId}] - [{Edition Tags} ]{[Custom Formats]}{[Quality Full]}{[MediaInfo VideoDynamicRangeType]}{[MediaInfo AudioCodec}{ MediaInfo AudioChannels}]{-Release Group}
+    ```
+  * **Movie Folder Format:**
+    ```text
+    {Movie CleanTitle} ({Release Year}) [imdbid-{ImdbId}]
+    ```
+
+* **Sonarr (Serien):**
+  * **Standard Episode Format:**
+    ```text
+    {Series CleanTitle} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats]}{[Quality Full]}{[MediaInfo VideoDynamicRangeType]}{[MediaInfo AudioCodec}{ MediaInfo AudioChannels}]{-Release Group}
+    ```
+  * **Series Folder Format:**
+    ```text
+    {Series CleanTitle} (tvdbid-{TvdbId})
+    ```
+  * **Season Folder Format:**
+    ```text
+    Season {season:00}
+    ```
+
+* **Ergebnis:**
+  Dateien heißen danach z. B. strukturiert:
+  `Dune Part Two (2024) [imdbid-tt15239678] - [German DL][Bluray-1080p][HDR][DTS-HD MA 5.1]-GROUP.mkv`.
+  Damit wissen Jellyfin, Sonarr und Radarr zu jedem Zeitpunkt exakt, um welche Qualität, Edition und Tonspuren es sich handelt.
+
 ---
 
 ## 6.4 Deutsche Sprachprofile & Custom Formats (TRaSH Guides Scoring)

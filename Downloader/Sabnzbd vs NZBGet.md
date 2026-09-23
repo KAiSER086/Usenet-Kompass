@@ -37,7 +37,8 @@ Führe diese Befehle im Docker-Verzeichnis aus:
 
 ```bash
 mkdir -p config/sabnzbd config/nzbget
-mkdir -p data/usenet/complete data/usenet/incomplete
+mkdir -p data/usenet/complete/movies data/usenet/complete/tv
+mkdir -p data/usenet/incomplete
 mkdir -p data/media/movies data/media/tv
 ```
 
