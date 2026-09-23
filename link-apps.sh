@@ -151,7 +151,7 @@ if [[ "$EXISTING_PROWLARR_APPS" != *"Sonarr"* ]]; then
     {"name": "prowlarrUrl", "value": "http://localhost:9696"},
     {"name": "baseUrl", "value": "http://localhost:8989"},
     {"name": "apiKey", "value": "${SONARR_KEY}"},
-    {"name": "syncCategories", "value": [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5090]},
+    {"name": "syncCategories", "value": [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5070, 5080, 5090]},
     {"name": "animeSyncCategories", "value": [5070]},
     {"name": "syncAnimeStandardFormatSearch", "value": true},
     {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
@@ -208,7 +208,7 @@ if [ "$DOWNLOADER_TYPE" = "nzbget" ]; then
     NZBGET_USER=${NZBGET_USER:-"nzbget"}
     NZBGET_PASS=${NZBGET_PASS:-"tegbzn6789"}
 
-    # Sonarr -> NZBGet (Kategorie: Series)
+    # Sonarr -> NZBGet (Kategorie: tv)
     EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/downloadclient 2>/dev/null || true)
     if [[ "$EXISTING_SONARR_DC" != *"NZBGet"* ]]; then
         NZBGET_SONARR_PAYLOAD=$(cat <<EOF
@@ -226,7 +226,7 @@ if [ "$DOWNLOADER_TYPE" = "nzbget" ]; then
     {"name": "useSsl", "value": false},
     {"name": "username", "value": "${NZBGET_USER}"},
     {"name": "password", "value": "${NZBGET_PASS}"},
-    {"name": "tvCategory", "value": "Series"}
+    {"name": "tvCategory", "value": "tv"}
   ]
 }
 EOF
@@ -241,7 +241,7 @@ EOF
         echo -e "  ${GREEN}✓ NZBGet bereits in Sonarr registriert.${NC}"
     fi
 
-    # Radarr -> NZBGet (Kategorie: Movies)
+    # Radarr -> NZBGet (Kategorie: movies)
     EXISTING_RADARR_DC=$(curl -s -H "X-Api-Key: $RADARR_KEY" http://localhost:7878/api/v3/downloadclient 2>/dev/null || true)
     if [[ "$EXISTING_RADARR_DC" != *"NZBGet"* ]]; then
         NZBGET_RADARR_PAYLOAD=$(cat <<EOF
@@ -259,7 +259,7 @@ EOF
     {"name": "useSsl", "value": false},
     {"name": "username", "value": "${NZBGET_USER}"},
     {"name": "password", "value": "${NZBGET_PASS}"},
-    {"name": "movieCategory", "value": "Movies"}
+    {"name": "movieCategory", "value": "movies"}
   ]
 }
 EOF

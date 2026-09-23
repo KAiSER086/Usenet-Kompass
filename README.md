@@ -121,7 +121,7 @@ curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/insta
 * **Subnetz-Erkennung:** Ermittelt das lokale Heimnetzwerk (z. B. `192.168.178.0/24`) und hinterlegt es im LAN-Bypass der Firewall.
 * **Downloader-Auswahl:** Ermöglicht die Wahl zwischen NZBGet (C++) und SABnzbd (Python).
 * **VPN-Integration & Leak-Test:** Richtet Gluetun ein, lädt benötigte Kernelmodule und prüft nach dem Start sofort die maskierte externe IP.
-* **Automatisches App-Linking (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander und richtet die Medien-Stammverzeichnisse (`/data/media`) ein.
+* **Automatisches App-Linking & TRaSH-Provisioning (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander (`fullSync`), bindet Downloader an, konfiguriert das TRaSH Naming Scheme und richtet deutsche Custom Formats (`German DL` +1500, `German` +1000) inklusive Quality-Profile-Scoring vollautomatisch ein.
 
 ---
 
@@ -146,7 +146,7 @@ git clone https://github.com/KAiSER086/Usenet-Kompass.git
 cd Usenet-Kompass
 
 # 2. Verzeichnisstruktur anlegen
-mkdir -p data/usenet/complete data/usenet/incomplete data/media/movies data/media/tv config
+mkdir -p data/usenet/complete/movies data/usenet/complete/tv data/usenet/incomplete data/media/movies data/media/tv config
 
 # 3. Vorlage kopieren, Zugangsdaten anpassen und starten
 cp docker-compose.example.yml docker-compose.yml

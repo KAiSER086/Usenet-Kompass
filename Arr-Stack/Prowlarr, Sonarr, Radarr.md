@@ -207,21 +207,21 @@ Aktiviere unter **Settings > Media Management**:
 * **Radarr (Filme):**
   * **Standard Movie Format:**
     ```text
-    {Movie CleanTitle} {(Release Year)} [imdbid-{ImdbId}] - [{Edition Tags} ]{[Custom Formats]}{[Quality Full]}{[MediaInfo VideoDynamicRangeType]}{[MediaInfo AudioCodec}{ MediaInfo AudioChannels}]{-Release Group}
+    {Movie CleanTitle} {(Release Year)} [imdb-{ImdbId}] - {[Custom Formats ]}{[Quality Full]}{[MediaInfo 3D]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ MediaInfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}
     ```
   * **Movie Folder Format:**
     ```text
-    {Movie CleanTitle} ({Release Year}) [imdbid-{ImdbId}]
+    {Movie CleanTitle} ({Release Year}) [imdb-{ImdbId}]
     ```
 
 * **Sonarr (Serien):**
   * **Standard Episode Format:**
     ```text
-    {Series CleanTitle} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats]}{[Quality Full]}{[MediaInfo VideoDynamicRangeType]}{[MediaInfo AudioCodec}{ MediaInfo AudioChannels}]{-Release Group}
+    {Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}]{-Release Group}
     ```
   * **Series Folder Format:**
     ```text
-    {Series CleanTitle} (tvdbid-{TvdbId})
+    {Series TitleYear} [tvdb-{TvdbId}]
     ```
   * **Season Folder Format:**
     ```text
