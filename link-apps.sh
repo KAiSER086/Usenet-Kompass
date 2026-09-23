@@ -275,7 +275,13 @@ EOF
     fi
 
 elif [ "$DOWNLOADER_TYPE" = "sabnzbd" ]; then
-    SAB_API_KEY=$(grep -E "^api_key" "$CONFIG_DIR/sabnzbd/sabnzbd.ini" 2>/dev/null | awk -F'=' '{gsub(/[ \t]/, "", $2); print $2}' || true)
+    wait_for_api "SABnzbd" "8080" "" || true
+    SAB_API_KEY=""
+    for i in {1..30}; do
+        SAB_API_KEY=$(grep -E "^api_key" "$CONFIG_DIR/sabnzbd/sabnzbd.ini" 2>/dev/null | awk -F'=' '{gsub(/[ \t]/, "", $2); print $2}' || true)
+        [ -n "$SAB_API_KEY" ] && break
+        sleep 2
+    done
     
     # Sonarr -> SABnzbd (Kategorie: tv)
     EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/downloadclient 2>/dev/null || true)

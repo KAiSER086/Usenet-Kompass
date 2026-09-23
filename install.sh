@@ -9,9 +9,11 @@
 set -euo pipefail
 
 # Interaktive Benutzereingaben sicherstellen – auch wenn das Skript
-# per Pipe (curl -fsSL ... | bash) ausgeführt wird:
+# per Pipe (curl -fsSL ... | bash) oder non-tty ausgeführt wird:
 read_input() {
-    if [ -e /dev/tty ]; then
+    if [ -t 0 ]; then
+        read -r "$@"
+    elif (exec < /dev/tty) 2>/dev/null; then
         read -r "$@" < /dev/tty
     else
         read -r "$@"
@@ -19,12 +21,25 @@ read_input() {
 }
 
 read_secret() {
-    if [ -e /dev/tty ]; then
+    if [ -t 0 ]; then
+        read -r -s "$@"
+    elif (exec < /dev/tty) 2>/dev/null; then
         read -r -s "$@" < /dev/tty
     else
         read -r -s "$@"
     fi
 }
+
+# --- Root- und Sudo-Erkennung ---
+SUDO=""
+if [ "$(id -u)" -ne 0 ]; then
+    if command -v sudo &>/dev/null; then
+        SUDO="sudo"
+    else
+        echo -e "\033[0;31mFehler: Dieses Skript benötigt Root-Rechte oder 'sudo'. Bitte als root ausführen oder sudo installieren.\033[0m"
+        exit 1
+    fi
+fi
 
 # --- Farben & UI-Elemente ---
 RED='\033[0;31m'
@@ -78,13 +93,29 @@ DISTRO_NAME="Linux"
 DISTRO_ID=""
 DISTRO_LIKE=""
 if [ -f /etc/os-release ]; then
-    DISTRO_NAME=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d= -f2- | tr -d '"')
-    DISTRO_ID=$(grep -E '^ID=' /etc/os-release | cut -d= -f2- | tr -d '"')
-    DISTRO_LIKE=$(grep -E '^ID_LIKE=' /etc/os-release | cut -d= -f2- | tr -d '"')
+    DISTRO_NAME=$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+    DISTRO_ID=$(grep -E '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
+    DISTRO_LIKE=$(grep -E '^ID_LIKE=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
 fi
 [ -z "$DISTRO_NAME" ] && DISTRO_NAME="$(uname -s) ($(uname -m))"
 
 echo -e "${GREEN}✓ Betriebssystem erkannt: ${BOLD}${DISTRO_NAME}${NC}"
+
+# curl sicherstellen (essentiell für get.docker.com & API-Links)
+if ! command -v curl &>/dev/null; then
+    echo -e "${CYAN}curl ist noch nicht installiert. Installiere curl...${NC}"
+    if command -v apt-get &>/dev/null; then
+        $SUDO apt-get update -qq && $SUDO apt-get install -y curl ca-certificates || true
+    elif command -v pacman &>/dev/null; then
+        $SUDO pacman -Sy --noconfirm --overwrite "*" curl ca-certificates || true
+    elif command -v dnf &>/dev/null; then
+        $SUDO dnf install -y curl ca-certificates || true
+    elif command -v zypper &>/dev/null; then
+        $SUDO zypper --non-interactive install curl ca-certificates || true
+    elif command -v apk &>/dev/null; then
+        $SUDO apk add --no-cache curl ca-certificates || true
+    fi
+fi
 
 # Docker & Compose prüfen
 if ! command -v docker &> /dev/null; then
@@ -95,23 +126,25 @@ if ! command -v docker &> /dev/null; then
         echo -e "${CYAN}Installiere Docker für ${DISTRO_NAME}...${NC}"
         if command -v pacman &> /dev/null; then
             echo -e "${CYAN}Arch Linux Familie erkannt: Installiere Docker via pacman...${NC}"
-            sudo pacman -Sy --noconfirm docker docker-compose || true
+            $SUDO pacman -Sy --noconfirm --overwrite "*" docker docker-compose glibc libseccomp || true
         elif command -v zypper &> /dev/null; then
             echo -e "${CYAN}openSUSE Familie erkannt: Installiere Docker via zypper...${NC}"
-            sudo zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker docker-compose || true
+            $SUDO zypper --non-interactive install docker docker-compose docker-compose-switch 2>/dev/null || $SUDO zypper --non-interactive install docker docker-compose || true
         elif command -v apk &> /dev/null; then
             echo -e "${CYAN}Alpine Linux erkannt: Installiere Docker via apk...${NC}"
-            sudo apk add --no-cache docker docker-cli-compose || true
+            $SUDO apk add --no-cache docker docker-cli-compose || true
         else
             echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
             curl -fsSL https://get.docker.com | sh
         fi
-        sudo usermod -aG docker "$USER" 2>/dev/null || true
+        if [ "$USER" != "root" ] && [ -n "${USER:-}" ]; then
+            $SUDO usermod -aG docker "$USER" 2>/dev/null || true
+        fi
         if command -v systemctl &>/dev/null; then
-            sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+            $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
         elif command -v rc-service &>/dev/null; then
-            sudo rc-service docker start 2>/dev/null || true
-            sudo rc-update add docker default 2>/dev/null || true
+            $SUDO rc-service docker start 2>/dev/null || true
+            $SUDO rc-update add docker default 2>/dev/null || true
         fi
         echo -e "${GREEN}✓ Docker erfolgreich installiert!${NC}"
     else
@@ -123,26 +156,26 @@ else
 fi
 
 # Stelle sicher, dass der Docker-Daemon aktiv ist
-if ! docker ps &>/dev/null && ! sudo docker ps &>/dev/null; then
+if ! docker ps &>/dev/null && ! $SUDO docker ps &>/dev/null; then
     if command -v systemctl &>/dev/null; then
-        sudo systemctl enable --now docker 2>/dev/null || sudo systemctl start docker 2>/dev/null || true
+        $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
     elif command -v rc-service &>/dev/null; then
-        sudo rc-service docker start 2>/dev/null || true
+        $SUDO rc-service docker start 2>/dev/null || true
     fi
 fi
 
 # VPN- & TUN-Kernelmodule laden, falls nicht aktiv (z. B. minimales openSUSE Leap / Debian)
-sudo modprobe tun 2>/dev/null || true
-sudo modprobe wireguard 2>/dev/null || true
+$SUDO modprobe tun 2>/dev/null || true
+$SUDO modprobe wireguard 2>/dev/null || true
 
-# python3 & curl für automatisierte API-Verknüpfungen (link-apps.sh) sicherstellen
+# python3 für automatisierte API-Verknüpfungen (link-apps.sh) sicherstellen
 if ! command -v python3 &>/dev/null; then
     echo -e "${CYAN}python3 wird für Automatisierungsskripte benötigt. Installiere python3...${NC}"
-    if command -v pacman &>/dev/null; then sudo pacman -S --noconfirm python || true;
-    elif command -v zypper &>/dev/null; then sudo zypper --non-interactive install python3 || true;
-    elif command -v apk &>/dev/null; then sudo apk add --no-cache python3 || true;
-    elif command -v dnf &>/dev/null; then sudo dnf install -y python3 || true;
-    elif command -v apt-get &>/dev/null; then sudo apt-get update -qq && sudo apt-get install -y python3 || true;
+    if command -v pacman &>/dev/null; then $SUDO pacman -S --noconfirm --overwrite "*" python || true;
+    elif command -v zypper &>/dev/null; then $SUDO zypper --non-interactive install python3 || true;
+    elif command -v apk &>/dev/null; then $SUDO apk add --no-cache python3 || true;
+    elif command -v dnf &>/dev/null; then $SUDO dnf install -y python3 || true;
+    elif command -v apt-get &>/dev/null; then $SUDO apt-get update -qq && $SUDO apt-get install -y python3 || true;
     fi
 fi
 
@@ -156,17 +189,17 @@ elif command -v docker-compose &> /dev/null; then
 else
     echo -e "${YELLOW}Docker Compose Plugin fehlt. Installiere docker-compose-plugin...${NC}"
     if command -v pacman &> /dev/null; then
-        sudo pacman -Sy --noconfirm docker-compose || true
+        $SUDO pacman -Sy --noconfirm --overwrite "*" docker-compose || true
     elif command -v zypper &> /dev/null; then
-        sudo zypper --non-interactive install docker-compose docker-compose-switch 2>/dev/null || sudo zypper --non-interactive install docker-compose || true
+        $SUDO zypper --non-interactive install docker-compose docker-compose-switch 2>/dev/null || $SUDO zypper --non-interactive install docker-compose || true
     elif command -v apk &> /dev/null; then
-        sudo apk add --no-cache docker-cli-compose || true
+        $SUDO apk add --no-cache docker-cli-compose || true
     elif command -v dnf &> /dev/null; then
-        sudo dnf install -y docker-compose-plugin || true
+        $SUDO dnf install -y docker-compose-plugin || true
     elif command -v apt-get &> /dev/null; then
-        sudo apt-get update -qq && sudo apt-get install -y docker-compose-plugin 2>/dev/null || true
+        $SUDO apt-get update -qq && $SUDO apt-get install -y docker-compose-plugin 2>/dev/null || true
     elif command -v apt &> /dev/null; then
-        sudo apt update && sudo apt install -y docker-compose-plugin || true
+        $SUDO apt update && $SUDO apt install -y docker-compose-plugin || true
     fi
 
     # Universeller Fallback auf offizielles Standalone-Binary falls Paketmanager kein v2 bereitstellt
@@ -186,9 +219,13 @@ else
     fi
 fi
 
-# PUID & PGID ermitteln
+# PUID & PGID ermitteln (LinuxServer.io Container verbieten PUID=0/PGID=0)
 CURRENT_UID=$(id -u)
 CURRENT_GID=$(id -g)
+if [ "$CURRENT_UID" -eq 0 ]; then
+    CURRENT_UID=1000
+    CURRENT_GID=1000
+fi
 echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
 
 # Lokales Heimnetzwerk / Subnetz über das physische Interface der Default Route ermitteln
@@ -344,7 +381,11 @@ mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
 
 # Servarr API-Keys vorab initialisieren (falls noch keine Konfiguration existiert)
 generate_servarr_key() {
-    tr -dc 'a-f0-9' < /dev/urandom 2>/dev/null | head -c 32 || head -c 32 /dev/urandom | md5sum | awk '{print $1}'
+    if command -v openssl &>/dev/null; then
+        openssl rand -hex 16
+    else
+        head -c 32 /dev/urandom | md5sum | awk '{print $1}'
+    fi
 }
 
 for app in prowlarr sonarr radarr; do
@@ -370,7 +411,7 @@ fi
 
 if [ "$SELINUX_ENFORCING" = true ]; then
     echo -e "${CYAN}SELinux (Enforcing) erkannt: Setze Dateiberechtigungen für Container-Volumes...${NC}"
-    chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || sudo chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
+    chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || $SUDO chcon -Rt container_file_t "$INSTALL_DIR/config" "$INSTALL_DIR/data" 2>/dev/null || true
 fi
 
 # Berechtigungen sicherstellen
@@ -543,9 +584,9 @@ echo -e "${GREEN}✓ docker-compose.yml wurde erfolgreich erstellt!${NC}\n"
 RUN_DOCKER_CMD="$COMPOSE_CMD"
 DOCKER_BIN="docker"
 if ! docker ps &>/dev/null; then
-    if sudo docker ps &>/dev/null; then
-        RUN_DOCKER_CMD="sudo $COMPOSE_CMD"
-        DOCKER_BIN="sudo docker"
+    if [ -n "$SUDO" ] && $SUDO docker ps &>/dev/null; then
+        RUN_DOCKER_CMD="$SUDO $COMPOSE_CMD"
+        DOCKER_BIN="$SUDO docker"
     fi
 fi
 
@@ -575,8 +616,8 @@ fi
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
     $RUN_DOCKER_CMD up -d
-    if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]]; then
-        sudo chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
+    if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]] || [ "$(id -u)" -eq 0 ]; then
+        $SUDO chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
     fi
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 
