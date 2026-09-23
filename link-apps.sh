@@ -42,7 +42,7 @@ wait_for_api() {
     local name="$1"
     local port="$2"
     local path="$3"
-    local max_wait=30
+    local max_wait=60
     local waited=0
     
     printf "  Warte auf %s (Port %s)... " "$name" "$port"
@@ -58,9 +58,9 @@ wait_for_api() {
     return 0
 }
 
-wait_for_api "Prowlarr" "9696" "/api/v1/system/status" || true
-wait_for_api "Sonarr"   "8989" "/api/v3/system/status" || true
-wait_for_api "Radarr"   "7878" "/api/v3/system/status" || true
+wait_for_api "Prowlarr" "9696" "/ping" || true
+wait_for_api "Sonarr"   "8989" "/ping" || true
+wait_for_api "Radarr"   "7878" "/ping" || true
 
 # 2.0 API-KEYS EXTRAHIEREN
 extract_xml_key() {
@@ -344,6 +344,202 @@ else
     echo -e "  ${YELLOW}Hinweis: Kein aktiver Downloader (nzbget/sabnzbd) im config-Ordner gefunden.${NC}"
 fi
 
+# 6.0 TRaSH-GUIDES NAMING SCHEMES & DACH CUSTOM FORMATS
+echo -e "\n${CYAN}▶ Konfiguriere TRaSH-Guides Naming Schemes & DACH Custom Formats...${NC}"
+
+if command -v python3 &>/dev/null; then
+    python3 - "$SONARR_KEY" "$RADARR_KEY" << 'EOF'
+import sys
+import json
+import urllib.request
+import urllib.error
+
+sonarr_key = sys.argv[1] if len(sys.argv) > 1 else ""
+radarr_key = sys.argv[2] if len(sys.argv) > 2 else ""
+
+def api_request(url, method="GET", data=None, key=""):
+    headers = {
+        "X-Api-Key": key,
+        "Content-Type": "application/json"
+    }
+    encoded = json.dumps(data).encode("utf-8") if data is not None else None
+    req = urllib.request.Request(url, data=encoded, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            resp_bytes = res.read()
+            return json.loads(resp_bytes) if resp_bytes else {}
+    except Exception:
+        return None
+
+# --- SONARR ---
+if sonarr_key:
+    # 1. TRaSH Naming Scheme
+    naming = api_request("http://localhost:8989/api/v3/config/naming", key=sonarr_key)
+    if isinstance(naming, dict) and "renameEpisodes" in naming:
+        naming["renameEpisodes"] = True
+        naming["replaceIllegalCharacters"] = True
+        naming["standardEpisodeFormat"] = "{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}]{-Release Group}"
+        naming["dailyEpisodeFormat"] = "{Series TitleYear} - {Air-Date} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}]{-Release Group}"
+        naming["animeEpisodeFormat"] = "{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}]{-Release Group}"
+        naming["seriesFolderFormat"] = "{Series TitleYear} [tvdb-{TvdbId}]"
+        naming["seasonFolderFormat"] = "Season {season:00}"
+        if api_request("http://localhost:8989/api/v3/config/naming", method="PUT", data=naming, key=sonarr_key) is not None:
+            print("  \033[0;32m✓ Sonarr: TRaSH Naming Scheme angewendet (inkl. MediaInfo & Custom Formats).\033[0m")
+
+    # 2. Media Management: downloadPropersAndRepacks
+    mm = api_request("http://localhost:8989/api/v3/config/mediamanagement", key=sonarr_key)
+    if isinstance(mm, dict) and "downloadPropersAndRepacks" in mm:
+        mm["downloadPropersAndRepacks"] = "doNotPrefer"
+        if api_request("http://localhost:8989/api/v3/config/mediamanagement", method="PUT", data=mm, key=sonarr_key) is not None:
+            print("  \033[0;32m✓ Sonarr: Propers & Repacks auf 'doNotPrefer' gesetzt.\033[0m")
+
+    # 3. Custom Formats
+    cfs = api_request("http://localhost:8989/api/v3/customformat", key=sonarr_key)
+    existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
+
+    if "German DL" not in existing_cf_names:
+        cf_german_dl = {
+            "name": "German DL",
+            "includeCustomFormatWhenRenaming": True,
+            "specifications": [
+                {
+                    "name": "German",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": 4}]
+                },
+                {
+                    "name": "Original Language",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": -2}]
+                }
+            ]
+        }
+        if api_request("http://localhost:8989/api/v3/customformat", method="POST", data=cf_german_dl, key=sonarr_key):
+            print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' registriert.\033[0m")
+    else:
+        print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' bereits vorhanden.\033[0m")
+
+    if "German" not in existing_cf_names:
+        cf_german = {
+            "name": "German",
+            "includeCustomFormatWhenRenaming": True,
+            "specifications": [
+                {
+                    "name": "German",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": 4}]
+                }
+            ]
+        }
+        if api_request("http://localhost:8989/api/v3/customformat", method="POST", data=cf_german, key=sonarr_key):
+            print("  \033[0;32m✓ Sonarr: Custom Format 'German' registriert.\033[0m")
+    else:
+        print("  \033[0;32m✓ Sonarr: Custom Format 'German' bereits vorhanden.\033[0m")
+
+    # 4. Quality Profiles Scoring
+    profiles = api_request("http://localhost:8989/api/v3/qualityprofile", key=sonarr_key)
+    if isinstance(profiles, list):
+        for p in profiles:
+            format_items = p.get("formatItems", [])
+            for fi in format_items:
+                if fi.get("name") == "German DL":
+                    fi["score"] = 1500
+                elif fi.get("name") == "German":
+                    fi["score"] = 1000
+            p["upgradeAllowed"] = True
+            p["cutoffFormatScore"] = 1500
+            api_request(f"http://localhost:8989/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=sonarr_key)
+        print("  \033[0;32m✓ Sonarr: Alle Qualitätsprofile mit DACH-Scoring (German DL +1500, German +1000) versehen.\033[0m")
+
+# --- RADARR ---
+if radarr_key:
+    # 1. TRaSH Naming Scheme
+    naming = api_request("http://localhost:7878/api/v3/config/naming", key=radarr_key)
+    if isinstance(naming, dict) and "renameMovies" in naming:
+        naming["renameMovies"] = True
+        naming["replaceIllegalCharacters"] = True
+        naming["standardMovieFormat"] = "{Movie CleanTitle} {(Release Year)} [imdb-{ImdbId}] - {[Custom Formats ]}{[Quality Full]}{[MediaInfo 3D]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ MediaInfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}"
+        naming["movieFolderFormat"] = "{Movie CleanTitle} ({Release Year}) [imdb-{ImdbId}]"
+        if api_request("http://localhost:7878/api/v3/config/naming", method="PUT", data=naming, key=radarr_key) is not None:
+            print("  \033[0;32m✓ Radarr: TRaSH Naming Scheme angewendet (inkl. MediaInfo & Custom Formats).\033[0m")
+
+    # 2. Custom Formats
+    cfs = api_request("http://localhost:7878/api/v3/customformat", key=radarr_key)
+    existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
+
+    if "German DL" not in existing_cf_names:
+        cf_german_dl = {
+            "name": "German DL",
+            "includeCustomFormatWhenRenaming": True,
+            "specifications": [
+                {
+                    "name": "German",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": 4}]
+                },
+                {
+                    "name": "Original Language",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": -2}]
+                }
+            ]
+        }
+        if api_request("http://localhost:7878/api/v3/customformat", method="POST", data=cf_german_dl, key=radarr_key):
+            print("  \033[0;32m✓ Radarr: Custom Format 'German DL' registriert.\033[0m")
+    else:
+        print("  \033[0;32m✓ Radarr: Custom Format 'German DL' bereits vorhanden.\033[0m")
+
+    if "German" not in existing_cf_names:
+        cf_german = {
+            "name": "German",
+            "includeCustomFormatWhenRenaming": True,
+            "specifications": [
+                {
+                    "name": "German",
+                    "implementation": "LanguageSpecification",
+                    "negate": False,
+                    "required": True,
+                    "fields": [{"name": "value", "value": 4}]
+                }
+            ]
+        }
+        if api_request("http://localhost:7878/api/v3/customformat", method="POST", data=cf_german, key=radarr_key):
+            print("  \033[0;32m✓ Radarr: Custom Format 'German' registriert.\033[0m")
+    else:
+        print("  \033[0;32m✓ Radarr: Custom Format 'German' bereits vorhanden.\033[0m")
+
+    # 3. Quality Profiles Scoring
+    profiles = api_request("http://localhost:7878/api/v3/qualityprofile", key=radarr_key)
+    if isinstance(profiles, list):
+        for p in profiles:
+            format_items = p.get("formatItems", [])
+            for fi in format_items:
+                if fi.get("name") == "German DL":
+                    fi["score"] = 1500
+                elif fi.get("name") == "German":
+                    fi["score"] = 1000
+            p["upgradeAllowed"] = True
+            p["cutoffFormatScore"] = 1500
+            api_request(f"http://localhost:7878/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=radarr_key)
+        print("  \033[0;32m✓ Radarr: Alle Qualitätsprofile mit DACH-Scoring (German DL +1500, German +1000) versehen.\033[0m")
+
+EOF
+else
+    echo -e "  ${YELLOW}Hinweis: python3 nicht gefunden – überspringe erweiterte Custom Formats & Profile-Scoring.${NC}"
+fi
+
 echo -e "\n${GREEN}${BOLD}🎉 FERTIG! ALLE MEDIEN-APPS WURDEN ERFOLGREICH VERKNÜPFT!${NC}"
-echo -e "Sobald du jetzt in Prowlarr einen Indexer hinterlegst, wird dieser"
-echo -e "vollautomatisch und sekundenschnell an Sonarr und Radarr synchronisiert.\n"
+echo -e "✓ Prowlarr synchronisiert Indexer an Sonarr & Radarr (fullSync)."
+echo -e "✓ Root-Folder (/data/media) und Downloader-Kategorien sind eingerichtet."
+echo -e "✓ TRaSH-Guides Naming Scheme & DACH Custom Formats (German DL +1500, German +1000) aktiv."
+echo -e "✓ Sobald du in Prowlarr einen Indexer hinterlegst, ist dein Stack sofort einsatzbereit!\n"

@@ -135,6 +135,17 @@ fi
 sudo modprobe tun 2>/dev/null || true
 sudo modprobe wireguard 2>/dev/null || true
 
+# python3 & curl für automatisierte API-Verknüpfungen (link-apps.sh) sicherstellen
+if ! command -v python3 &>/dev/null; then
+    echo -e "${CYAN}python3 wird für Automatisierungsskripte benötigt. Installiere python3...${NC}"
+    if command -v pacman &>/dev/null; then sudo pacman -S --noconfirm python || true;
+    elif command -v zypper &>/dev/null; then sudo zypper --non-interactive install python3 || true;
+    elif command -v apk &>/dev/null; then sudo apk add --no-cache python3 || true;
+    elif command -v dnf &>/dev/null; then sudo dnf install -y python3 || true;
+    elif command -v apt-get &>/dev/null; then sudo apt-get update -qq && sudo apt-get install -y python3 || true;
+    fi
+fi
+
 # Compose Plugin prüfen
 if docker compose version &> /dev/null; then
     COMPOSE_CMD="docker compose"
@@ -330,6 +341,22 @@ if [ -d "$INSTALL_DIR/config/jellyseerr" ] && [ ! -f "$INSTALL_DIR/config/seerr/
     cp -rn "$INSTALL_DIR/config/jellyseerr/"* "$INSTALL_DIR/config/seerr/" 2>/dev/null || true
 fi
 mkdir -p "$INSTALL_DIR/config/$SELECTED_DOWNLOADER"
+
+# Servarr API-Keys vorab initialisieren (falls noch keine Konfiguration existiert)
+generate_servarr_key() {
+    tr -dc 'a-f0-9' < /dev/urandom 2>/dev/null | head -c 32 || head -c 32 /dev/urandom | md5sum | awk '{print $1}'
+}
+
+for app in prowlarr sonarr radarr; do
+    if [ ! -f "$INSTALL_DIR/config/$app/config.xml" ]; then
+        APP_KEY=$(generate_servarr_key)
+        cat <<EOF > "$INSTALL_DIR/config/$app/config.xml"
+<Config>
+  <ApiKey>${APP_KEY}</ApiKey>
+</Config>
+EOF
+    fi
+done
 
 # Falls SELinux aktiv ist (z. B. Fedora, openSUSE Leap 16, RHEL), Container-Berechtigungen setzen
 SELINUX_ENFORCING=false
