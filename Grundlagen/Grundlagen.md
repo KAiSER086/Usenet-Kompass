@@ -1,4 +1,4 @@
-﻿# 1.0 Grundlagen
+# 1.0 Grundlagen
 
 ## 1.1 Was ist Usenet?
 
@@ -46,7 +46,7 @@ Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**
 
 #### 🍓 Option 1: Raspberry Pi 5 mit DietPi (Der stromsparende Klassiker)
 
-* **Vorteile:** Sehr geringer Stromverbrauch (ca. 3–5 Watt), geräuschlos, kompakt und vollkommen ausreichend für Downloader (NZBGet/SABnzbd), *arr-Apps und Direct-Play-Streaming.
+* **Vorteile:** Sehr geringer Stromverbrauch (ca. 3–5 Watt), geräuschlos, kompakt und vollkommen ausreichend für Downloader (SABnzbd/NZBGet), *arr-Apps und Direct-Play-Streaming.
 * **Beachte:** Ein Single-Board-Computer (ARM CPU) stößt an Grenzen bei rechenintensiver Video-Transkodierung in Echtzeit.
 
 #### 💻 Option 2: Intel N100 / N97 Mini-PC (Die moderne Allround-Empfehlung)

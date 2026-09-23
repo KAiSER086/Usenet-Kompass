@@ -24,8 +24,8 @@ services:
       - PUID=1000 # Deine PUID (Terminal: 'id -u')
       - PGID=1000 # Deine PGID (Terminal: 'id -g')
     ports:
-      - "6789:6789" # NZBGet WebUI
-      - "8080:8080" # SABnzbd WebUI (falls SABnzbd genutzt wird)
+      - "8080:8080" # SABnzbd WebUI (Standard)
+      - "6789:6789" # NZBGet WebUI (falls genutzt)
       - "7878:7878" # Radarr WebUI & API
       - "8989:8989" # Sonarr WebUI & API
       - "9696:9696" # Prowlarr WebUI & API
@@ -33,34 +33,34 @@ services:
       - ./config/gluetun:/gluetun
     restart: unless-stopped
 
-  # --- Usenet Downloader (Wähle NZBGet ODER SABnzbd) ---
+  # --- Usenet Downloader (Wähle SABnzbd ODER NZBGet) ---
 
-  # Option A: NZBGet (C++ Performance, empfohlen für Raspberry Pi & sparsame Server)
-  nzbget:
-    image: lscr.io/linuxserver/nzbget:latest
-    container_name: nzbget
+  # Option A: SABnzbd (Standard-Empfehlung: Moderne UI, intelligentes Caching & volle Gigabit-Power)
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Berlin
     volumes:
-      - ./config/nzbget:/config
+      - ./config/sabnzbd:/config
       - ./data:/data
     restart: unless-stopped
     depends_on:
       - gluetun
     network_mode: "service:gluetun"
 
-  # Option B: SABnzbd (Python Allrounder mit moderner UI)
-  # sabnzbd:
-  #   image: lscr.io/linuxserver/sabnzbd:latest
-  #   container_name: sabnzbd
+  # Option B: NZBGet (Ressourcen-Leichtgewicht für < 2 GB RAM inkl. Direct Unpack)
+  # nzbget:
+  #   image: lscr.io/linuxserver/nzbget:latest
+  #   container_name: nzbget
   #   environment:
   #     - PUID=1000
   #     - PGID=1000
   #     - TZ=Europe/Berlin
   #   volumes:
-  #     - ./config/sabnzbd:/config
+  #     - ./config/nzbget:/config
   #     - ./data:/data
   #   restart: unless-stopped
   #   depends_on:
@@ -96,7 +96,7 @@ services:
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
-      - nzbget # oder sabnzbd
+      - sabnzbd # oder nzbget
     restart: unless-stopped
 
   radarr:
@@ -112,7 +112,7 @@ services:
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
-      - nzbget # oder sabnzbd
+      - sabnzbd # oder nzbget
     restart: unless-stopped
 
   # --- Frontend (Streaming & Media Requests) ---

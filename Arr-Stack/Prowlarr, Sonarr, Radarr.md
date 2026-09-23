@@ -182,9 +182,10 @@ Deutsche Indexer strukturieren Releases häufig über spezifische Newznab-Katego
     * In Radarr: **`movies`**
 
 > [!TIP]
-> **Performance-Tipp für SABnzbd (Direct Unpack):**
-> Aktiviere in SABnzbd unter **Einstellungen > Schalter** die Option **Direktes Entpacken (*Direct Unpack*)**.
-> SABnzbd entpackt RAR-Archive dadurch bereits parallel während des Herunterladens, sobald die Segmente eintreffen. Wenn der Download fertiggestellt ist, ist die Datei sofort entpackt. Sonarr und Radarr können den Instant Move unmittelbar und ohne Wartezeit vollziehen.
+> **Performance-Tipp (Direct Unpack für SABnzbd & NZBGet):**
+> * **In SABnzbd:** Gehe zu **Einstellungen > Schalter** und aktiviere **Direktes Entpacken (*Direct Unpack*)**.
+> * **In NZBGet:** Gehe zu **Settings > UNPACK** und setze **DirectUnpack** auf **`yes`**.
+> * *Warum?* Beide Downloader entpacken RAR-Archive bereits parallel während des Herunterladens. Sobald der Download beendet ist, steht die Datei unmittelbar bereit – Sonarr und Radarr können den Instant Atomic Move ohne jegliche Wartezeit vollziehen.
 
 > [!NOTE]
 > **Warum du KEIN Remote Path Mapping brauchst:**

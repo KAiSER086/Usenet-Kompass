@@ -234,25 +234,25 @@ echo ""
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${BOLD}▶ SCHRITT 1: Welchen Usenet-Downloader möchtest du nutzen?${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "  ${BOLD}[1] NZBGet${NC}  ${GREEN}(⭐ Dringend empfohlen für sparsame Server & Raspberry Pi)${NC}"
-echo -e "      Kompiliert in nativem C++. Extrem ressourcenschonend, liefert maximale"
-echo -e "      Download-Geschwindigkeit bei minimaler CPU-Auslastung auch auf sparsamer Hardware."
+echo -e "  ${BOLD}[1] SABnzbd${NC} ${GREEN}(⭐ Empfohlen: Moderne UI, intelligentes Caching & volle Gigabit-Power)${NC}"
+echo -e "      Python mit C-optimierten sabctools (SIMD NEON/AVX2). Erstklassige moderne"
+echo -e "      Weboberfläche, Direct Unpack, Auto-PAR2 und intelligentes RAM-Caching."
 echo ""
-echo -e "  ${BOLD}[2] SABnzbd${NC} (Sehr beliebt & modern)"
-echo -e "      Python-basiert mit erstklassiger, moderner Weboberfläche, integrierter"
-echo -e "      Auto-PAR2-Reparatur und Direkt-Entpacken."
+echo -e "  ${BOLD}[2] NZBGet${NC}  ${CYAN}(Ressourcen-Leichtgewicht für < 2 GB RAM / alte Hardware)${NC}"
+echo -e "      Kompiliert in nativem C++. Minimaler RAM-Bedarf (~40-60 MB), Direct Unpack, ideal für"
+echo -e "      Kleinst-Geräte (z. B. Raspberry Pi 3 oder 1 GB VPS)."
 echo ""
 read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
 DOWNLOADER_CHOICE=${DOWNLOADER_CHOICE:-1}
 
 if [ "$DOWNLOADER_CHOICE" = "2" ]; then
-    SELECTED_DOWNLOADER="sabnzbd"
-    DOWNLOADER_PORT="8080"
-    DOWNLOADER_SERVICE_NAME="SABnzbd"
-else
     SELECTED_DOWNLOADER="nzbget"
     DOWNLOADER_PORT="6789"
     DOWNLOADER_SERVICE_NAME="NZBGet"
+else
+    SELECTED_DOWNLOADER="sabnzbd"
+    DOWNLOADER_PORT="8080"
+    DOWNLOADER_SERVICE_NAME="SABnzbd"
 fi
 echo -e "${GREEN}✓ Ausgewählter Downloader: ${DOWNLOADER_SERVICE_NAME}${NC}"
 
