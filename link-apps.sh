@@ -132,6 +132,24 @@ else
     echo -e "  ${GREEN}✓ Radarr Root-Folder bereits vorhanden: /data/media/movies${NC}"
 fi
 
+# 3.5 NETZWERK-ERKENNUNG (GLUETUN VS. DOCKER-BRIDGE)
+USE_GLUETUN=false
+if grep -q "gluetun:" "$INSTALL_DIR/docker-compose.yml" 2>/dev/null; then
+    USE_GLUETUN=true
+fi
+
+if [ "$USE_GLUETUN" = true ]; then
+    PROWLARR_URL_FOR_APPS="http://localhost:9696"
+    SONARR_URL_FOR_PROWLARR="http://localhost:8989"
+    RADARR_URL_FOR_PROWLARR="http://localhost:7878"
+    DOWNLOADER_HOST_FOR_APPS="localhost"
+else
+    PROWLARR_URL_FOR_APPS="http://prowlarr:9696"
+    SONARR_URL_FOR_PROWLARR="http://sonarr:8989"
+    RADARR_URL_FOR_PROWLARR="http://radarr:7878"
+    DOWNLOADER_HOST_FOR_APPS="${DOWNLOADER_TYPE}"
+fi
+
 # 4.0 APPS IN PROWLARR REGISTRIEREN
 echo -e "\n${CYAN}▶ Verknüpfe Sonarr & Radarr mit Prowlarr...${NC}"
 
@@ -148,8 +166,8 @@ if [[ "$EXISTING_PROWLARR_APPS" != *"Sonarr"* ]]; then
   "implementationName": "Sonarr",
   "configContract": "SonarrSettings",
   "fields": [
-    {"name": "prowlarrUrl", "value": "http://localhost:9696"},
-    {"name": "baseUrl", "value": "http://localhost:8989"},
+    {"name": "prowlarrUrl", "value": "${PROWLARR_URL_FOR_APPS}"},
+    {"name": "baseUrl", "value": "${SONARR_URL_FOR_PROWLARR}"},
     {"name": "apiKey", "value": "${SONARR_KEY}"},
     {"name": "syncCategories", "value": [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5070, 5080, 5090]},
     {"name": "animeSyncCategories", "value": [5070]},
@@ -180,8 +198,8 @@ if [[ "$EXISTING_PROWLARR_APPS" != *"Radarr"* ]]; then
   "implementationName": "Radarr",
   "configContract": "RadarrSettings",
   "fields": [
-    {"name": "prowlarrUrl", "value": "http://localhost:9696"},
-    {"name": "baseUrl", "value": "http://localhost:7878"},
+    {"name": "prowlarrUrl", "value": "${PROWLARR_URL_FOR_APPS}"},
+    {"name": "baseUrl", "value": "${RADARR_URL_FOR_PROWLARR}"},
     {"name": "apiKey", "value": "${RADARR_KEY}"},
     {"name": "syncCategories", "value": [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090]},
     {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
@@ -221,7 +239,7 @@ if [ "$DOWNLOADER_TYPE" = "nzbget" ]; then
   "implementationName": "NZBGet",
   "configContract": "NzbgetSettings",
   "fields": [
-    {"name": "host", "value": "localhost"},
+    {"name": "host", "value": "${DOWNLOADER_HOST_FOR_APPS}"},
     {"name": "port", "value": 6789},
     {"name": "useSsl", "value": false},
     {"name": "username", "value": "${NZBGET_USER}"},
@@ -254,7 +272,7 @@ EOF
   "implementationName": "NZBGet",
   "configContract": "NzbgetSettings",
   "fields": [
-    {"name": "host", "value": "localhost"},
+    {"name": "host", "value": "${DOWNLOADER_HOST_FOR_APPS}"},
     {"name": "port", "value": 6789},
     {"name": "useSsl", "value": false},
     {"name": "username", "value": "${NZBGET_USER}"},
@@ -296,7 +314,7 @@ elif [ "$DOWNLOADER_TYPE" = "sabnzbd" ]; then
   "implementationName": "SABnzbd",
   "configContract": "SabnzbdSettings",
   "fields": [
-    {"name": "host", "value": "localhost"},
+    {"name": "host", "value": "${DOWNLOADER_HOST_FOR_APPS}"},
     {"name": "port", "value": 8080},
     {"name": "useSsl", "value": false},
     {"name": "apiKey", "value": "${SAB_API_KEY}"},
@@ -328,7 +346,7 @@ EOF
   "implementationName": "SABnzbd",
   "configContract": "SabnzbdSettings",
   "fields": [
-    {"name": "host", "value": "localhost"},
+    {"name": "host", "value": "${DOWNLOADER_HOST_FOR_APPS}"},
     {"name": "port", "value": 8080},
     {"name": "useSsl", "value": false},
     {"name": "apiKey", "value": "${SAB_API_KEY}"},

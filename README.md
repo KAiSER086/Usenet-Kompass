@@ -78,9 +78,9 @@ flowchart LR
 
 | Dienst | Port | Kategorie | Beschreibung |
 |:---|:---:|:---:|:---|
-| **[Gluetun](Docker%20Compose%20Stack/VPNs.md#41-das-netzwerk-sichern-mit-gluetun)** | — | Sicherheit | VPN-Client (WireGuard/OpenVPN) mit Kill-Switch für Downloader und Indexer. |
-| **[Tailscale](Docker%20Compose%20Stack/VPNs.md#42-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | Netzwerk | Privates Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
-| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | Downloader | Moderner, leistungsstarker Usenet-Downloader (Standard) mit Direct Unpack, Auto-PAR2 und voller Gigabit-Power. |
+| **[Gluetun](Docker%20Compose%20Stack/VPNs.md#42-optional-das-netzwerk-sichern-mit-gluetun)** | — | Sicherheit | Optionaler VPN-Client (WireGuard/OpenVPN) mit Kill-Switch für Downloader und Indexer. |
+| **[Tailscale](Docker%20Compose%20Stack/VPNs.md#43-tailscale-dienst-auf-dem-host-system-hinzufügen)** | — | Netzwerk | Privates Mesh-VPN für verschlüsselten Fernzugriff von unterwegs. |
+| **[SABnzbd](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `8080` | Downloader | Moderner Usenet-Downloader mit Direct Unpack, Auto-PAR2 und intelligenter Pufferung. |
 | **[NZBGet](Downloader/Sabnzbd%20vs%20NZBGet.md)** | `6789` | Downloader | Schlankes C++ Leichtgewicht mit minimalem RAM-Verbrauch (< 60 MB), ideal für Systeme mit < 2 GB RAM. |
 | **[Prowlarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#631-prowlarr-einrichten)** | `9696` | Indexer-Hub | Zentrale Verwaltung aller Usenet-Indexer mit nativer Synchronisation. |
 | **[Sonarr](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#632-sonarr--radarr-einrichten)** | `8989` | Serien | Automatisierte Suche, Überwachung und Verwaltung von Serien. |
@@ -94,14 +94,14 @@ flowchart LR
 
 | Kapitel | Leitfaden | Kerninhalte |
 |:---:|:---|:---|
-| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Hardware-Wahl (Pi 5, Mini-PC oder Cloud VPS), Transkodierung |
+| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Hardware-Wahl (Pi 5, Mini-PC oder Cloud VPS), Transkodierung, SSL/TLS vs. VPN |
 | **`2.0`** | **[Provider & Indexer](Provider%20%26%20Indexer/Provider%20%26%20Indexer.md#20-provider-und-indexer)** | Retention, Backbones, Block-Accounts, deutsche Indexer (*Treasure-Maps*, *NewzBay*) |
 | **`3.0`** | **[Docker Vorbereitung](Docker%20Compose%20Stack/Docker%20Compose%20Stack.md#30-der-docker-compose-stack)** | Container-Grundlagen, Installation unter Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch |
-| **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-vpn--und-mesh-konfiguration)** | Gluetun (WireGuard / OpenVPN), LAN-Bypass und Tailscale-Einbindung |
+| **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-netzwerk--und-vpn-konfiguration)** | Direktanbindung vs. VPN (Gluetun), LAN-Bypass und Tailscale-Einbindung |
 | **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | Vergleich von SABnzbd und NZBGet, Direct Unpack, I/O-Tuning und Benchmarks |
 | **`6.0`** | **[Automatisierung](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr-Sync, standardisierte Speicherpfade (`/data`), German DL Custom Formats |
 | **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Seerr.md#70-jellyfin--seerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Seerr |
-| **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige, vorkonfigurierte `docker-compose.yml` für alle Dienste |
+| **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige `docker-compose.yml`-Vorlagen (mit und ohne VPN) für alle Dienste |
 | **`Glossar`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Fachbegriffe verständlich erklärt: Retention, PAR2, Remux, German DL, Newznab |
 
 ---
@@ -119,9 +119,8 @@ curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/insta
 **Funktionsumfang des Installers:**
 * **Betriebssystem- & Paketprüfung:** Erkennt die Linux-Distribution (Debian, Ubuntu, DietPi, Arch Linux, Fedora, openSUSE, Alpine etc.) und richtet Docker sowie Docker Compose automatisch über den passenden Paketmanager ein.
 * **Hardwarebeschleunigung:** Erkennt vorhandene Grafikchipsätze (Intel QuickSync / VAAPI via `/dev/dri`) und bindet sie für Jellyfin ein.
-* **Subnetz-Erkennung:** Ermittelt das lokale Heimnetzwerk (z. B. `192.168.178.0/24`) und hinterlegt es im LAN-Bypass der Firewall.
-* **Downloader-Auswahl:** Ermöglicht die Wahl zwischen SABnzbd (Standard: moderne UI, Direct Unpack & volle Gigabit-Power) und NZBGet (Ressourcen-Leichtgewicht für < 2 GB RAM).
-* **VPN-Integration & Leak-Test:** Richtet Gluetun ein, lädt benötigte Kernelmodule und prüft nach dem Start sofort die maskierte externe IP.
+* **Downloader-Wahl:** Bietet die freie Wahl zwischen SABnzbd und NZBGet.
+* **Flexible Netzwerkarchitektur:** Unterstützt sowohl Direktanbindung via SSL/TLS (Port 563) als auch VPN-Tunneling via Gluetun (inkl. automatischem Leak-Test).
 * **Automatisches App-Linking & TRaSH-Provisioning (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander (`fullSync`), bindet Downloader an, konfiguriert das TRaSH Naming Scheme und richtet deutsche Custom Formats (`German DL` +1500, `German` +1000) inklusive Quality-Profile-Scoring vollautomatisch ein.
 
 ---

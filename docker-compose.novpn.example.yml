@@ -1,55 +1,26 @@
 # ==============================================================================
-# 🧭 USENET-KOMPASS - DOCKER COMPOSE TEMPLATE
+# 🧭 USENET-KOMPASS - DOCKER COMPOSE TEMPLATE (OHNE VPN / DIREKT-MODUS)
 # Schlüsselfertige Vorlage für deinen automatisierten Medienserver-Stack
 # Dokumentation: https://github.com/KAiSER086/Usenet-Kompass
 # ==============================================================================
 
 services:
-  gluetun:
-    image: qmcgaw/gluetun:latest
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    environment:
-      # --- VPN Konfiguration (WireGuard / OpenVPN) ---
-      - VPN_SERVICE_PROVIDER=mullvad # z. B. mullvad, protonvpn, surfshark, ivpn, custom
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
-      - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine WireGuard-IP
-      - SERVER_COUNTRIES=Netherlands,Germany
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24 # Erlaube Zugriff aus dem lokalen Heimnetz (anpassen!)
-      - TZ=Europe/Berlin
-      - PUID=1000 # Deine PUID (Terminal: 'id -u')
-      - PGID=1000 # Deine PGID (Terminal: 'id -g')
-    ports:
-      - "8080:8080" # SABnzbd WebUI (Standard)
-      - "6789:6789" # NZBGet WebUI (falls genutzt)
-      - "7878:7878" # Radarr WebUI & API
-      - "8989:8989" # Sonarr WebUI & API
-      - "9696:9696" # Prowlarr WebUI & API
-    volumes:
-      - ./config/gluetun:/gluetun
-    restart: unless-stopped
-
   # --- Usenet Downloader (Wähle SABnzbd ODER NZBGet) ---
 
-  # Option A: SABnzbd (Standard-Empfehlung: Moderne UI, intelligentes Caching & volle Gigabit-Power)
+  # Option A: SABnzbd (Moderne UI, intelligentes Caching & volle Gigabit-Power)
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=1000 # Deine PUID (Terminal: 'id -u')
+      - PGID=1000 # Deine PGID (Terminal: 'id -g')
       - TZ=Europe/Berlin
     volumes:
       - ./config/sabnzbd:/config
       - ./data:/data
+    ports:
+      - "8080:8080" # SABnzbd WebUI
     restart: unless-stopped
-    depends_on:
-      - gluetun
-    network_mode: "service:gluetun"
 
   # Option B: NZBGet (Ressourcen-Leichtgewicht für < 2 GB RAM inkl. Direct Unpack)
   # nzbget:
@@ -62,10 +33,9 @@ services:
   #   volumes:
   #     - ./config/nzbget:/config
   #     - ./data:/data
+  #   ports:
+  #     - "6789:6789" # NZBGet WebUI
   #   restart: unless-stopped
-  #   depends_on:
-  #     - gluetun
-  #   network_mode: "service:gluetun"
 
   # --- Arr-Stack (Automatisierung & Indexer-Management) ---
 
@@ -78,9 +48,8 @@ services:
       - TZ=Europe/Berlin
     volumes:
       - ./config/prowlarr:/config
-    network_mode: "service:gluetun"
-    depends_on:
-      - gluetun
+    ports:
+      - "9696:9696" # Prowlarr WebUI & API
     restart: unless-stopped
 
   sonarr:
@@ -93,9 +62,9 @@ services:
     volumes:
       - ./config/sonarr:/config
       - ./data:/data
-    network_mode: "service:gluetun"
+    ports:
+      - "8989:8989" # Sonarr WebUI & API
     depends_on:
-      - gluetun
       - sabnzbd # oder nzbget
     restart: unless-stopped
 
@@ -109,9 +78,9 @@ services:
     volumes:
       - ./config/radarr:/config
       - ./data:/data
-    network_mode: "service:gluetun"
+    ports:
+      - "7878:7878" # Radarr WebUI & API
     depends_on:
-      - gluetun
       - sabnzbd # oder nzbget
     restart: unless-stopped
 
@@ -127,13 +96,13 @@ services:
     volumes:
       - ./config/jellyfin:/config
       - ./data/media:/data/media
-    # Optional für Intel QuickSync Hardware-Transcoding:
+    # Optional für Intel QuickSync / VAAPI Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
     # group_add:
-    #   - "107" # GID der Gruppe 'render' auf dem Host ('getent group render | cut -d: -f3')
+    #   - "107" # GID der Gruppe 'render' auf dem Host (getent group render | cut -d: -f3)
     ports:
-      - "8096:8096"
+      - "8096:8096" # Jellyfin WebUI
     restart: unless-stopped
 
   seerr:
@@ -145,9 +114,8 @@ services:
     volumes:
       - ./config/seerr:/app/config
     ports:
-      - "5055:5055"
+      - "5055:5055" # Seerr WebUI
     depends_on:
       - radarr
       - sonarr
-      - gluetun
     restart: unless-stopped

@@ -32,6 +32,24 @@ In Deutschland spielt der Aspekt der **Rechtslage** eine entscheidende Rolle:
   * **Torrent:** Da bei Torrents das Herunterladen und gleichzeitige Hochladen (**Filesharing**) untrennbar verknüpft ist, erfassen spezialisierte Kanzleien die öffentlich sichtbaren IP-Adressen im P2P-Schwarm für teure Abmahnungen.
   * **Usenet:** Beim Usenet lädst du ausschließlich herunter (reiner Client-Server-Traffic). Deine IP-Adresse ist im Netzwerk nicht öffentlich sichtbar, und der Transfer zum Server ist TLS-verschlüsselt. Abmahnungen, wie sie bei Torrents an der Tagesordnung sind, gibt es im Usenet nicht.
 
+### Brauche ich für das Usenet ein VPN? (SSL/TLS vs. VPN)
+
+Eine der häufigsten Fragen von Einsteigern lautet, ob für Usenet-Downloads zwingend ein VPN benötigt wird. Die Antwort lautet: **Nein, ein VPN ist technisch nicht zwingend erforderlich – beide Ansätze haben handfeste Vor- und Nachteile:**
+
+* **Direktverbindung via SSL/TLS (Standard Port 563):**
+  * Verbindungen zu Usenet-Providern sind standardmäßig Ende-zu-Ende verschlüsselt (TLS), identisch mit moderner Browser- und Banking-Sicherheit.
+  * Dein Internetanbieter (ISP) sieht zwar, dass Daten mit einem News-Server ausgetauscht werden, kann jedoch weder Dateinamen noch Inhalte einsehen.
+  * Da es im Usenet keine P2P-Uploads an Dritte gibt, entfallen die typischen Filesharing-Abmahnrisiken vollständig.
+  * **Vorteile:** Maximale native Leitungsgeschwindigkeit, kein CPU-Kryptographie-Overhead, keine MTU-Einbußen und keine monatlichen Kosten für ein VPN-Abonnement.
+
+* **Zusätzlicher Schutz via VPN (Gluetun):**
+  * Leitet den gesamten Netzwerkverkehr des Downloaders und der Indexer-Apps über einen VPN-Tunnel um.
+  * Dein Internetanbieter sieht nicht einmal mehr die IP-Adresse des Usenet-Providers (hilfreich bei Providern, die Usenet-Ports in den Abendstunden drosseln).
+  * Anfragen von Prowlarr an Indexer-Websites und APIs laufen über die maskierte VPN-IP statt über deinen privaten Internetanschluss.
+  * **Vorteile:** Höchstmögliche Anonymität gegenüber allen externen Schnittstellen und Umgehung von ISP-Traffic-Shaping.
+
+> Ob du deinen Stack direkt über SSL/TLS oder zusätzlich getunnelt über ein VPN betreibst, liegt ganz in deinem persönlichen Ermessen. Unser Guide und das Installationsskript unterstützen beide Varianten gleichermaßen.
+
 ---
 
 ## 1.2 Systemvoraussetzungen & Hardware-Wahl

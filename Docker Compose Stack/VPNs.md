@@ -1,36 +1,46 @@
-# 4.0 VPN- und Mesh-Konfiguration
+# 4.0 Netzwerk- und VPN-Konfiguration
 
-Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, beginnen wir mit der grundlegenden Netzwerkkonfiguration deines Stacks. Hierbei konzentrieren wir uns auf die Absicherung deiner Downloads und den sicheren Fernzugriff.
-
-## Was ist ein VPN und warum ist es für Usenet wichtig?
-
-Ein **VPN (Virtual Private Network)** ist eine Technologie, die eine sichere und verschlüsselte Verbindung zwischen deinem Computer und einem Server im Internet herstellt. Stell dir vor, du leitest deinen gesamten Internetverkehr durch einen sicheren, privaten Tunnel.
-
-Für Usenet-Downloads ist ein VPN aus folgenden Gründen nützlich:
-
-* **Anonymität:** Deine tatsächliche IP-Adresse wird verborgen, da der gesamte Traffic über die IP-Adresse des VPN-Servers läuft. Das schützt deine Privatsphäre.
-* **Sicherheit:** Die Daten werden zusätzlich getunnelt, sodass dein Internetanbieter (oder andere Dritte) nicht einsehen können, welche Server du kontaktierst.
-
-## Was ist ein Mesh-VPN und warum nutzen wir Tailscale?
-
-Ein **Mesh-VPN**, wie es von Tailscale verwendet wird, ist eine moderne Form des VPN. Während ein herkömmliches VPN all deinen Traffic über einen einzigen zentralen Server leitet, um ihn zu verschleiern, ermöglicht ein Mesh-VPN eine direkte, verschlüsselte Kommunikation zwischen all deinen Geräten – egal wo sie sich befinden.
-
-Stell dir vor, deine Geräte (z. B. dein Heimserver, dein Laptop und dein Smartphone) sind Teil eines privaten, sicheren Netzwerks. Mit Tailscale kannst du von unterwegs direkt und sicher auf die Benutzeroberflächen deiner Docker-Dienste auf deinem Server zugreifen, ohne Ports am Router öffnen zu müssen. Es ist die optimale Lösung für einen sicheren Fernzugriff auf deinen Usenet-Stack.
+Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, widmen wir uns der Netzwerkarchitektur deines Stacks. Hierbei hast du die freie Wahl zwischen zwei bewährten Ansätzen: **Direktanbindung ohne VPN** oder **zusätzliches VPN-Tunneling mit Gluetun**. Anschließend richten wir den sicheren Fernzugriff via **Tailscale** ein.
 
 ---
 
-## 4.1 Das Netzwerk sichern mit Gluetun
+## 4.1 Die Wahl der Netzwerkarchitektur: Direktanbindung vs. VPN
 
-Um deine Privatsphäre zu schützen und deine Downloads abzusichern, leiten wir den Datenverkehr des Downloaders und der Arr-Apps über ein VPN. **Gluetun** ist ein extrem schlanker, sicherer Docker-Container mit integriertem Kill-Switch.
+Usenet-Verbindungen werden standardmäßig über **SSL/TLS (Port 563)** aufgebaut und sind somit auf Transportebene vollständig verschlüsselt. Ob du zusätzlich ein VPN zwischenschaltest, liegt in deinem eigenen Ermessen:
+
+| Kriterium | Direktanbindung (Ohne VPN) | Mit VPN (Gluetun-Tunneling) |
+| :--- | :--- | :--- |
+| **Verschlüsselung** | **SSL/TLS (Port 563)** direkt zum Usenet-Server. | Doppelte Verschlüsselung: **WireGuard/OpenVPN** + SSL/TLS. |
+| **Download-Performance** | **100 % native Leitungsgeschwindigkeit**, keine MTU-Reduktion (1500), 0 % CPU-Overhead für Tunnel-Kryptographie. | Bis zu 100 % bei WireGuard; mögliche Einbußen bei vielen parallelen Verbindungen oder schwachen Kernen. |
+| **Kosten** | **0 €** (kein VPN-Abonnement erforderlich). | Kosten für einen VPN-Anbieter (z. B. Mullvad, ProtonVPN). |
+| **Sichtbarkeit gegenüber ISP** | ISP sieht Datenaustausch mit News-Server-IP (Inhalte & Dateinamen bleiben unsichtbar). | ISP sieht ausschließlich verschlüsselten UDP-Traffic zum VPN-Server. |
+| **Schutz vor ISP-Drosselung** | Abhängig vom ISP; einige Anbieter drosseln Usenet-Traffic in Stoßzeiten. | Wirksam: ISP kann Usenet-Pakete nicht identifizieren oder drosseln. |
+| **Indexer-Anfragen (Prowlarr)** | Laufen über deine reguläre Heim-IP. | Laufen über die externe VPN-IP. |
 
 ---
 
-### 🚀 Warum wir WireGuard dringend empfehlen (und warum OpenVPN ein alter Onkel ist)
+### Welcher Weg ist der richtige für dich?
 
-Wir empfehlen dir ganz ausdrücklich, **WireGuard** anstelle von OpenVPN zu nutzen:
+* **Wähle Direktanbindung (Ohne VPN), wenn:**
+  * Du maximale Übertragungsraten und minimale Systemkomplexität anstrebst.
+  * Dein Internetanbieter keine gezielten Drosselungen für Usenet-Ports vornimmt.
+  * Du auf ein zusätzliches monatliches VPN-Abonnement verzichten möchtest.
+  * *Hinweis:* Du kannst in diesem Fall direkt mit **[Kapitel 4.3: Tailscale für sicheren Fernzugriff](#43-tailscale-dienst-auf-dem-host-system-hinzufügen)** fortfahren und den Gluetun-Schritt überspringen!
 
-* 👴 **OpenVPN (Der alte Onkel):** OpenVPN ist über 20 Jahre alt. Es läuft im sogenannten *Userspace* und hat eine riesige, träge Codebasis. Das bedeutet: Hohe CPU-Last und spürbarer Flaschenhals. Auf einem **Raspberry Pi 5** oder sparsamen Mini-PC bremst OpenVPN schnelle Internetleitungen oft schon ab 200–300 Mbit/s massiv aus, weil die CPU mit dem Verschlüsseln nicht hinterherkommt.
-* ⚡ **WireGuard (Die moderne Rakete):** WireGuard ist der moderne Standard für VPNs. Es ist direkt in den **Linux-Kernel integriert**, extrem schlank (~4.000 Zeilen Code vs. 100.000+ bei OpenVPN) und verbraucht einen Bruchteil der Prozessorleistung. Mit WireGuard lastest du selbst eine **1.000 Mbit/s (Gigabit) Leitung** auf dem Raspberry Pi 5 mühelos voll aus.
+* **Wähle VPN (Gluetun), wenn:**
+  * Du deinen gesamten Usenet- und Indexer-Traffic gegenüber deinem Provider vollständig maskieren möchtest.
+  * Du restriktives ISP-Traffic-Shaping zuverlässig umgehen willst.
+  * Du den integrierten DNS- und Kill-Switch-Schutz von Gluetun nutzen möchtest.
+
+---
+
+## 4.2 Optional: Das Netzwerk sichern mit Gluetun
+
+Wenn du dich für den Betrieb mit VPN entschieden hast, binden wir den Container **Gluetun** ein. Gluetun ist ein spezialisierter, extrem schlanker VPN-Client für Docker mit integriertem Kill-Switch.
+
+### WireGuard vs. OpenVPN im Vergleich
+* **WireGuard:** Direkt in den Linux-Kernel integriert. Bietet hohen Durchsatz bei minimaler Prozessorlast, besonders empfehlenswert für sparsame Hardware wie den Raspberry Pi 5 oder Mini-PCs.
+* **OpenVPN:** Klassisches, weit verbreitetes Protokoll im Userspace. Erzeugt bei hohen Bandbreiten (ab 200–300 Mbit/s) spürbare CPU-Last.
 
 ---
 
@@ -55,7 +65,7 @@ nano docker-compose.yml
 
 ---
 
-### Gluetun mit WireGuard einrichten (Standard-Empfehlung)
+### Gluetun mit WireGuard einrichten
 
 Füge folgenden Block in deine `docker-compose.yml` ein. Ersetze die Zugangsdaten durch die WireGuard-Konfigurationsdaten deines VPN-Anbieters (z. B. Mullvad, ProtonVPN, IVPN, NordVPN, Custom):
 
@@ -129,7 +139,7 @@ Die angezeigte IP-Adresse muss nun mit der deines gewählten VPN-Servers überei
 
 ---
 
-## 4.2 Tailscale-Dienst auf dem Host-System hinzufügen
+## 4.3 Tailscale-Dienst auf dem Host-System hinzufügen
 
 Nachdem das VPN-Fundament steht, richten wir den sicheren Fernzugriff ein. Tailscale installieren wir direkt auf dem Host-System. So kannst du zuverlässig auf den Server zugreifen, ohne dass es zu Routing-Konflikten mit Docker oder Gluetun kommt.
 

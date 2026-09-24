@@ -261,30 +261,6 @@ if [ "$CURRENT_UID" -eq 0 ]; then
 fi
 echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
 
-# Lokales Heimnetzwerk / Subnetz über das physische Interface der Default Route ermitteln
-DEFAULT_IFACE=$(ip route show default 2>/dev/null | awk '{print $5}' | head -n 1 || true)
-DETECTED_SUBNET=""
-if [ -n "$DEFAULT_IFACE" ]; then
-    # Nur das Subnetz des physischen Interfaces abfragen (ignoriert docker0, br-xxx etc.)
-    DETECTED_SUBNET=$(ip route show dev "$DEFAULT_IFACE" 2>/dev/null | grep -v default | grep -E '192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.' | awk '{print $1}' | head -n 1 || true)
-fi
-
-if [ -z "$DETECTED_SUBNET" ]; then
-    DEFAULT_GW=$(ip route show default 2>/dev/null | awk '{print $3}' | head -n 1 || true)
-    if [[ "$DEFAULT_GW" =~ ^192\.168\.[0-9]+\. ]]; then
-        DETECTED_SUBNET="${DEFAULT_GW%.*}.0/24"
-    else
-        DETECTED_SUBNET="192.168.178.0/24"
-    fi
-fi
-
-echo ""
-echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall):${NC}"
-echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
-read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
-LAN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
-echo -e "${GREEN}✓ Lokales Subnetz für Gluetun gesetzt: ${LAN_SUBNET}${NC}"
-
 # Server-IP für die spätere Anzeige ermitteln
 SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
@@ -304,11 +280,11 @@ echo ""
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${BOLD}▶ SCHRITT 1: Welchen Usenet-Downloader möchtest du nutzen?${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "  ${BOLD}[1] SABnzbd${NC} ${GREEN}(⭐ Empfohlen: Moderne UI, intelligentes Caching & volle Gigabit-Power)${NC}"
+echo -e "  ${BOLD}[1] SABnzbd${NC} (Moderne UI, intelligentes Caching & volle Gigabit-Power)"
 echo -e "      Python mit C-optimierten sabctools (SIMD NEON/AVX2). Erstklassige moderne"
 echo -e "      Weboberfläche, Direct Unpack, Auto-PAR2 und intelligentes RAM-Caching."
 echo ""
-echo -e "  ${BOLD}[2] NZBGet${NC}  ${CYAN}(Ressourcen-Leichtgewicht für < 2 GB RAM / alte Hardware)${NC}"
+echo -e "  ${BOLD}[2] NZBGet${NC}  (Ressourcen-Leichtgewicht für < 2 GB RAM / sparsame Hardware)"
 echo -e "      Kompiliert in nativem C++. Minimaler RAM-Bedarf (~40-60 MB), Direct Unpack, ideal für"
 echo -e "      Kleinst-Geräte (z. B. Raspberry Pi 3 oder 1 GB VPS)."
 echo ""
@@ -327,72 +303,112 @@ fi
 echo -e "${GREEN}✓ Ausgewählter Downloader: ${DOWNLOADER_SERVICE_NAME}${NC}"
 
 # ------------------------------------------------------------------------------
-# 4.0 VPN-KONFIGURATION (WIREGUARD VS. OPENVPN)
+# 4.0 NETZWERK- & VPN-KONFIGURATION (MIT ODER OHNE GLUETUN)
 # ------------------------------------------------------------------------------
 echo ""
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${BOLD}▶ SCHRITT 2: VPN-Protokoll & Sicherheit (Gluetun)${NC}"
+echo -e "${BOLD}▶ SCHRITT 2: Möchtest du ein VPN (Gluetun) für Downloader & Indexer nutzen?${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "  ${BOLD}[1] WireGuard${NC} ${GREEN}(⭐ Dringend empfohlen!)${NC}"
-echo -e "      Modern, direkt im Linux-Kernel integriert. Liefert maximalen Durchsatz"
-echo -e "      bei minimaler Prozessorlast auf sparsamer Hardware / Mini-PCs."
+echo -e "  ${BOLD}[1] Ohne VPN (Direkte SSL/TLS-Verbindung)${NC}"
+echo -e "      Verbindungen zum Usenet-Provider sind über SSL/TLS (Port 563) standardmäßig"
+echo -e "      vollständig verschlüsselt. Volle Übertragungsrate ohne CPU-Overhead"
+echo -e "      und ohne Notwendigkeit eines kostenpflichtigen VPN-Abonnements."
 echo ""
-echo -e "  ${BOLD}[2] OpenVPN${NC}   ${YELLOW}(Veraltetes Fallback)${NC}"
-echo -e "      Erzeugt hohe CPU-Last und bremst schnelle Internetleitungen oft aus."
+echo -e "  ${BOLD}[2] Mit VPN (Gluetun-Tunneling via WireGuard oder OpenVPN)${NC}"
+echo -e "      Leitet Downloader und Indexer über einen VPN-Tunnel. Maskiert deine IP"
+echo -e "      zusätzlich gegenüber dem Provider und schützt vor möglichem ISP-Traffic-Shaping."
 echo ""
-read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
-VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
+read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_MODE_CHOICE
+VPN_MODE_CHOICE=${VPN_MODE_CHOICE:-1}
 
-echo ""
-echo -e "Welchen VPN-Anbieter nutzt du?"
-echo -e "  [1] Mullvad"
-echo -e "  [2] ProtonVPN"
-echo -e "  [3] Surfshark"
-echo -e "  [4] IVPN"
-echo -e "  [5] Anderer / Custom"
-read_input -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
-VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
-
-case "$VPN_PROV_CHOICE" in
-    1) VPN_PROVIDER="mullvad" ;;
-    2) VPN_PROVIDER="protonvpn" ;;
-    3) VPN_PROVIDER="surfshark" ;;
-    4) VPN_PROVIDER="ivpn" ;;
-    *) VPN_PROVIDER="custom" ;;
-esac
-
+USE_VPN=false
+VPN_TYPE="none"
+VPN_PROVIDER="none"
 WIREGUARD_PRIVATE_KEY=""
 WIREGUARD_ADDRESSES=""
 OPENVPN_USER=""
 OPENVPN_PASS=""
+VPN_COUNTRIES=""
+LAN_SUBNET=""
 
-if [ "$VPN_PROTO_CHOICE" = "2" ]; then
-    VPN_TYPE="openvpn"
+if [ "$VPN_MODE_CHOICE" = "2" ]; then
+    USE_VPN=true
     echo ""
-    read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
-    read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+    echo -e "Welches VPN-Protokoll möchtest du nutzen?"
+    echo -e "  [1] WireGuard (Direkt im Linux-Kernel integriert, minimaler CPU-Overhead)"
+    echo -e "  [2] OpenVPN   (Klassisches Userspace-Protokoll, höhere CPU-Last)"
+    read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
+    VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
+
     echo ""
-    OPENVPN_USER=${OPENVPN_USER:-"dummy_user"}
-    OPENVPN_PASS=${OPENVPN_PASS:-"dummy_pass"}
-else
-    VPN_TYPE="wireguard"
-    echo ""
-    if [ "$DRY_RUN" = true ]; then
-        WIREGUARD_PRIVATE_KEY="c29tZXJhbmRvbXdpcmVndWFyZHByaXZhdGVrZXkxMjM0NTY="
-        WIREGUARD_ADDRESSES="10.64.0.1/32"
+    echo -e "Welchen VPN-Anbieter nutzt du?"
+    echo -e "  [1] Mullvad"
+    echo -e "  [2] ProtonVPN"
+    echo -e "  [3] Surfshark"
+    echo -e "  [4] IVPN"
+    echo -e "  [5] Anderer / Custom"
+    read_input -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
+    VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
+
+    case "$VPN_PROV_CHOICE" in
+        1) VPN_PROVIDER="mullvad" ;;
+        2) VPN_PROVIDER="protonvpn" ;;
+        3) VPN_PROVIDER="surfshark" ;;
+        4) VPN_PROVIDER="ivpn" ;;
+        *) VPN_PROVIDER="custom" ;;
+    esac
+
+    if [ "$VPN_PROTO_CHOICE" = "2" ]; then
+        VPN_TYPE="openvpn"
+        echo ""
+        read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
+        read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+        echo ""
+        OPENVPN_USER=${OPENVPN_USER:-"dummy_user"}
+        OPENVPN_PASS=${OPENVPN_PASS:-"dummy_pass"}
     else
-        while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
-            read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
-            if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
-                echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
-            fi
-        done
-        read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+        VPN_TYPE="wireguard"
+        echo ""
+        if [ "$DRY_RUN" = true ]; then
+            WIREGUARD_PRIVATE_KEY="c29tZXJhbmRvbXdpcmVndWFyZHByaXZhdGVrZXkxMjM0NTY="
+            WIREGUARD_ADDRESSES="10.64.0.1/32"
+        else
+            while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
+                read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+                if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
+                    echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
+                fi
+            done
+            read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+        fi
     fi
-fi
 
-read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
-VPN_COUNTRIES=${VPN_COUNTRIES:-"Netherlands,Germany"}
+    read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
+    VPN_COUNTRIES=${VPN_COUNTRIES:-"Netherlands,Germany"}
+
+    # Lokales Heimnetzwerk für Gluetun Firewall ermitteln
+    DEFAULT_IFACE=$(ip route show default 2>/dev/null | awk '{print $5}' | head -n 1 || true)
+    DETECTED_SUBNET=""
+    if [ -n "$DEFAULT_IFACE" ]; then
+        DETECTED_SUBNET=$(ip route show dev "$DEFAULT_IFACE" 2>/dev/null | grep -v default | grep -E '192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.' | awk '{print $1}' | head -n 1 || true)
+    fi
+    if [ -z "$DETECTED_SUBNET" ]; then
+        DEFAULT_GW=$(ip route show default 2>/dev/null | awk '{print $3}' | head -n 1 || true)
+        if [[ "$DEFAULT_GW" =~ ^192\.168\.[0-9]+\. ]]; then
+            DETECTED_SUBNET="${DEFAULT_GW%.*}.0/24"
+        else
+            DETECTED_SUBNET="192.168.178.0/24"
+        fi
+    fi
+    echo ""
+    echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall Bypass):${NC}"
+    echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
+    read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
+    LAN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
+    echo -e "${GREEN}✓ Lokales Subnetz für Gluetun gesetzt: ${LAN_SUBNET}${NC}"
+else
+    echo -e "${GREEN}✓ Direktmodus gewählt: Verbindungen laufen ohne VPN direkt über SSL/TLS (Port 563).${NC}"
+fi
 
 # ------------------------------------------------------------------------------
 # 5.0 VERZEICHNISSTRUKTUR ANLEGEN (TRaSH-GUIDES STANDARD)
@@ -407,7 +423,9 @@ mkdir -p "$INSTALL_DIR/data/usenet/incomplete"
 mkdir -p "$INSTALL_DIR/data/media/movies"
 mkdir -p "$INSTALL_DIR/data/media/tv"
 
-mkdir -p "$INSTALL_DIR/config/gluetun"
+if [ "$USE_VPN" = true ]; then
+    mkdir -p "$INSTALL_DIR/config/gluetun"
+fi
 mkdir -p "$INSTALL_DIR/config/prowlarr"
 mkdir -p "$INSTALL_DIR/config/sonarr"
 mkdir -p "$INSTALL_DIR/config/radarr"
@@ -463,6 +481,7 @@ echo -e "${GREEN}✓ Ordnerstruktur erfolgreich unter $INSTALL_DIR/data angelegt
 # ------------------------------------------------------------------------------
 echo -e "${CYAN}▶ Generiere maßgeschneiderte docker-compose.yml...${NC}"
 
+if [ "$USE_VPN" = true ]; then
 cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
 services:
   gluetun:
@@ -566,6 +585,76 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
       - gluetun
       - ${SELECTED_DOWNLOADER}
     restart: unless-stopped
+EOF
+
+else
+# OHNE VPN (DIREKT-MODUS)
+cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
+services:
+  # --- Downloader: ${DOWNLOADER_SERVICE_NAME} ---
+  ${SELECTED_DOWNLOADER}:
+    image: lscr.io/linuxserver/${SELECTED_DOWNLOADER}:latest
+    container_name: ${SELECTED_DOWNLOADER}
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/${SELECTED_DOWNLOADER}:/config
+      - ./data:/data
+    ports:
+      - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}"
+    restart: unless-stopped
+
+  # --- Arr-Stack (Automation & Indexer) ---
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/sonarr:/config
+      - ./data:/data
+    ports:
+      - "8989:8989"
+    depends_on:
+      - ${SELECTED_DOWNLOADER}
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${CURRENT_UID}
+      - PGID=${CURRENT_GID}
+      - TZ=Europe/Berlin
+    volumes:
+      - ./config/radarr:/config
+      - ./data:/data
+    ports:
+      - "7878:7878"
+    depends_on:
+      - ${SELECTED_DOWNLOADER}
+    restart: unless-stopped
+EOF
+fi
+
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
 
   # --- Frontend (Medienserver & Anfragen) ---
   jellyfin:
@@ -611,7 +700,15 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     depends_on:
       - radarr
       - sonarr
+EOF
+
+if [ "$USE_VPN" = true ]; then
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
       - gluetun
+EOF
+fi
+
+cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     restart: unless-stopped
 EOF
 
@@ -682,32 +779,41 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     fi
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 
-    # --- 7.1 VPN-LEAK-TEST & LIVE-IP-CHECK ---
-    echo -e "${CYAN}⏳ Warte kurz auf VPN-Tunnelverbindung für den Sicherheits-Check...${NC}"
-    VPN_JSON=""
-    for i in {1..10}; do
-        VPN_JSON=$($DOCKER_BIN exec gluetun wget -qO- --timeout=5 https://ipinfo.io/json 2>/dev/null || true)
+    # --- 7.1 STATUS-CHECK (VPN-LEAK-TEST ODER DIREKT-MODUS) ---
+    if [ "$USE_VPN" = true ]; then
+        echo -e "${CYAN}⏳ Warte kurz auf VPN-Tunnelverbindung für den Sicherheits-Check...${NC}"
+        VPN_JSON=""
+        for i in {1..10}; do
+            VPN_JSON=$($DOCKER_BIN exec gluetun wget -qO- --timeout=5 https://ipinfo.io/json 2>/dev/null || true)
+            if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
+                break
+            fi
+            sleep 2
+        done
+
         if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
-            break
+            VPN_IP=$(echo "$VPN_JSON" | grep -oPm1 '(?<="ip": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"ip": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+            VPN_CITY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="city": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"city": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+            VPN_COUNTRY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="country": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"country": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+            VPN_ORG=$(echo "$VPN_JSON" | grep -oPm1 '(?<="org": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"org": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
+
+            echo -e "${GREEN}=================================================================="
+            echo -e "          🔒  VPN-LEAK-TEST: ERFOLGREICH BESTANDEN!               "
+            echo -e "==================================================================${NC}"
+            echo -e "  ${BOLD}Öffentliche VPN-IP:${NC}  ${GREEN}${BOLD}${VPN_IP}${NC}"
+            echo -e "  ${BOLD}Server-Standort:${NC}     ${VPN_CITY} (${VPN_COUNTRY})"
+            echo -e "  ${BOLD}Provider / ISP:${NC}      ${VPN_ORG}"
+            echo -e "  ${GREEN}✓ Deine echte Internet-IP ist zu 100% maskiert und geschützt.${NC}\n"
+        else
+            echo -e "${YELLOW}ℹ️  VPN-Tunnel baut sich noch im Hintergrund auf (Handshake läuft).${NC}\n"
         fi
-        sleep 2
-    done
-
-    if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
-        VPN_IP=$(echo "$VPN_JSON" | grep -oPm1 '(?<="ip": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"ip": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
-        VPN_CITY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="city": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"city": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
-        VPN_COUNTRY=$(echo "$VPN_JSON" | grep -oPm1 '(?<="country": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"country": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
-        VPN_ORG=$(echo "$VPN_JSON" | grep -oPm1 '(?<="org": ")[^"]+' 2>/dev/null || echo "$VPN_JSON" | sed -n 's/.*"org": "\([^"]*\)".*/\1/p' 2>/dev/null || true)
-
-        echo -e "${GREEN}=================================================================="
-        echo -e "          🔒  VPN-LEAK-TEST: ERFOLGREICH BESTANDEN!               "
-        echo -e "==================================================================${NC}"
-        echo -e "  ${BOLD}Öffentliche VPN-IP:${NC}  ${GREEN}${BOLD}${VPN_IP}${NC}"
-        echo -e "  ${BOLD}Server-Standort:${NC}     ${VPN_CITY} (${VPN_COUNTRY})"
-        echo -e "  ${BOLD}Provider / ISP:${NC}      ${VPN_ORG}"
-        echo -e "  ${GREEN}✓ Deine echte Internet-IP ist zu 100% maskiert und geschützt.${NC}\n"
     else
-        echo -e "${YELLOW}ℹ️  VPN-Tunnel baut sich noch im Hintergrund auf (Handshake läuft).${NC}\n"
+        echo -e "${GREEN}=================================================================="
+        echo -e "          ⚡  DIREKT-MODUS AKTIV (SSL/TLS VERSCHLÜSSELT)           "
+        echo -e "==================================================================${NC}"
+        echo -e "  ${BOLD}Verschlüsselung:${NC}     Ende-zu-Ende via SSL/TLS (Port 563)"
+        echo -e "  ${BOLD}Netzwerkmodus:${NC}       Native Leitungsgeschwindigkeit ohne VPN-Tunnel"
+        echo -e "  ${GREEN}✓ Downloads sind gegenüber deinem ISP und Dritten vollkommen verschlüsselt.${NC}\n"
     fi
 
     # --- 7.2 AUTOMATISCHES APP-LINKING ANBIETEN ---
