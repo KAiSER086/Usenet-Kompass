@@ -96,12 +96,48 @@ sudo usermod -aG docker $USER
 
 ### Installation überprüfen
 
- ```bash
+```bash
 # Zeigt die installierte Docker-Version an
 docker --version
 
 # Zeigt die installierte Docker Compose-Version an
 docker compose version
- ```
+```
+
+---
+
+## 3.2 Konfigurationsverwaltung (.env) & Log-Rotation
+
+Damit du vertrauliche Daten (wie VPN-Schlüssel) und systemspezifische Einstellungen (wie Benutzer-IDs und Pfade) nicht direkt in der `docker-compose.yml` verwalten musst, unterstützt der Usenet-Kompass das **Environment-File-Prinzip (`.env`)**.
+
+### Warum eine `.env`-Datei?
+* **Sicherheit:** Deine Passwörter und WireGuard-Keys verbleiben in der lokalen `.env`-Datei. Diese wird über `.gitignore` geschützt und landet niemals versehentlich in öffentlichen Repositories.
+* **Zentralität:** Musst du z. B. deine Festplattenpfade (`DATA_DIR`) oder die Zeitzone ändern, passt du das an einer einzigen Stelle an.
+* **Standard-Fallbacks:** Alle Compose-Dateien im Usenet-Kompass nutzen das Format `${VARIABLENNAME:-standardwert}`. Das bedeutet: Falls keine `.env` vorhanden ist, startet der Stack trotzdem stabil mit erprobten Standardwerten.
+
+### Die Vorlage `.env.example` nutzen
+Kopiere einfach die bereitgestellte Vorlage in dein Projektverzeichnis:
+```bash
+cp .env.example .env
+nano .env
+```
+
+Hier trägst du deine Benutzer-IDs (`id -u` und `id -g`), deine Zeitzone und ggf. deine VPN-Zugangsdaten ein.
+
+### Schutz vor vollen Festplatten (Docker Log-Rotation)
+Docker speichert Container-Logs standardmäßig unbegrenzt. Läuft ein Downloader oder Arr-Dienst über längere Zeit, können Logs gigabyteweise Speicherplatz füllen und insbesondere auf SD-Karten (z. B. beim Raspberry Pi) oder kleinen SSDs zum Systemstillstand führen.
+
+Alle Vorlagen im Usenet-Kompass definieren daher einen ressourcenschonenden Logging-Block:
+```yaml
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+```
+Damit ist garantiert, dass ein Dienst niemals mehr als 30 MB (3 Dateien à 10 MB) an Logs auf deinem System belegt.
+
+---
 
 Jetzt können wir mit der Einrichtung des VPN und Mesh-Netzwerks fortfahren.

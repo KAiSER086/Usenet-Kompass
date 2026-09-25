@@ -7,6 +7,18 @@ Hier findest du die vollständigen, harmonisierten `docker-compose.yml`-Vorlagen
 > * **Integrierte Log-Rotation:** Alle Vorlagen nutzen einen wiederverwendbaren Logging-Block (`max-size: 10m`, `max-file: 3`), damit Docker-Logs deine Festplatte oder microSD-Karte niemals unbemerkt füllen können.
 > * **Umgebungsvariablen (`.env`):** Du kannst die Vorlage `.env.example` nach `.env` kopieren (`cp .env.example .env`), um Benutzer-IDs (`PUID`/`PGID`), Pfade (`CONFIG_DIR`/`DATA_DIR`) oder VPN-Keys zentral und sicher auszulagern.
 
+### Schnellstart mit `.env`
+```bash
+# 1. Umgebungsvariablen anlegen und anpassen
+cp .env.example .env
+nano .env
+
+# 2. Gewünschte Vorlage kopieren & Stack starten
+cp docker-compose.example.yml docker-compose.yml       # Mit VPN (Gluetun)
+# ODER: cp docker-compose.novpn.example.yml docker-compose.yml  # Ohne VPN (Direktmodus)
+docker compose up -d
+```
+
 ---
 
 ## Variante A: Mit VPN (Gluetun-Tunneling via WireGuard / OpenVPN)

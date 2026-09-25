@@ -100,6 +100,10 @@ services:
     restart: unless-stopped
 ```
 
+> [!TIP]
+> **Tipp – Zugangsdaten in `.env` auslagern:**
+> Anstatt sensible Schlüssel wie `WIREGUARD_PRIVATE_KEY` direkt in die `docker-compose.yml` zu schreiben, kannst du diese sicher in der `.env`-Datei definieren (siehe [3.2 Konfigurationsverwaltung](Docker%20Compose%20Stack.md#32-konfigurationsverwaltung-env--log-rotation) und `.env.example`). In der Compose-Datei nutzt du dann einfach `- WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}`.
+
 > 💡 **Wichtig für den lokalen LAN-Zugriff:**
 > Gluetun blockiert standardmäßig durch seine integrierte Firewall alle Verbindungen außerhalb des Docker-Netzwerks. Mit `FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24` erlaubst du deinem lokalen Heimnetzwerk (z. B. PC oder Laptop im WLAN deiner Fritz!Box), direkt über die lokale IP des Servers auf die Webinterfaces zuzugreifen. Falls dein Heimnetz einen anderen IP-Bereich nutzt (z. B. `192.168.1.0/24` oder `10.0.0.0/24`), passe diesen Wert entsprechend an.
 
