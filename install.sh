@@ -477,10 +477,55 @@ chmod -R 755 "$INSTALL_DIR/data" || true
 echo -e "${GREEN}✓ Ordnerstruktur erfolgreich unter $INSTALL_DIR/data angelegt.${NC}"
 
 # ------------------------------------------------------------------------------
-# 6.0 DOCKER-COMPOSE.YML GENERIEREN
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}▶ Generiere maßgeschneiderte docker-compose.yml...${NC}"
+# 6.0 .ENV & DOCKER-COMPOSE.YML GENERIEREN
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}▶ Generiere maßgeschneiderte .env und docker-compose.yml...${NC}"
 
+# 6.1 .env-Datei generieren
+cat <<EOF > "$INSTALL_DIR/.env"
+# ==============================================================================
+# 🧭 USENET-KOMPASS - UMGEBUNGSVARIABLEN (.env)
+# Automatisch generiert durch install.sh
+# ==============================================================================
+
+PUID=${CURRENT_UID}
+PGID=${CURRENT_GID}
+TZ=Europe/Berlin
+CONFIG_DIR=./config
+DATA_DIR=./data
+EOF
+
+if [ "$USE_VPN" = true ]; then
+cat <<EOF >> "$INSTALL_DIR/.env"
+
+# --- VPN Konfiguration (Gluetun) ---
+VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
+VPN_TYPE=${VPN_TYPE}
+EOF
+
+if [ "$VPN_TYPE" = "wireguard" ]; then
+cat <<EOF >> "$INSTALL_DIR/.env"
+WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+EOF
+else
+cat <<EOF >> "$INSTALL_DIR/.env"
+OPENVPN_USER=${OPENVPN_USER}
+OPENVPN_PASSWORD=${OPENVPN_PASS}
+EOF
+fi
+
+cat <<EOF >> "$INSTALL_DIR/.env"
+SERVER_COUNTRIES=${VPN_COUNTRIES}
+FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
+EOF
+fi
+
+chmod 600 "$INSTALL_DIR/.env" || true
+echo -e "${GREEN}✓ .env erfolgreich mit restriktiven Rechten (chmod 600) erstellt.${NC}"
+
+# 6.2 docker-compose.yml generieren
 if [ "$USE_VPN" = true ]; then
 cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
 # Wiederverwendbarer Logging-Block gegen unbegrenzt volllaufende Festplatten
@@ -501,35 +546,35 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
-      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER}
-      - VPN_TYPE=${VPN_TYPE}
+      - VPN_SERVICE_PROVIDER=\${VPN_SERVICE_PROVIDER:-${VPN_PROVIDER}}
+      - VPN_TYPE=\${VPN_TYPE:-${VPN_TYPE}}
 EOF
 
 if [ "$VPN_TYPE" = "wireguard" ]; then
 cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_PRIVATE_KEY=\${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=\${WIREGUARD_ADDRESSES}
 EOF
 else
 cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
-      - OPENVPN_USER=${OPENVPN_USER}
-      - OPENVPN_PASSWORD=${OPENVPN_PASS}
+      - OPENVPN_USER=\${OPENVPN_USER}
+      - OPENVPN_PASSWORD=\${OPENVPN_PASSWORD}
 EOF
 fi
 
 cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
-      - SERVER_COUNTRIES=${VPN_COUNTRIES}
-      - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
-      - TZ=Europe/Berlin
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
+      - SERVER_COUNTRIES=\${SERVER_COUNTRIES:-${VPN_COUNTRIES}}
+      - FIREWALL_OUTBOUND_SUBNETS=\${FIREWALL_OUTBOUND_SUBNETS:-${LAN_SUBNET}}
+      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
     ports:
       - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}" # Downloader (${DOWNLOADER_SERVICE_NAME}) WebUI
       - "7878:7878" # Radarr WebUI & API
       - "8989:8989" # Sonarr WebUI & API
       - "9696:9696" # Prowlarr WebUI & API
     volumes:
-      - ./config/gluetun:/gluetun
+      - \${CONFIG_DIR:-./config}/gluetun:/gluetun
     restart: unless-stopped
 
   # --- Downloader: ${DOWNLOADER_SERVICE_NAME} ---
@@ -538,12 +583,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: ${SELECTED_DOWNLOADER}
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/${SELECTED_DOWNLOADER}:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/${SELECTED_DOWNLOADER}:/config
+      - \${DATA_DIR:-./data}:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -555,11 +600,11 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/prowlarr:/config
+      - \${CONFIG_DIR:-./config}/prowlarr:/config
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -570,12 +615,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sonarr:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/sonarr:/config
+      - \${DATA_DIR:-./data}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -587,12 +632,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/radarr:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/radarr:/config
+      - \${DATA_DIR:-./data}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -618,12 +663,12 @@ services:
     container_name: ${SELECTED_DOWNLOADER}
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/${SELECTED_DOWNLOADER}:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/${SELECTED_DOWNLOADER}:/config
+      - \${DATA_DIR:-./data}:/data
     ports:
       - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}"
     restart: unless-stopped
@@ -634,11 +679,11 @@ services:
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/prowlarr:/config
+      - \${CONFIG_DIR:-./config}/prowlarr:/config
     ports:
       - "9696:9696"
     restart: unless-stopped
@@ -648,12 +693,12 @@ services:
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sonarr:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/sonarr:/config
+      - \${DATA_DIR:-./data}:/data
     ports:
       - "8989:8989"
     depends_on:
@@ -665,12 +710,12 @@ services:
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/radarr:/config
-      - ./data:/data
+      - \${CONFIG_DIR:-./config}/radarr:/config
+      - \${DATA_DIR:-./data}:/data
     ports:
       - "7878:7878"
     depends_on:
@@ -687,12 +732,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: jellyfin
     <<: *default-logging
     environment:
-      - PUID=${CURRENT_UID}
-      - PGID=${CURRENT_GID}
-      - TZ=Europe/Berlin
+      - PUID=\${PUID:-1000}
+      - PGID=\${PGID:-1000}
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/jellyfin:/config
-      - ./data/media:/data/media
+      - \${CONFIG_DIR:-./config}/jellyfin:/config
+      - \${DATA_DIR:-./data}/media:/data/media
     ports:
       - "8096:8096"
     restart: unless-stopped
@@ -719,9 +764,9 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     <<: *default-logging
     init: true
     environment:
-      - TZ=Europe/Berlin
+      - TZ=\${TZ:-Europe/Berlin}
     volumes:
-      - ./config/seerr:/app/config
+      - \${CONFIG_DIR:-./config}/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
@@ -739,15 +784,15 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     restart: unless-stopped
 EOF
 
-echo -e "${GREEN}✓ docker-compose.yml wurde erfolgreich erstellt!${NC}\n"
+echo -e "${GREEN}✓ .env und docker-compose.yml wurden erfolgreich erstellt!${NC}\n"
 
 if [ "$DRY_RUN" = true ]; then
     echo -e "${CYAN}==================================================================${NC}"
-    echo -e "${GREEN}${BOLD}✓ [DRY-RUN] Validierung & docker-compose.yml Generierung erfolgreich!${NC}"
+    echo -e "${GREEN}${BOLD}✓ [DRY-RUN] Validierung & Konfigurations-Generierung erfolgreich!${NC}"
     echo -e "${CYAN}==================================================================${NC}"
     if command -v docker &>/dev/null && docker compose version &>/dev/null; then
         if docker compose config -q 2>/dev/null; then
-            echo -e "  ${GREEN}✓ docker-compose.yml ist syntaktisch 100% valide (geprüft via 'docker compose config').${NC}"
+            echo -e "  ${GREEN}✓ .env & docker-compose.yml sind syntaktisch 100% valide (geprüft via 'docker compose config').${NC}"
         else
             echo -e "  ${RED}✗ Fehler bei Validierung von docker-compose.yml via 'docker compose config'.${NC}"
             docker compose config || true
