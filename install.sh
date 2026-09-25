@@ -64,6 +64,8 @@ elif [ "$(id -u)" -ne 0 ]; then
     fi
 fi
 
+ORIGINAL_DIR="$(pwd)"
+
 # --- Farben & UI-Elemente ---
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -257,8 +259,13 @@ fi
 CURRENT_UID=$(id -u)
 CURRENT_GID=$(id -g)
 if [ "$CURRENT_UID" -eq 0 ]; then
-    CURRENT_UID=1000
-    CURRENT_GID=1000
+    if [ -n "$SUDO_USER" ]; then
+        CURRENT_UID=$(id -u "$SUDO_USER" 2>/dev/null || echo 1000)
+        CURRENT_GID=$(id -g "$SUDO_USER" 2>/dev/null || echo 1000)
+    else
+        CURRENT_UID=1000
+        CURRENT_GID=1000
+    fi
 fi
 echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
 
@@ -464,13 +471,49 @@ if [ "$USE_VPN" = true ]; then
     fi
 fi
 
+# ==============================================================================
+# SCHRITT 4: Installationsverzeichnis festlegen
+# ==============================================================================
+TARGET_USER="${SUDO_USER:-$USER}"
+TARGET_HOME=$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || true)
+TARGET_HOME=${TARGET_HOME:-$HOME}
+
+if [ -f "$ORIGINAL_DIR/docker-compose.example.yml" ] || [ "$(basename "$ORIGINAL_DIR")" = "Usenet-Kompass" ]; then
+    DEFAULT_INSTALL_DIR="$ORIGINAL_DIR"
+else
+    DEFAULT_INSTALL_DIR="${TARGET_HOME}/usenet-kompass"
+fi
+
+echo ""
+echo -e "${CYAN}=================================================================="
+echo -e "▶ SCHRITT 4: Installationsverzeichnis festlegen"
+echo -e "==================================================================${NC}"
+echo -e "  In welchem Ordner soll dein Usenet-Stack eingerichtet werden?"
+echo -e "  Standard-Pfad: ${BOLD}${DEFAULT_INSTALL_DIR}${NC}"
+read_input -p "Pfad übernehmen (Enter) oder individuellen Pfad eingeben: " USER_DIR_INPUT
+INSTALL_DIR="${USER_DIR_INPUT:-$DEFAULT_INSTALL_DIR}"
+# Tilde (~) im Pfad expandieren falls vom Nutzer eingegeben
+INSTALL_DIR="${INSTALL_DIR/#\~/$TARGET_HOME}"
+
+# Verzeichnis anlegen und absoluten Pfad ermitteln
+mkdir -p "$INSTALL_DIR" 2>/dev/null || $SUDO mkdir -p "$INSTALL_DIR"
+INSTALL_DIR="$(cd "$INSTALL_DIR" && pwd)"
+
+# Falls link-apps.sh im ursprünglichen Ordner existiert, ins Zielverzeichnis kopieren
+if [ -f "$ORIGINAL_DIR/link-apps.sh" ] && [ ! -f "$INSTALL_DIR/link-apps.sh" ]; then
+    cp "$ORIGINAL_DIR/link-apps.sh" "$INSTALL_DIR/" 2>/dev/null || true
+fi
+
+# In Installationsverzeichnis wechseln
+cd "$INSTALL_DIR"
+echo -e "${GREEN}✓ Installationsordner gesetzt: ${BOLD}${INSTALL_DIR}${NC}"
+
 # ------------------------------------------------------------------------------
 # 5.0 VERZEICHNISSTRUKTUR ANLEGEN (TRaSH-GUIDES STANDARD)
 # ------------------------------------------------------------------------------
 echo ""
 echo -e "${CYAN}▶ Erstelle TRaSH-Guides Verzeichnisstruktur für Instant Atomic Moves...${NC}"
 
-INSTALL_DIR="$(pwd)"
 mkdir -p "$INSTALL_DIR/data/usenet/complete/movies"
 mkdir -p "$INSTALL_DIR/data/usenet/complete/tv"
 mkdir -p "$INSTALL_DIR/data/usenet/incomplete"
@@ -901,7 +944,7 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
     $RUN_DOCKER_CMD up -d
     if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]] || [ "$(id -u)" -eq 0 ]; then
-        $SUDO chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR/data" "$INSTALL_DIR/config" 2>/dev/null || true
+        $SUDO chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR" 2>/dev/null || true
     fi
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 
@@ -961,10 +1004,10 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
             fi
         fi
     else
-        echo -e "${YELLOW}Du kannst die Apps jederzeit später verknüpfen mit: ${BOLD}./link-apps.sh${NC}\n"
+        echo -e "${YELLOW}Du kannst die Apps jederzeit später verknüpfen mit: ${BOLD}cd $INSTALL_DIR && ./link-apps.sh${NC}\n"
     fi
 else
-    echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}$RUN_DOCKER_CMD up -d${NC}\n"
+    echo -e "\n${YELLOW}Alles vorbereitet! Starte den Stack später mit: ${BOLD}cd $INSTALL_DIR && $RUN_DOCKER_CMD up -d${NC}\n"
 fi
 
 # ------------------------------------------------------------------------------
@@ -999,6 +1042,7 @@ fi
 echo -e "${CYAN}=================================================================="
 echo -e "                   DEINE WEB-INTERFACES                           "
 echo -e "==================================================================${NC}"
+echo -e "📁 ${BOLD}Installationsordner:${NC}            ${INSTALL_DIR}"
 echo -e "🍿 ${BOLD}Seerr (Medien-Anfragen):${NC}         http://${SERVER_IP}:5055"
 if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:5055"

@@ -26,7 +26,11 @@ echo "              AUTOMATISCHER APP-LINKER                          "
 echo "=================================================================="
 echo -e "${NC}"
 
-INSTALL_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="${1:-$SCRIPT_DIR}"
+if [ ! -d "$INSTALL_DIR/config" ] && [ -d "$(pwd)/config" ]; then
+    INSTALL_DIR="$(pwd)"
+fi
 CONFIG_DIR="$INSTALL_DIR/config"
 
 if [ ! -d "$CONFIG_DIR" ]; then
