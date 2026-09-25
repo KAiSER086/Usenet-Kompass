@@ -148,9 +148,10 @@ cd Usenet-Kompass
 # 2. Verzeichnisstruktur anlegen
 mkdir -p data/usenet/complete/movies data/usenet/complete/tv data/usenet/incomplete data/media/movies data/media/tv config
 
-# 3. Vorlage kopieren, Zugangsdaten anpassen und starten
+# 3. Vorlagen & Umgebungsvariablen anpassen und starten
+cp .env.example .env
 cp docker-compose.example.yml docker-compose.yml
-nano docker-compose.yml
+nano .env  # oder nano docker-compose.yml
 docker compose up -d
 
 # 4. Apps automatisch verknüpfen

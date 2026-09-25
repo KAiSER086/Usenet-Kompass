@@ -483,10 +483,19 @@ echo -e "${CYAN}▶ Generiere maßgeschneiderte docker-compose.yml...${NC}"
 
 if [ "$USE_VPN" = true ]; then
 cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
+# Wiederverwendbarer Logging-Block gegen unbegrenzt volllaufende Festplatten
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
+    <<: *default-logging
     cap_add:
       - NET_ADMIN
     devices:
@@ -527,6 +536,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   ${SELECTED_DOWNLOADER}:
     image: lscr.io/linuxserver/${SELECTED_DOWNLOADER}:latest
     container_name: ${SELECTED_DOWNLOADER}
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -543,6 +553,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -557,6 +568,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -573,6 +585,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -590,11 +603,20 @@ EOF
 else
 # OHNE VPN (DIREKT-MODUS)
 cat <<EOF > "$INSTALL_DIR/docker-compose.yml"
+# Wiederverwendbarer Logging-Block gegen unbegrenzt volllaufende Festplatten
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   # --- Downloader: ${DOWNLOADER_SERVICE_NAME} ---
   ${SELECTED_DOWNLOADER}:
     image: lscr.io/linuxserver/${SELECTED_DOWNLOADER}:latest
     container_name: ${SELECTED_DOWNLOADER}
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -610,6 +632,7 @@ services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -623,6 +646,7 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -639,6 +663,7 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -660,6 +685,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    <<: *default-logging
     environment:
       - PUID=${CURRENT_UID}
       - PGID=${CURRENT_GID}
@@ -690,6 +716,7 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
+    <<: *default-logging
     init: true
     environment:
       - TZ=Europe/Berlin

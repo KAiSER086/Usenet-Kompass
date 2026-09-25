@@ -1,5 +1,6 @@
 # Docker runtime files & secrets
 docker-compose.yml
+.env
 config/
 data/
 

@@ -2,6 +2,11 @@
 
 Hier findest du die vollständigen, harmonisierten `docker-compose.yml`-Vorlagen für deinen gesamten Usenet- und Medienserver-Stack. Du kannst frei wählen, ob du den Stack abgesichert über ein VPN oder als schlanke Direktanbindung ohne VPN betreiben möchtest.
 
+> [!TIP]
+> **Ausfallsicherheit & Saubere Konfiguration:**
+> * **Integrierte Log-Rotation:** Alle Vorlagen nutzen einen wiederverwendbaren Logging-Block (`max-size: 10m`, `max-file: 3`), damit Docker-Logs deine Festplatte oder microSD-Karte niemals unbemerkt füllen können.
+> * **Umgebungsvariablen (`.env`):** Du kannst die Vorlage `.env.example` nach `.env` kopieren (`cp .env.example .env`), um Benutzer-IDs (`PUID`/`PGID`), Pfade (`CONFIG_DIR`/`DATA_DIR`) oder VPN-Keys zentral und sicher auszulagern.
+
 ---
 
 ## Variante A: Mit VPN (Gluetun-Tunneling via WireGuard / OpenVPN)
@@ -9,25 +14,34 @@ Hier findest du die vollständigen, harmonisierten `docker-compose.yml`-Vorlagen
 Diese Variante leitet den gesamten Datenverkehr von SABnzbd/NZBGet und Prowlarr über den VPN-Tunnel von Gluetun.
 
 ```yaml
+# Wiederverwendbarer Logging-Block gegen unbegrenzt volllaufende Festplatten
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   gluetun:
     image: qmcgaw/gluetun:latest
     container_name: gluetun
+    <<: *default-logging
     cap_add:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
       # --- VPN Konfiguration ---
-      - VPN_SERVICE_PROVIDER=mullvad # z. B. mullvad, protonvpn, ivpn, custom
-      - VPN_TYPE=wireguard # wireguard oder openvpn
-      - WIREGUARD_PRIVATE_KEY=dein-wireguard-private-key
-      - WIREGUARD_ADDRESSES=10.64.0.1/32 # Deine WireGuard-IP
-      - SERVER_COUNTRIES=Netherlands
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24 # Erlaube Zugriff aus dem lokalen Heimnetz (an dein Subnetz anpassen)
-      - TZ=Europe/Berlin
-      - PUID=1000 # Deine PUID
-      - PGID=1000 # Deine PGID
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-mullvad} # z. B. mullvad, protonvpn, ivpn, custom
+      - VPN_TYPE=${VPN_TYPE:-wireguard} # wireguard oder openvpn
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-dein-wireguard-private-key}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-10.64.0.1/32} # Deine WireGuard-IP
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Netherlands,Germany}
+      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-192.168.178.0/24} # Erlaube Zugriff aus dem lokalen Heimnetz (anpassen!)
+      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID:-1000} # Deine PUID
+      - PGID=${PGID:-1000} # Deine PGID
     ports:
       - "8080:8080" # SABnzbd WebUI
       - "6789:6789" # NZBGet WebUI (falls genutzt)
@@ -35,7 +49,7 @@ services:
       - "8989:8989" # Sonarr WebUI & API
       - "9696:9696" # Prowlarr WebUI & API
     volumes:
-      - ./config/gluetun:/gluetun
+      - ${CONFIG_DIR:-./config}/gluetun:/gluetun
     restart: unless-stopped
 
   # --- Usenet Downloader (Wähle SABnzbd ODER NZBGet) ---
@@ -43,13 +57,14 @@ services:
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sabnzbd:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/sabnzbd:/config
+      - ${DATA_DIR:-./data}:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -58,13 +73,14 @@ services:
   # nzbget:
   #   image: lscr.io/linuxserver/nzbget:latest
   #   container_name: nzbget
+  #   <<: *default-logging
   #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Berlin
+  #     - PUID=${PUID:-1000}
+  #     - PGID=${PGID:-1000}
+  #     - TZ=${TZ:-Europe/Berlin}
   #   volumes:
-  #     - ./config/nzbget:/config
-  #     - ./data:/data
+  #     - ${CONFIG_DIR:-./config}/nzbget:/config
+  #     - ${DATA_DIR:-./data}:/data
   #   restart: unless-stopped
   #   depends_on:
   #     - gluetun
@@ -75,12 +91,13 @@ services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/prowlarr:/config
+      - ${CONFIG_DIR:-./config}/prowlarr:/config
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -89,13 +106,14 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sonarr:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/sonarr:/config
+      - ${DATA_DIR:-./data}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -105,13 +123,14 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/radarr:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/radarr:/config
+      - ${DATA_DIR:-./data}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -123,13 +142,14 @@ services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/jellyfin:/config
-      - ./data/media:/data/media
+      - ${CONFIG_DIR:-./config}/jellyfin:/config
+      - ${DATA_DIR:-./data}/media:/data/media
     # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
@@ -142,11 +162,12 @@ services:
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
+    <<: *default-logging
     init: true
     environment:
-      - TZ=Europe/Berlin
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/seerr:/app/config
+      - ${CONFIG_DIR:-./config}/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
@@ -163,19 +184,28 @@ services:
 Diese Variante verzichtet komplett auf Gluetun. Alle Downloads erfolgen direkt und nativ über Port 563 (SSL/TLS Ende-zu-Ende verschlüsselt). Jeder Dienst bindet seine Ports direkt an das Hostsystem.
 
 ```yaml
+# Wiederverwendbarer Logging-Block gegen unbegrenzt volllaufende Festplatten
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
 services:
   # --- Usenet Downloader (Wähle SABnzbd ODER NZBGet) ---
 
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sabnzbd:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/sabnzbd:/config
+      - ${DATA_DIR:-./data}:/data
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -183,13 +213,14 @@ services:
   # nzbget:
   #   image: lscr.io/linuxserver/nzbget:latest
   #   container_name: nzbget
+  #   <<: *default-logging
   #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Berlin
+  #     - PUID=${PUID:-1000}
+  #     - PGID=${PGID:-1000}
+  #     - TZ=${TZ:-Europe/Berlin}
   #   volumes:
-  #     - ./config/nzbget:/config
-  #     - ./data:/data
+  #     - ${CONFIG_DIR:-./config}/nzbget:/config
+  #     - ${DATA_DIR:-./data}:/data
   #   ports:
   #     - "6789:6789"
   #   restart: unless-stopped
@@ -199,12 +230,13 @@ services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/prowlarr:/config
+      - ${CONFIG_DIR:-./config}/prowlarr:/config
     ports:
       - "9696:9696"
     restart: unless-stopped
@@ -212,13 +244,14 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/sonarr:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/sonarr:/config
+      - ${DATA_DIR:-./data}:/data
     ports:
       - "8989:8989"
     depends_on:
@@ -228,13 +261,14 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/radarr:/config
-      - ./data:/data
+      - ${CONFIG_DIR:-./config}/radarr:/config
+      - ${DATA_DIR:-./data}:/data
     ports:
       - "7878:7878"
     depends_on:
@@ -246,13 +280,14 @@ services:
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
+    <<: *default-logging
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Berlin
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/jellyfin:/config
-      - ./data/media:/data/media
+      - ${CONFIG_DIR:-./config}/jellyfin:/config
+      - ${DATA_DIR:-./data}/media:/data/media
     # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
@@ -265,11 +300,12 @@ services:
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
     container_name: seerr
+    <<: *default-logging
     init: true
     environment:
-      - TZ=Europe/Berlin
+      - TZ=${TZ:-Europe/Berlin}
     volumes:
-      - ./config/seerr:/app/config
+      - ${CONFIG_DIR:-./config}/seerr:/app/config
     ports:
       - "5055:5055"
     depends_on:
