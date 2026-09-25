@@ -75,7 +75,7 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-clear || true
+clear 2>/dev/null || true
 
 echo -e "${CYAN}${BOLD}"
 echo "=================================================================="
@@ -166,7 +166,7 @@ if ! command -v docker &> /dev/null; then
                 echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
                 curl -fsSL https://get.docker.com | sh
             fi
-            if [ "$USER" != "root" ] && [ -n "${USER:-}" ]; then
+            if [ -n "${USER:-}" ] && [ "$USER" != "root" ]; then
                 $SUDO usermod -aG docker "$USER" 2>/dev/null || true
             fi
             if command -v systemctl &>/dev/null; then
@@ -259,7 +259,7 @@ fi
 CURRENT_UID=$(id -u)
 CURRENT_GID=$(id -g)
 if [ "$CURRENT_UID" -eq 0 ]; then
-    if [ -n "$SUDO_USER" ]; then
+    if [ -n "${SUDO_USER:-}" ]; then
         CURRENT_UID=$(id -u "$SUDO_USER" 2>/dev/null || echo 1000)
         CURRENT_GID=$(id -g "$SUDO_USER" 2>/dev/null || echo 1000)
     else
@@ -474,9 +474,9 @@ fi
 # ==============================================================================
 # SCHRITT 4: Installationsverzeichnis festlegen
 # ==============================================================================
-TARGET_USER="${SUDO_USER:-$USER}"
+TARGET_USER="${SUDO_USER:-${USER:-root}}"
 TARGET_HOME=$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || true)
-TARGET_HOME=${TARGET_HOME:-$HOME}
+TARGET_HOME=${TARGET_HOME:-${HOME:-/root}}
 
 if [ -f "$ORIGINAL_DIR/docker-compose.example.yml" ] || [ "$(basename "$ORIGINAL_DIR")" = "Usenet-Kompass" ]; then
     DEFAULT_INSTALL_DIR="$ORIGINAL_DIR"
