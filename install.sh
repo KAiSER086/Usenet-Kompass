@@ -92,7 +92,7 @@ echo -e "Bevor die Installation startet, stelle bitte sicher, dass du folgende"
 echo -e "Zugänge bereitliegen hast:\n"
 echo -e "  ${BOLD}1. Einen Usenet-Provider Account${NC} (z. B. Eweka, NewsgroupDirect, etc.)"
 echo -e "  ${BOLD}2. Mindestens einen Usenet-Indexer${NC} mit API-Key (z. B. Treasure-Maps, NZBGeek)"
-echo -e "  ${BOLD}3. Optional (nur bei VPN-Wunsch):${NC} VPN-Account mit WireGuard/OpenVPN (z. B. Mullvad, ProtonVPN)"
+echo -e "  ${BOLD}3. (Optional):${NC} VPN-Account mit WireGuard/OpenVPN (z. B. Mullvad, ProtonVPN)"
 echo -e "     ${CYAN}Hinweis:${NC} Der Stack kann auch komplett ${GREEN}ohne VPN${NC} mit direkter SSL/TLS-Verschlüsselung (Port 563) betrieben werden.\n"
 
 read_input -p "Möchtest du mit der Einrichtung fortfahren? [J/n]: " READY_CHOICE
