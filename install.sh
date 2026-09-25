@@ -446,8 +446,8 @@ if [ -n "$TAILSCALE_DETECTED_IP" ]; then
         echo -e "${YELLOW}Tailscale-Einbindung übersprungen.${NC}"
     fi
 else
-    read_input -p "Möchtest du Tailscale für sicheren Fernzugriff einrichten und einbinden? [j/N]: " TAILSCALE_INPUT
-    TAILSCALE_INPUT=${TAILSCALE_INPUT:-N}
+    read_input -p "Möchtest du Tailscale für sicheren Fernzugriff einrichten und einbinden? [J/n]: " TAILSCALE_INPUT
+    TAILSCALE_INPUT=${TAILSCALE_INPUT:-J}
     if [[ "$TAILSCALE_INPUT" =~ ^[jJyY]$ ]]; then
         WANT_TAILSCALE=true
         echo -e "${GREEN}✓ Tailscale wird nach dem Start des Stacks eingerichtet.${NC}"
@@ -924,8 +924,8 @@ START_NOW="J"
 if [ -n "$CONFLICTING_CONTAINERS" ]; then
     echo -e "${YELLOW}⚠️  ACHTUNG: Auf diesem System existieren bereits Container mit identischen Namen:${NC}"
     echo -e "${BOLD}${CONFLICTING_CONTAINERS}${NC}"
-    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
-    REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-N}
+    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [J/n]: " REMOVE_CONFLICTS
+    REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-J}
     if [[ "$REMOVE_CONFLICTS" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Stoppe und entferne kollidierende Container...${NC}"
         echo "$CONFLICTING_CONTAINERS" | xargs -r $DOCKER_BIN rm -f
