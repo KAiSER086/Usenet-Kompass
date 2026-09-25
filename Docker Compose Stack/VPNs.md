@@ -171,3 +171,52 @@ Nachdem dein Server Teil des Mesh-VPNs ist, verbindest du deine Endgeräte (Smar
 2. **Anmelden:** Öffne die App und melde dich mit demselben Konto an.
 
 Sobald du verbunden bist, kannst du über die private **Tailscale-IP-Adresse** deines Servers jederzeit von überall sicher auf deine Webinterfaces (SABnzbd, Sonarr, Radarr, Jellyfin etc.) zugreifen.
+
+---
+
+### 🛡️ Wichtig für Gluetun: Tailscale-Subnetz freigeben (`100.64.0.0/10`)
+
+Wenn du Gluetun als VPN für Downloader und Arr-Dienste nutzt, blockiert dessen Firewall standardmäßig alle eingehenden Verbindungen außerhalb deines lokalen Heimnetzes.
+
+Da Tailscale allen Geräten IP-Adressen aus dem standardisierten CGNAT-Bereich **`100.64.0.0/10`** (Bereich `100.64.0.0` bis `100.127.255.255`) zuweist, musst du dieses Subnetz in deiner `.env` bzw. `docker-compose.yml` bei `FIREWALL_OUTBOUND_SUBNETS` eintragen:
+
+```env
+FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24,100.64.0.0/10
+```
+
+*(Hinweis: Unser interaktiver `install.sh`-Installer konfiguriert diesen Eintrag bereits automatisch für dich!)*
+
+---
+
+### ⚡ Performance-Tuning: DERP-Relays umgehen für Direct Play in Jellyfin
+
+Tailscale ist als **Peer-to-Peer-Mesh** konzipiert – Daten fließen im Idealfall direkt verschlüsselt von deinem Server zum Abspielgerät (Smartphone, Laptop, Apple TV), mit der vollen Upload-Bandbreite deines Heimanschlusses.
+
+#### Das Problem: Gedrosselte DERP-Relays
+Kann Tailscale aufgrund von strikten Router-Firewalls oder Mobilfunk-NAT keine direkte UDP-Verbindung aufbauen, schaltet es unbemerkt auf sogenannte **DERP-Relays** (öffentliche Relay-Server von Tailscale) um.
+* DERP-Relays sind für SSH oder Web-GUIs ausreichend, aber **auf wenige Mbit/s (oft 2–5 Mbps) künstlich gedrosselt**.
+* **Die Folge für Jellyfin:** 1080p- und 4K-Streams puffern endlos, ruckeln oder zwingen Jellyfin zu extremer Qualitätsminderung.
+
+#### 1. Verbindung prüfen (Direct vs. DERP)
+Führe auf deinem Server im Terminal folgenden Befehl aus (ersetze `<client>` durch den Namen deines Handys oder Laptops im Tailnet):
+
+```bash
+tailscale ping <client>
+# oder den Verbindungsstatus aller Geräte anzeigen:
+tailscale status
+```
+
+* 🟢 **`via direct <ip>:<port>`** ➔ **Direct Play aktiv!** Ungedrosselte Direktverbindung mit voller Geschwindigkeit.
+* 🟡 **`via DERP(fra)`** ➔ **Relay aktiv!** Die Verbindung läuft über einen Relay-Server und wird gedrosselt.
+
+#### 2. Lösung: Portweiterleitung für UDP 41641 im Router einrichten
+Damit Tailscale immer und von überall eine direkte Punkt-zu-Punkt-Verbindung herstellen kann, benötigt es lediglich einen offenen UDP-Port für WireGuard:
+
+1. Öffne die Konfiguration deines Heimrouters (z. B. Fritz!Box unter *Internet > Freigaben > Portfreigaben*).
+2. Erstelle eine neue Freigabe für deinen Server:
+   * **Protokoll:** `UDP`
+   * **Externer Port:** `41641`
+   * **Interner Port:** `41641`
+3. Router-Einstellung speichern.
+
+Sobald der UDP-Port `41641` weitergeleitet wird, kann dein Abspielgerät die NAT-Barriere sofort durchbrechen. Streams laufen ab diesem Moment als ungedrosseltes **Direct Play** über Tailscale.
