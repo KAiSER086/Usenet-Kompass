@@ -89,17 +89,18 @@ echo ""
 # ------------------------------------------------------------------------------
 echo -e "${YELLOW}${BOLD}⚠️  WICHTIGER HINWEIS VORAB:${NC}"
 echo -e "Bevor die Installation startet, stelle bitte sicher, dass du folgende"
-echo -e "drei Dinge bereitliegen hast:\n"
+echo -e "Zugänge bereitliegen hast:\n"
 echo -e "  ${BOLD}1. Einen Usenet-Provider Account${NC} (z. B. Eweka, NewsgroupDirect, etc.)"
 echo -e "  ${BOLD}2. Mindestens einen Usenet-Indexer${NC} mit API-Key (z. B. Treasure-Maps, NZBGeek)"
-echo -e "  ${BOLD}3. Einen VPN-Account${NC} mit WireGuard-Support (z. B. Mullvad, ProtonVPN, Surfshark)"
-echo ""
-read_input -p "Hast du diese Zugänge bereit und möchtest fortfahren? [J/n]: " READY_CHOICE
+echo -e "  ${BOLD}3. Optional (nur bei VPN-Wunsch):${NC} VPN-Account mit WireGuard/OpenVPN (z. B. Mullvad, ProtonVPN)"
+echo -e "     ${CYAN}Hinweis:${NC} Der Stack kann auch komplett ${GREEN}ohne VPN${NC} mit direkter SSL/TLS-Verschlüsselung (Port 563) betrieben werden.\n"
+
+read_input -p "Möchtest du mit der Einrichtung fortfahren? [J/n]: " READY_CHOICE
 READY_CHOICE=${READY_CHOICE:-J}
 
 if [[ ! "$READY_CHOICE" =~ ^[jJyY]$ ]]; then
     echo -e "\n${RED}Installation abgebrochen.${NC}"
-    echo "Besorge dir zuerst die nötigen Zugänge und starte den Installer danach erneut."
+    echo "Besorge dir zuerst deine Zugänge und starte den Installer danach erneut."
     echo "Tipps zu Providern und Indexern findest du im Guide: https://github.com/KAiSER086/Usenet-Kompass"
     exit 0
 fi
