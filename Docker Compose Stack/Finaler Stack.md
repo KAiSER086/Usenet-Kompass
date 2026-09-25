@@ -50,7 +50,7 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-dein-wireguard-private-key}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-10.64.0.1/32} # Deine WireGuard-IP
       - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Netherlands,Germany}
-      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-192.168.178.0/24,100.64.0.0/10} # Erlaube Zugriff aus dem lokalen Heimnetz & Tailscale (anpassen!)
+      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-192.168.178.0/24} # Erlaube Zugriff aus dem lokalen Heimnetz (bei Tailscale: 192.168.178.0/24,100.64.0.0/10)
       - TZ=${TZ:-Europe/Berlin}
       - PUID=${PUID:-1000} # Deine PUID
       - PGID=${PGID:-1000} # Deine PGID

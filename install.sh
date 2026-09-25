@@ -405,14 +405,62 @@ if [ "$VPN_MODE_CHOICE" = "2" ]; then
     echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
     read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
     CHOSEN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
-    if [[ "$CHOSEN_SUBNET" != *"100.64.0.0/10"* ]]; then
-        LAN_SUBNET="${CHOSEN_SUBNET},100.64.0.0/10"
-    else
-        LAN_SUBNET="${CHOSEN_SUBNET}"
-    fi
-    echo -e "${GREEN}✓ Gluetun Firewall-Bypass gesetzt für lokales Netz (${CHOSEN_SUBNET}) & Tailscale (100.64.0.0/10).${NC}"
 else
     echo -e "${GREEN}✓ Direktmodus gewählt: Verbindungen laufen ohne VPN direkt über SSL/TLS (Port 563).${NC}"
+fi
+
+# ==============================================================================
+# SCHRITT 3: Möchtest du Tailscale für sicheren Fernzugriff nutzen?
+# ==============================================================================
+echo ""
+echo -e "${CYAN}=================================================================="
+echo -e "▶ SCHRITT 3: Möchtest du Tailscale für sicheren Fernzugriff nutzen?"
+echo -e "==================================================================${NC}"
+echo -e "  Tailscale ermöglicht den verschlüsselten Zugriff auf Jellyfin, Seerr"
+echo -e "  und deinen gesamten Stack von unterwegs (Smartphone, Laptop etc.),"
+echo -e "  ganz ohne unsichere Router-Portweiterleitungen einrichten zu müssen."
+echo -e "  📖 Dokumentation & DERP-Direct-Play Ratgeber:"
+echo -e "  ${CYAN}https://github.com/KAiSER086/Usenet-Kompass/blob/main/Docker%20Compose%20Stack/VPNs.md#43-tailscale-dienst-auf-dem-host-system-hinzuf%C3%BCgen${NC}\n"
+
+TAILSCALE_DETECTED_IP=$(tailscale ip -4 2>/dev/null || true)
+WANT_TAILSCALE=false
+TAILSCALE_IP=""
+
+if [ -n "$TAILSCALE_DETECTED_IP" ]; then
+    echo -e "${GREEN}✓ Aktiver Tailscale-Dienst auf diesem System erkannt (IP: ${BOLD}${TAILSCALE_DETECTED_IP}${GREEN}).${NC}"
+    read_input -p "Möchtest du Tailscale in diesen Stack einbinden? [J/n]: " TAILSCALE_INPUT
+    TAILSCALE_INPUT=${TAILSCALE_INPUT:-J}
+    if [[ "$TAILSCALE_INPUT" =~ ^[jJyY]$ ]]; then
+        WANT_TAILSCALE=true
+        TAILSCALE_IP="$TAILSCALE_DETECTED_IP"
+        echo -e "${GREEN}✓ Tailscale wird in den Stack eingebunden.${NC}"
+    else
+        echo -e "${YELLOW}Tailscale-Einbindung übersprungen.${NC}"
+    fi
+else
+    read_input -p "Möchtest du Tailscale für sicheren Fernzugriff einrichten und einbinden? [j/N]: " TAILSCALE_INPUT
+    TAILSCALE_INPUT=${TAILSCALE_INPUT:-N}
+    if [[ "$TAILSCALE_INPUT" =~ ^[jJyY]$ ]]; then
+        WANT_TAILSCALE=true
+        echo -e "${GREEN}✓ Tailscale wird nach dem Start des Stacks eingerichtet.${NC}"
+    else
+        echo -e "${YELLOW}Tailscale übersprungen. Du kannst es bei Bedarf jederzeit später einrichten.${NC}"
+    fi
+fi
+
+# Firewall-Bypass für Gluetun finalisieren: Tailscale nur hinzufügen, wenn gewünscht!
+if [ "$USE_VPN" = true ]; then
+    if [ "$WANT_TAILSCALE" = true ]; then
+        if [[ "$CHOSEN_SUBNET" != *"100.64.0.0/10"* ]]; then
+            LAN_SUBNET="${CHOSEN_SUBNET},100.64.0.0/10"
+        else
+            LAN_SUBNET="${CHOSEN_SUBNET}"
+        fi
+        echo -e "${GREEN}✓ Gluetun Firewall-Bypass gesetzt: Lokales Netz (${CHOSEN_SUBNET}) & Tailscale (100.64.0.0/10).${NC}"
+    else
+        LAN_SUBNET="${CHOSEN_SUBNET}"
+        echo -e "${GREEN}✓ Gluetun Firewall-Bypass auf lokales Heimnetz beschränkt (${CHOSEN_SUBNET}). Kein Tailscale-Bypass.${NC}"
+    fi
 fi
 
 # ------------------------------------------------------------------------------
@@ -921,26 +969,15 @@ fi
 # ------------------------------------------------------------------------------
 # 7.3 OPTIONALER FERNZUGRIFF MIT TAILSCALE
 # ------------------------------------------------------------------------------
-TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || true)
-
-echo -e "${CYAN}------------------------------------------------------------------${NC}"
-echo -e "${BOLD}▶ Sicherer Fernzugriff von unterwegs (Tailscale Mesh-VPN)${NC}"
-echo -e "  Mit Tailscale erreichst du Jellyfin, Seerr und deinen gesamten Stack"
-echo -e "  unterwegs verschlüsselt, ganz ohne unsichere Router-Portweiterleitungen."
-echo -e "  ${YELLOW}📖 Dokumentation & DERP-Direct-Play Ratgeber:${NC}"
-echo -e "  ${CYAN}https://github.com/KAiSER086/Usenet-Kompass/blob/main/Docker%20Compose%20Stack/VPNs.md#43-tailscale-dienst-auf-dem-host-system-hinzuf%C3%BCgen${NC}\n"
-
-if [ -n "$TAILSCALE_IP" ]; then
-    echo -e "${GREEN}✓ Tailscale ist bereits aktiv und verbunden! (IP: ${BOLD}${TAILSCALE_IP}${GREEN})${NC}\n"
-else
-    read_input -p "Möchtest du Tailscale jetzt auf diesem Server einrichten? [j/N]: " SETUP_TAILSCALE
-    SETUP_TAILSCALE=${SETUP_TAILSCALE:-N}
-    if [[ "$SETUP_TAILSCALE" =~ ^[jJyY]$ ]]; then
+if [ "$WANT_TAILSCALE" = true ]; then
+    if [ -z "$TAILSCALE_IP" ]; then
+        echo -e "${CYAN}------------------------------------------------------------------${NC}"
+        echo -e "${BOLD}▶ Richte Tailscale für sicheren Fernzugriff ein...${NC}"
         if ! command -v tailscale &>/dev/null; then
             echo -e "${CYAN}Installiere Tailscale...${NC}"
             curl -fsSL https://tailscale.com/install.sh | $SUDO sh
         else
-            echo -e "${GREEN}✓ Tailscale ist bereits installiert.${NC}"
+            echo -e "${GREEN}✓ Tailscale ist bereits auf diesem System installiert.${NC}"
         fi
 
         echo -e "${CYAN}Starte Tailscale-Dienst und Authentifizierung...${NC}"
@@ -951,7 +988,7 @@ else
             echo -e "\n${GREEN}✓ Tailscale erfolgreich verbunden! Deine Tailscale-IP: ${BOLD}${TAILSCALE_IP}${NC}\n"
         fi
     else
-        echo -e "${YELLOW}Tailscale-Einrichtung übersprungen. Du kannst Tailscale jederzeit später nachinstallieren.${NC}\n"
+        echo -e "\n${GREEN}✓ Tailscale ist aktiv und verbunden! (IP: ${BOLD}${TAILSCALE_IP}${GREEN})${NC}\n"
     fi
 fi
 
@@ -962,22 +999,22 @@ echo -e "${CYAN}================================================================
 echo -e "                   DEINE WEB-INTERFACES                           "
 echo -e "==================================================================${NC}"
 echo -e "🍿 ${BOLD}Seerr (Medien-Anfragen):${NC}         http://${SERVER_IP}:5055"
-if [ -n "$TAILSCALE_IP" ]; then
+if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:5055"
 fi
 echo -e "🎬 ${BOLD}Jellyfin (Medienserver):${NC}         http://${SERVER_IP}:8096"
-if [ -n "$TAILSCALE_IP" ]; then
+if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:8096"
 fi
 echo -e "⚡ ${BOLD}${DOWNLOADER_SERVICE_NAME} (Downloader):${NC}         http://${SERVER_IP}:${DOWNLOADER_PORT}"
-if [ -n "$TAILSCALE_IP" ]; then
+if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:${DOWNLOADER_PORT}"
 fi
 echo -e "📺 ${BOLD}Sonarr (Serien-Manager):${NC}         http://${SERVER_IP}:8989"
 echo -e "🎬 ${BOLD}Radarr (Film-Manager):${NC}           http://${SERVER_IP}:7878"
 echo -e "🔍 ${BOLD}Prowlarr (Indexer-Hub):${NC}          http://${SERVER_IP}:9696"
 echo -e "${CYAN}=================================================================="
-if [ -n "$TAILSCALE_IP" ]; then
+if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "${YELLOW}⚡ Performance-Tipp für Jellyfin via Tailscale:${NC}"
     echo -e "   Leite im Heim-Router UDP-Port 41641 an diesen Server weiter, um gedrosselte"
     echo -e "   DERP-Relays zu umgehen und maximale Videoqualität (Direct Play) zu erzielen."
@@ -1012,7 +1049,7 @@ if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     echo -e "\n${CYAN}=================================================================="
     echo -e "       🎬 Schritt 1 / 3: Jellyfin Medienserver einrichten        "
     echo -e "==================================================================${NC}"
-    if [ -n "$TAILSCALE_IP" ]; then
+    if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
         echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:8096${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:8096${NC})"
     else
         echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:8096${NC}"
@@ -1029,7 +1066,7 @@ if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     echo -e "\n${CYAN}=================================================================="
     echo -e "       🍿 Schritt 2 / 3: Seerr Anfrage-Portal initialisieren     "
     echo -e "==================================================================${NC}"
-    if [ -n "$TAILSCALE_IP" ]; then
+    if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
         echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:5055${NC})"
     else
         echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC}"
