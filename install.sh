@@ -929,3 +929,96 @@ echo -e "${CYAN}================================================================
 echo -e "📌 Nächste Schritte: Richte deinen Indexer in Prowlarr ein und hinterlege"
 echo -e "   deinen Provider in ${DOWNLOADER_SERVICE_NAME}."
 echo -e "   Vollständige Anleitung: ${BOLD}https://github.com/KAiSER086/Usenet-Kompass${NC}\n"
+
+# ------------------------------------------------------------------------------
+# 9.0 INTERAKTIVE SCHRITT-FÜR-SCHRITT ANLEITUNG (JELLYFIN & SEERR)
+# ------------------------------------------------------------------------------
+echo -e "${CYAN}------------------------------------------------------------------${NC}"
+echo -e "${BOLD}▶ MÖCHTEST DU JETZT DEN SCHRITT-FÜR-SCHRITT EINRICHTUNGSASSISTENTEN"
+echo -e "  FÜR JELLYFIN & SEERR STARTEN?${NC}"
+read_input -p "Ersteinrichtung jetzt Schritt für Schritt durchgehen? [J/n]: " RUN_FRONTEND_GUIDE
+RUN_FRONTEND_GUIDE=${RUN_FRONTEND_GUIDE:-J}
+
+if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
+    # API-Keys für Seerr aus den Configs auslesen
+    RADARR_API_KEY=$(grep -oPm1 '(?<=<ApiKey>)[^<]+' "$INSTALL_DIR/config/radarr/config.xml" 2>/dev/null || sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' "$INSTALL_DIR/config/radarr/config.xml" 2>/dev/null || echo "siehe config/radarr/config.xml")
+    SONARR_API_KEY=$(grep -oPm1 '(?<=<ApiKey>)[^<]+' "$INSTALL_DIR/config/sonarr/config.xml" 2>/dev/null || sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' "$INSTALL_DIR/config/sonarr/config.xml" 2>/dev/null || echo "siehe config/sonarr/config.xml")
+
+    # Host-Erklärung je nach gewähltem Netzwerkmodus
+    if [ "$USE_VPN" = true ]; then
+        HOST_EXPLANATION="Da Sonarr und Radarr über das VPN-Netzwerk von Gluetun laufen, erreichst du sie containerintern über den Hostnamen 'gluetun'."
+    else
+        HOST_EXPLANATION="Da die Dienste im direkten Bridge-Netzwerk laufen, erreichst du sie containerintern über ihre direkten Dienstnamen 'radarr' bzw. 'sonarr'."
+    fi
+
+    # --- SCHRITT 1: JELLYFIN ---
+    echo -e "\n${CYAN}=================================================================="
+    echo -e "       🎬 SCHRITT 1 / 3: JELLYFIN MEDIENSERVER EINRICHTEN        "
+    echo -e "==================================================================${NC}"
+    echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:8096${NC}"
+    echo -e "2. Wähle die Sprache und erstelle dein ${BOLD}Admin-Benutzerkonto${NC}."
+    echo -e "3. Füge deine zwei Mediatheken hinzu:"
+    echo -e "   • ${BOLD}Filme:${NC}  Wähle den Ordner ${GREEN}/data/media/movies${NC}"
+    echo -e "   • ${BOLD}Serien:${NC} Wähle den Ordner ${GREEN}/data/media/tv${NC}"
+    echo -e "4. Schließe den Assistenten ab. (Jellyfin ist nun einsatzbereit!)\n"
+
+    read_input -p "Drücke [Enter], wenn Jellyfin eingerichtet ist, um zu Schritt 2 (Seerr) zu wechseln... " _
+
+    # --- SCHRITT 2: SEERR INITIALISIEREN ---
+    echo -e "\n${CYAN}=================================================================="
+    echo -e "       🍿 SCHRITT 2 / 3: SEERR ANFRAGE-PORTAL INITIALISIEREN     "
+    echo -e "==================================================================${NC}"
+    echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC}"
+    echo -e "2. Wähle ${BOLD}„Mit Jellyfin anmelden“${NC}."
+    echo -e "3. Gib folgende Verbindungsdaten für Jellyfin ein:"
+    echo -e "   • ${BOLD}Jellyfin-URL:${NC}  ${GREEN}http://jellyfin:8096${NC}"
+    echo -e "   • ${BOLD}Benutzername:${NC}  Dein soeben erstellter Jellyfin-Admin"
+    echo -e "   • ${BOLD}Passwort:${NC}      Dein Jellyfin-Passwort"
+    echo -e "4. Wähle die synchronisierten Bibliotheken (Filme & Serien) aus und klicke auf Weiter.\n"
+
+    read_input -p "Drücke [Enter], wenn Schritt 2 abgeschlossen ist, für die Radarr/Sonarr-Verknüpfung... " _
+
+    # --- SCHRITT 3: RADARR & SONARR IN SEERR EINBINDEN ---
+    echo -e "\n${CYAN}=================================================================="
+    echo -e "       🔗 SCHRITT 3 / 3: RADARR & SONARR IN SEERR VERKNÜPFEN     "
+    echo -e "==================================================================${NC}"
+    echo -e "${YELLOW}ℹ️  ${HOST_EXPLANATION}${NC}\n"
+    echo -e "Gehe in Seerr auf ${BOLD}Einstellungen > Dienste${NC} und füge hinzu:\n"
+
+    if [ "$USE_VPN" = true ]; then
+        echo -e "🍿 ${BOLD}RADARR (Filme):${NC}"
+        echo -e "   • Standardserver:        ${GREEN}Aktivieren${NC}"
+        echo -e "   • Servername:            Radarr"
+        echo -e "   • Hostname oder IP:      ${GREEN}${BOLD}gluetun${NC}"
+        echo -e "   • Port:                  ${BOLD}7878${NC}"
+        echo -e "   • API-Schlüssel:         ${GREEN}${BOLD}${RADARR_API_KEY}${NC}"
+        echo -e "   • Stammordner:           /data/media/movies\n"
+
+        echo -e "📺 ${BOLD}SONARR (Serien):${NC}"
+        echo -e "   • Standardserver:        ${GREEN}Aktivieren${NC}"
+        echo -e "   • Servername:            Sonarr"
+        echo -e "   • Hostname oder IP:      ${GREEN}${BOLD}gluetun${NC}"
+        echo -e "   • Port:                  ${BOLD}8989${NC}"
+        echo -e "   • API-Schlüssel:         ${GREEN}${BOLD}${SONARR_API_KEY}${NC}"
+        echo -e "   • Stammordner:           /data/media/tv\n"
+    else
+        echo -e "🍿 ${BOLD}RADARR (Filme):${NC}"
+        echo -e "   • Standardserver:        ${GREEN}Aktivieren${NC}"
+        echo -e "   • Servername:            Radarr"
+        echo -e "   • Hostname oder IP:      ${GREEN}${BOLD}radarr${NC}"
+        echo -e "   • Port:                  ${BOLD}7878${NC}"
+        echo -e "   • API-Schlüssel:         ${GREEN}${BOLD}${RADARR_API_KEY}${NC}"
+        echo -e "   • Stammordner:           /data/media/movies\n"
+
+        echo -e "📺 ${BOLD}SONARR (Serien):${NC}"
+        echo -e "   • Standardserver:        ${GREEN}Aktivieren${NC}"
+        echo -e "   • Servername:            Sonarr"
+        echo -e "   • Hostname oder IP:      ${GREEN}${BOLD}sonarr${NC}"
+        echo -e "   • Port:                  ${BOLD}8989${NC}"
+        echo -e "   • API-Schlüssel:         ${GREEN}${BOLD}${SONARR_API_KEY}${NC}"
+        echo -e "   • Stammordner:           /data/media/tv\n"
+    fi
+
+    echo -e "${GREEN}✓ Klicke bei beiden Servern auf 'Verbindung testen' und anschließend auf 'Speichern'.${NC}"
+    echo -e "${GREEN}${BOLD}🎉 FERTIG! Dein gesamter Medien- und Download-Workflow ist nun zu 100% startklar!${NC}\n"
+fi
