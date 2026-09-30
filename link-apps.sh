@@ -305,6 +305,16 @@ elif [ "$DOWNLOADER_TYPE" = "sabnzbd" ]; then
         sleep 2
     done
     
+    if [ -n "$SAB_API_KEY" ]; then
+        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=host_whitelist&value=sabnzbd,gluetun,localhost,127.0.0.1&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:8080/api?mode=add_category&name=tv&dir=tv&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:8080/api?mode=add_category&name=movies&dir=movies&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=complete_dir&value=/data/usenet/complete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=download_dir&value=/data/usenet/incomplete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:8080/api?mode=save_config&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        echo -e "  ${GREEN}✓ SABnzbd: Host-Whitelist, TRaSH-Pfade (/data/usenet) & Kategorien (tv, movies) konfiguriert.${NC}"
+    fi
+    
     # Sonarr -> SABnzbd (Kategorie: tv)
     EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/downloadclient 2>/dev/null || true)
     if [[ "$EXISTING_SONARR_DC" != *"SABnzbd"* ]]; then
@@ -425,31 +435,27 @@ if sonarr_key:
     cfs = api_request("http://localhost:8989/api/v3/customformat", key=sonarr_key)
     existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
 
-    if "German DL" not in existing_cf_names:
-        cf_german_dl = {
-            "name": "German DL",
-            "includeCustomFormatWhenRenaming": True,
-            "specifications": [
-                {
-                    "name": "German",
-                    "implementation": "LanguageSpecification",
-                    "negate": False,
-                    "required": True,
-                    "fields": [{"name": "value", "value": 4}]
-                },
-                {
-                    "name": "Original Language",
-                    "implementation": "LanguageSpecification",
-                    "negate": False,
-                    "required": True,
-                    "fields": [{"name": "value", "value": -2}]
-                }
-            ]
-        }
+    cf_german_dl = {
+        "name": "German DL",
+        "includeCustomFormatWhenRenaming": True,
+        "specifications": [
+            {
+                "name": "German DL",
+                "implementation": "ReleaseTitleSpecification",
+                "negate": False,
+                "required": False,
+                "fields": [{"name": "value", "value": r"\b(German\b.*\b(DL|Dual)|(DL|Dual)\b.*\bGerman)\b"}]
+            }
+        ]
+    }
+    existing_cf_dl = next((c for c in cfs if c.get("name") == "German DL"), None) if isinstance(cfs, list) else None
+    if existing_cf_dl is None:
         if api_request("http://localhost:8989/api/v3/customformat", method="POST", data=cf_german_dl, key=sonarr_key):
             print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' registriert.\033[0m")
     else:
-        print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' bereits vorhanden.\033[0m")
+        cf_german_dl["id"] = existing_cf_dl["id"]
+        if api_request(f"http://localhost:8989/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=sonarr_key):
+            print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' aktualisiert.\033[0m")
 
     if "German" not in existing_cf_names:
         cf_german = {
@@ -460,7 +466,7 @@ if sonarr_key:
                     "name": "German",
                     "implementation": "LanguageSpecification",
                     "negate": False,
-                    "required": True,
+                    "required": False,
                     "fields": [{"name": "value", "value": 4}]
                 }
             ]
@@ -492,7 +498,7 @@ if radarr_key:
     if isinstance(naming, dict) and "renameMovies" in naming:
         naming["renameMovies"] = True
         naming["replaceIllegalCharacters"] = True
-        naming["standardMovieFormat"] = "{Movie CleanTitle} {(Release Year)} [imdb-{ImdbId}] - {[Custom Formats ]}{[Quality Full]}{[MediaInfo 3D]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo AudioCodec}{ MediaInfo AudioChannels]}{[MediaInfo VideoCodec]}{-Release Group}"
+        naming["standardMovieFormat"] = "{Movie CleanTitle} {(Release Year)} [imdb-{ImdbId}] - {[Custom Formats ]}{[Quality Full]}{[MediaInfo 3D]}{[MediaInfo VideoDynamicRangeType]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}][{MediaInfo VideoCodec}][-Release Group]"
         naming["movieFolderFormat"] = "{Movie CleanTitle} ({Release Year}) [imdb-{ImdbId}]"
         if api_request("http://localhost:7878/api/v3/config/naming", method="PUT", data=naming, key=radarr_key) is not None:
             print("  \033[0;32m✓ Radarr: TRaSH Naming Scheme angewendet (inkl. MediaInfo & Custom Formats).\033[0m")
@@ -501,31 +507,27 @@ if radarr_key:
     cfs = api_request("http://localhost:7878/api/v3/customformat", key=radarr_key)
     existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
 
-    if "German DL" not in existing_cf_names:
-        cf_german_dl = {
-            "name": "German DL",
-            "includeCustomFormatWhenRenaming": True,
-            "specifications": [
-                {
-                    "name": "German",
-                    "implementation": "LanguageSpecification",
-                    "negate": False,
-                    "required": True,
-                    "fields": [{"name": "value", "value": 4}]
-                },
-                {
-                    "name": "Original Language",
-                    "implementation": "LanguageSpecification",
-                    "negate": False,
-                    "required": True,
-                    "fields": [{"name": "value", "value": -2}]
-                }
-            ]
-        }
+    cf_german_dl = {
+        "name": "German DL",
+        "includeCustomFormatWhenRenaming": True,
+        "specifications": [
+            {
+                "name": "German DL",
+                "implementation": "ReleaseTitleSpecification",
+                "negate": False,
+                "required": False,
+                "fields": [{"name": "value", "value": r"\b(German\b.*\b(DL|Dual)|(DL|Dual)\b.*\bGerman)\b"}]
+            }
+        ]
+    }
+    existing_cf_dl = next((c for c in cfs if c.get("name") == "German DL"), None) if isinstance(cfs, list) else None
+    if existing_cf_dl is None:
         if api_request("http://localhost:7878/api/v3/customformat", method="POST", data=cf_german_dl, key=radarr_key):
             print("  \033[0;32m✓ Radarr: Custom Format 'German DL' registriert.\033[0m")
     else:
-        print("  \033[0;32m✓ Radarr: Custom Format 'German DL' bereits vorhanden.\033[0m")
+        cf_german_dl["id"] = existing_cf_dl["id"]
+        if api_request(f"http://localhost:7878/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=radarr_key):
+            print("  \033[0;32m✓ Radarr: Custom Format 'German DL' aktualisiert.\033[0m")
 
     if "German" not in existing_cf_names:
         cf_german = {
@@ -536,7 +538,7 @@ if radarr_key:
                     "name": "German",
                     "implementation": "LanguageSpecification",
                     "negate": False,
-                    "required": True,
+                    "required": False,
                     "fields": [{"name": "value", "value": 4}]
                 }
             ]

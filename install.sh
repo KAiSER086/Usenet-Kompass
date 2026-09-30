@@ -272,13 +272,21 @@ echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURR
 # Server-IP für die spätere Anzeige ermitteln
 SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 
-# Prüfe Hardwarebeschleunigung (/dev/dri für Intel QuickSync / VAAPI)
+# Prüfe Hardwarebeschleunigung (/dev/dri für Intel QuickSync / VAAPI / GPU)
 DRI_PRESENT=false
 RENDER_GID=""
 if [ -d "/dev/dri" ]; then
     DRI_PRESENT=true
-    RENDER_GID=$(getent group render 2>/dev/null | cut -d: -f3 || true)
-    echo -e "${GREEN}✓ Hardware-Transcoding erkannt (/dev/dri) – QuickSync / VAAPI wird für Jellyfin aktiviert.${NC}"
+    if [ -e /dev/dri/renderD128 ]; then
+        RENDER_GID=$(stat -c '%g' /dev/dri/renderD128 2>/dev/null || true)
+    fi
+    if [ -z "$RENDER_GID" ]; then
+        RENDER_GID=$(getent group render 2>/dev/null | cut -d: -f3 || true)
+    fi
+    if [ -z "$RENDER_GID" ]; then
+        RENDER_GID=$(getent group video 2>/dev/null | cut -d: -f3 || true)
+    fi
+    echo -e "${GREEN}✓ Hardware-Transcoding erkannt (/dev/dri) – GPU-Beschleunigung wird für Jellyfin aktiviert.${NC}"
 fi
 
 # ------------------------------------------------------------------------------
@@ -478,8 +486,12 @@ TARGET_USER="${SUDO_USER:-${USER:-root}}"
 TARGET_HOME=$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || true)
 TARGET_HOME=${TARGET_HOME:-${HOME:-/root}}
 
+IS_TEMP_DRY_RUN_DIR=false
 if [ -f "$ORIGINAL_DIR/docker-compose.example.yml" ] || [ "$(basename "$ORIGINAL_DIR")" = "Usenet-Kompass" ]; then
     DEFAULT_INSTALL_DIR="$ORIGINAL_DIR"
+elif [ "$DRY_RUN" = true ]; then
+    DEFAULT_INSTALL_DIR=$(mktemp -d -t usenet-kompass-dryrun-XXXXXX 2>/dev/null || echo "/tmp/usenet-kompass-dryrun")
+    IS_TEMP_DRY_RUN_DIR=true
 else
     DEFAULT_INSTALL_DIR="${TARGET_HOME}/usenet-kompass"
 fi
@@ -901,6 +913,10 @@ if [ "$DRY_RUN" = true ]; then
     echo -e "  ${GREEN}✓ TRaSH-Guides Verzeichnisstruktur (/data, /config) erfolgreich vorbereitet.${NC}"
     echo -e "  ${GREEN}✓ API-Keys für Prowlarr, Sonarr & Radarr vorkonfiguriert.${NC}"
     echo -e "${CYAN}==================================================================${NC}\n"
+    if [ "$IS_TEMP_DRY_RUN_DIR" = true ] && [ -d "$INSTALL_DIR" ]; then
+        cd "$ORIGINAL_DIR" 2>/dev/null || true
+        rm -rf "$INSTALL_DIR" 2>/dev/null || true
+    fi
     exit 0
 fi
 
@@ -924,8 +940,8 @@ START_NOW="J"
 if [ -n "$CONFLICTING_CONTAINERS" ]; then
     echo -e "${YELLOW}⚠️  ACHTUNG: Auf diesem System existieren bereits Container mit identischen Namen:${NC}"
     echo -e "${BOLD}${CONFLICTING_CONTAINERS}${NC}"
-    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [J/n]: " REMOVE_CONFLICTS
-    REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-J}
+    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
+    REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-N}
     if [[ "$REMOVE_CONFLICTS" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Stoppe und entferne kollidierende Container...${NC}"
         echo "$CONFLICTING_CONTAINERS" | xargs -r $DOCKER_BIN rm -f
@@ -941,11 +957,12 @@ if [ "$START_NOW" != "n" ]; then
 fi
 
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
-    echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
-    $RUN_DOCKER_CMD up -d
+    # Berechtigungen vor dem Containerstart an den Zielbenutzer übergeben
     if [[ "$RUN_DOCKER_CMD" == *"sudo"* ]] || [ "$(id -u)" -eq 0 ]; then
         $SUDO chown -R "${CURRENT_UID}:${CURRENT_GID}" "$INSTALL_DIR" 2>/dev/null || true
     fi
+    echo -e "${CYAN}Starte Docker Stack via '$RUN_DOCKER_CMD up -d'...${NC}"
+    $RUN_DOCKER_CMD up -d
     echo -e "\n${GREEN}${BOLD}🎉 HERZLICHEN GLÜCKWUNSCH! DEIN STACK LÄUFT!${NC}\n"
 
     # --- 7.1 STATUS-CHECK (VPN-LEAK-TEST ODER DIREKT-MODUS) ---
@@ -995,12 +1012,12 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     if [[ "$RUN_LINK" =~ ^[jJyY]$ ]]; then
         if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
             chmod +x "$INSTALL_DIR/link-apps.sh"
-            bash "$INSTALL_DIR/link-apps.sh" || true
+            bash "$INSTALL_DIR/link-apps.sh" "$INSTALL_DIR" || true
         else
             curl -fsSL "https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/link-apps.sh" -o "$INSTALL_DIR/link-apps.sh" 2>/dev/null || true
             chmod +x "$INSTALL_DIR/link-apps.sh" 2>/dev/null || true
             if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
-                bash "$INSTALL_DIR/link-apps.sh" || true
+                bash "$INSTALL_DIR/link-apps.sh" "$INSTALL_DIR" || true
             fi
         fi
     else
