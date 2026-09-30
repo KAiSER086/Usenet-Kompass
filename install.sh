@@ -10,44 +10,200 @@ set -euo pipefail
 
 # --- CLI Argumente parsen ---
 DRY_RUN=false
-for arg in "$@"; do
-    case "$arg" in
+NON_INTERACTIVE=false
+CLI_DOWNLOADER=""
+CLI_VPN=""
+CLI_VPN_PROVIDER=""
+CLI_WG_KEY=""
+CLI_WG_IP=""
+CLI_OVPN_USER=""
+CLI_OVPN_PASS=""
+CLI_VPN_COUNTRIES=""
+CLI_SUBNET=""
+CLI_TAILSCALE=""
+CLI_DIR=""
+CLI_SKIP_START=false
+CLI_SKIP_LINK=false
+CLI_SKIP_GUIDE=false
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
         --dry-run|--test|-t)
             DRY_RUN=true
+            shift
+            ;;
+        -y|--yes|--non-interactive)
+            NON_INTERACTIVE=true
+            shift
+            ;;
+        --downloader=?*)
+            CLI_DOWNLOADER="${1#*=}"
+            shift
+            ;;
+        --downloader)
+            CLI_DOWNLOADER="${2:-}"
+            shift 2
+            ;;
+        --vpn=?*)
+            CLI_VPN="${1#*=}"
+            shift
+            ;;
+        --vpn)
+            CLI_VPN="${2:-}"
+            shift 2
+            ;;
+        --vpn-provider=?*)
+            CLI_VPN_PROVIDER="${1#*=}"
+            shift
+            ;;
+        --vpn-provider)
+            CLI_VPN_PROVIDER="${2:-}"
+            shift 2
+            ;;
+        --wireguard-key=?*)
+            CLI_WG_KEY="${1#*=}"
+            shift
+            ;;
+        --wireguard-key)
+            CLI_WG_KEY="${2:-}"
+            shift 2
+            ;;
+        --wireguard-ip=?*)
+            CLI_WG_IP="${1#*=}"
+            shift
+            ;;
+        --wireguard-ip)
+            CLI_WG_IP="${2:-}"
+            shift 2
+            ;;
+        --openvpn-user=?*)
+            CLI_OVPN_USER="${1#*=}"
+            shift
+            ;;
+        --openvpn-user)
+            CLI_OVPN_USER="${2:-}"
+            shift 2
+            ;;
+        --openvpn-pass=?*)
+            CLI_OVPN_PASS="${1#*=}"
+            shift
+            ;;
+        --openvpn-pass)
+            CLI_OVPN_PASS="${2:-}"
+            shift 2
+            ;;
+        --vpn-countries=?*)
+            CLI_VPN_COUNTRIES="${1#*=}"
+            shift
+            ;;
+        --vpn-countries)
+            CLI_VPN_COUNTRIES="${2:-}"
+            shift 2
+            ;;
+        --subnet=?*)
+            CLI_SUBNET="${1#*=}"
+            shift
+            ;;
+        --subnet)
+            CLI_SUBNET="${2:-}"
+            shift 2
+            ;;
+        --tailscale=?*)
+            val="${1#*=}"
+            if [[ "$val" =~ ^(false|0|no)$ ]]; then
+                CLI_TAILSCALE=false
+            else
+                CLI_TAILSCALE=true
+            fi
+            shift
+            ;;
+        --tailscale)
+            if [ -n "${2:-}" ] && [[ "$2" =~ ^(true|false|1|0|yes|no)$ ]]; then
+                if [[ "$2" =~ ^(false|0|no)$ ]]; then
+                    CLI_TAILSCALE=false
+                else
+                    CLI_TAILSCALE=true
+                fi
+                shift 2
+            else
+                CLI_TAILSCALE=true
+                shift
+            fi
+            ;;
+        --no-tailscale|--without-tailscale)
+            CLI_TAILSCALE=false
+            shift
+            ;;
+        --dir=?*)
+            CLI_DIR="${1#*=}"
+            shift
+            ;;
+        --dir)
+            CLI_DIR="${2:-}"
+            shift 2
+            ;;
+        --skip-start)
+            CLI_SKIP_START=true
+            shift
+            ;;
+        --skip-link)
+            CLI_SKIP_LINK=true
+            shift
+            ;;
+        --skip-guide)
+            CLI_SKIP_GUIDE=true
+            shift
             ;;
         --help|-h)
             echo "Verwendung: bash install.sh [OPTIONEN]"
             echo "Optionen:"
-            echo "  --dry-run, --test, -t   Führt Syntaxprüfungen und Template-Generierung ohne Container-Start durch."
-            echo "  --help, -h              Zeigt diesen Hilfetext an."
+            echo "  --dry-run, --test, -t          Führt Syntaxprüfungen und Template-Generierung ohne Container-Start durch."
+            echo "  -y, --yes, --non-interactive   Führt die Installation ohne interaktive Prompts mit Standardwerten aus."
+            echo "  --downloader <sabnzbd|nzbget>  Wählt den Downloader (SABnzbd oder NZBGet)."
+            echo "  --vpn <none|wireguard|openvpn> Netzwerkmodus (Direkt ohne VPN, oder Gluetun mit WireGuard/OpenVPN)."
+            echo "  --vpn-provider <mullvad|...>   VPN-Provider (mullvad, protonvpn, surfshark, ivpn, custom)."
+            echo "  --wireguard-key <key>          WireGuard Private Key für Gluetun."
+            echo "  --wireguard-ip <ip>            Zugewiesene WireGuard-IP (z. B. 10.64.0.1/32)."
+            echo "  --openvpn-user <user>          OpenVPN Benutzername."
+            echo "  --openvpn-pass <pass>          OpenVPN Passwort."
+            echo "  --vpn-countries <countries>    VPN Server-Länder (z. B. 'Netherlands,Germany')."
+            echo "  --subnet <cidr>                Lokales Subnetz für Gluetun Firewall Bypass (z. B. 192.168.178.0/24)."
+            echo "  --tailscale / --no-tailscale   Tailscale Fernzugriff aktivieren bzw. deaktivieren."
+            echo "  --dir <pfad>                   Installationsverzeichnis festlegen."
+            echo "  --skip-start                   Erstellt Konfigurationen, startet aber die Docker-Container nicht."
+            echo "  --skip-link                    Überspringt das automatische Verknüpfen der Apps (link-apps.sh)."
+            echo "  --skip-guide                   Überspringt den abschließenden Frontend-Assistenten."
+            echo "  --help, -h                     Zeigt diesen Hilfetext an."
             exit 0
+            ;;
+        *)
+            shift
             ;;
     esac
 done
 
-# Interaktive Benutzereingaben sicherstellen – auch wenn das Skript
-# per Pipe (curl -fsSL ... | bash) oder non-tty ausgeführt wird:
+# Benutzereingaben sicherstellen – unterstützt Pipes, Terminals und non-interactive Modus:
 read_input() {
-    if [ "$DRY_RUN" = true ]; then
+    if [ "$DRY_RUN" = true ] || [ "$NON_INTERACTIVE" = true ]; then
         return 0
-    elif [ -t 0 ]; then
-        read -r "$@"
+    elif [ ! -t 0 ]; then
+        read -r "$@" || true
     elif (exec < /dev/tty) 2>/dev/null; then
-        read -r "$@" < /dev/tty
+        read -r "$@" < /dev/tty || true
     else
-        read -r "$@"
+        read -r "$@" || true
     fi
 }
 
 read_secret() {
-    if [ "$DRY_RUN" = true ]; then
+    if [ "$DRY_RUN" = true ] || [ "$NON_INTERACTIVE" = true ]; then
         return 0
-    elif [ -t 0 ]; then
-        read -r -s "$@"
+    elif [ ! -t 0 ]; then
+        read -r -s "$@" || true
     elif (exec < /dev/tty) 2>/dev/null; then
-        read -r -s "$@" < /dev/tty
+        read -r -s "$@" < /dev/tty || true
     else
-        read -r -s "$@"
+        read -r -s "$@" || true
     fi
 }
 
@@ -70,7 +226,6 @@ ORIGINAL_DIR="$(pwd)"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
@@ -97,8 +252,12 @@ echo -e "  ${BOLD}2. Mindestens einen Usenet-Indexer${NC} mit API-Key (z. B. Tre
 echo -e "  ${BOLD}3. (Optional):${NC} VPN-Account mit WireGuard/OpenVPN (z. B. Mullvad, ProtonVPN)"
 echo -e "     ${CYAN}Hinweis:${NC} Der Stack kann auch komplett ${GREEN}ohne VPN${NC} mit direkter SSL/TLS-Verschlüsselung (Port 563) betrieben werden.\n"
 
-read_input -p "Möchtest du mit der Einrichtung fortfahren? [J/n]: " READY_CHOICE
-READY_CHOICE=${READY_CHOICE:-J}
+if [ "$NON_INTERACTIVE" = true ]; then
+    READY_CHOICE="J"
+else
+    read_input -p "Möchtest du mit der Einrichtung fortfahren? [J/n]: " READY_CHOICE
+    READY_CHOICE=${READY_CHOICE:-J}
+fi
 
 if [[ ! "$READY_CHOICE" =~ ^[jJyY]$ ]]; then
     echo -e "\n${RED}Installation abgebrochen.${NC}"
@@ -116,12 +275,8 @@ echo -e "${CYAN}▶ Prüfe Systemvoraussetzungen...${NC}"
 
 # Betriebssystem / Distribution ermitteln
 DISTRO_NAME="Linux"
-DISTRO_ID=""
-DISTRO_LIKE=""
 if [ -f /etc/os-release ]; then
     DISTRO_NAME=$(grep -E '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
-    DISTRO_ID=$(grep -E '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
-    DISTRO_LIKE=$(grep -E '^ID_LIKE=' /etc/os-release 2>/dev/null | cut -d= -f2- | tr -d '"' || true)
 fi
 [ -z "$DISTRO_NAME" ] && DISTRO_NAME="$(uname -s) ($(uname -m))"
 
@@ -166,8 +321,9 @@ if ! command -v docker &> /dev/null; then
                 echo -e "${CYAN}Installiere Docker via offiziellem Docker-Installationsskript...${NC}"
                 curl -fsSL https://get.docker.com | sh
             fi
-            if [ -n "${USER:-}" ] && [ "$USER" != "root" ]; then
-                $SUDO usermod -aG docker "$USER" 2>/dev/null || true
+            TARGET_USER="${SUDO_USER:-${USER:-}}"
+            if [ -n "$TARGET_USER" ] && [ "$TARGET_USER" != "root" ]; then
+                $SUDO usermod -aG docker "$TARGET_USER" 2>/dev/null || true
             fi
             if command -v systemctl &>/dev/null; then
                 $SUDO systemctl enable --now docker 2>/dev/null || $SUDO systemctl start docker 2>/dev/null || true
@@ -270,7 +426,19 @@ fi
 echo -e "${GREEN}✓ Verwende System-Kennungen: PUID=${CURRENT_UID}, PGID=${CURRENT_GID}${NC}"
 
 # Server-IP für die spätere Anzeige ermitteln
-SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+# Server-IP für die spätere Anzeige ermitteln (auch ohne hostname-Paket robust)
+SERVER_IP=""
+if command -v hostname &>/dev/null; then
+    SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || true)
+fi
+if [ -z "$SERVER_IP" ] && command -v ip &>/dev/null; then
+    SERVER_IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{print $7}' || true)
+    [ -z "$SERVER_IP" ] && SERVER_IP=$(ip -4 addr show scope global 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1 || true)
+fi
+if [ -z "$SERVER_IP" ] && command -v hostname &>/dev/null; then
+    SERVER_IP=$(hostname -i 2>/dev/null | awk '{print $1}' || true)
+fi
+[ -z "$SERVER_IP" ] && SERVER_IP="localhost" 
 
 # Prüfe Hardwarebeschleunigung (/dev/dri für Intel QuickSync / VAAPI / GPU)
 DRI_PRESENT=false
@@ -304,8 +472,19 @@ echo -e "  ${BOLD}[2] NZBGet${NC}  (Ressourcen-Leichtgewicht für < 2 GB RAM / s
 echo -e "      Kompiliert in nativem C++. Minimaler RAM-Bedarf (~40-60 MB), Direct Unpack, ideal für"
 echo -e "      Kleinst-Geräte (z. B. Raspberry Pi 3 oder 1 GB VPS)."
 echo ""
-read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
-DOWNLOADER_CHOICE=${DOWNLOADER_CHOICE:-1}
+
+if [ -n "$CLI_DOWNLOADER" ]; then
+    if [ "$CLI_DOWNLOADER" = "2" ] || [ "$CLI_DOWNLOADER" = "nzbget" ]; then
+        DOWNLOADER_CHOICE="2"
+    else
+        DOWNLOADER_CHOICE="1"
+    fi
+elif [ "$NON_INTERACTIVE" = true ]; then
+    DOWNLOADER_CHOICE="1"
+else
+    read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " DOWNLOADER_CHOICE
+    DOWNLOADER_CHOICE=${DOWNLOADER_CHOICE:-1}
+fi
 
 if [ "$DOWNLOADER_CHOICE" = "2" ]; then
     SELECTED_DOWNLOADER="nzbget"
@@ -334,8 +513,24 @@ echo -e "  ${BOLD}[2] Mit VPN (Gluetun-Tunneling via WireGuard oder OpenVPN)${NC
 echo -e "      Leitet Downloader und Indexer über einen VPN-Tunnel. Maskiert deine IP"
 echo -e "      zusätzlich gegenüber dem Provider und schützt vor möglichem ISP-Traffic-Shaping."
 echo ""
-read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_MODE_CHOICE
-VPN_MODE_CHOICE=${VPN_MODE_CHOICE:-1}
+
+if [ -n "$CLI_VPN" ]; then
+    if [ "$CLI_VPN" = "none" ] || [ "$CLI_VPN" = "1" ] || [ "$CLI_VPN" = "no" ] || [ "$CLI_VPN" = "false" ]; then
+        VPN_MODE_CHOICE="1"
+    else
+        VPN_MODE_CHOICE="2"
+        if [ "$CLI_VPN" = "openvpn" ] || [ "$CLI_VPN" = "ovpn" ] || [ "$CLI_VPN" = "2" ]; then
+            VPN_PROTO_CHOICE="2"
+        else
+            VPN_PROTO_CHOICE="1"
+        fi
+    fi
+elif [ "$NON_INTERACTIVE" = true ]; then
+    VPN_MODE_CHOICE="1"
+else
+    read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_MODE_CHOICE
+    VPN_MODE_CHOICE=${VPN_MODE_CHOICE:-1}
+fi
 
 USE_VPN=false
 VPN_TYPE="none"
@@ -349,57 +544,88 @@ LAN_SUBNET=""
 
 if [ "$VPN_MODE_CHOICE" = "2" ]; then
     USE_VPN=true
-    echo ""
-    echo -e "Welches VPN-Protokoll möchtest du nutzen?"
-    echo -e "  [1] WireGuard (Direkt im Linux-Kernel integriert, minimaler CPU-Overhead)"
-    echo -e "  [2] OpenVPN   (Klassisches Userspace-Protokoll, höhere CPU-Last)"
-    read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
-    VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
+    if [ -z "${VPN_PROTO_CHOICE:-}" ]; then
+        echo ""
+        echo -e "Welches VPN-Protokoll möchtest du nutzen?"
+        echo -e "  [1] WireGuard (Direkt im Linux-Kernel integriert, minimaler CPU-Overhead)"
+        echo -e "  [2] OpenVPN   (Klassisches Userspace-Protokoll, höhere CPU-Last)"
+        read_input -p "Deine Wahl [1 oder 2, Standard: 1]: " VPN_PROTO_CHOICE
+        VPN_PROTO_CHOICE=${VPN_PROTO_CHOICE:-1}
+    fi
 
-    echo ""
-    echo -e "Welchen VPN-Anbieter nutzt du?"
-    echo -e "  [1] Mullvad"
-    echo -e "  [2] ProtonVPN"
-    echo -e "  [3] Surfshark"
-    echo -e "  [4] IVPN"
-    echo -e "  [5] Anderer / Custom"
-    read_input -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
-    VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
+    if [ -n "$CLI_VPN_PROVIDER" ]; then
+        VPN_PROVIDER="$CLI_VPN_PROVIDER"
+    else
+        echo ""
+        echo -e "Welchen VPN-Anbieter nutzt du?"
+        echo -e "  [1] Mullvad"
+        echo -e "  [2] ProtonVPN"
+        echo -e "  [3] Surfshark"
+        echo -e "  [4] IVPN"
+        echo -e "  [5] Anderer / Custom"
+        read_input -p "Auswahl [1-5, Standard: 1]: " VPN_PROV_CHOICE
+        VPN_PROV_CHOICE=${VPN_PROV_CHOICE:-1}
 
-    case "$VPN_PROV_CHOICE" in
-        1) VPN_PROVIDER="mullvad" ;;
-        2) VPN_PROVIDER="protonvpn" ;;
-        3) VPN_PROVIDER="surfshark" ;;
-        4) VPN_PROVIDER="ivpn" ;;
-        *) VPN_PROVIDER="custom" ;;
-    esac
+        case "$VPN_PROV_CHOICE" in
+            1) VPN_PROVIDER="mullvad" ;;
+            2) VPN_PROVIDER="protonvpn" ;;
+            3) VPN_PROVIDER="surfshark" ;;
+            4) VPN_PROVIDER="ivpn" ;;
+            *) VPN_PROVIDER="custom" ;;
+        esac
+    fi
 
-    if [ "$VPN_PROTO_CHOICE" = "2" ]; then
+    if [ "${VPN_PROTO_CHOICE:-1}" = "2" ] || [ "${VPN_PROTO_CHOICE:-}" = "openvpn" ]; then
         VPN_TYPE="openvpn"
         echo ""
-        read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
-        read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+        if [ -n "$CLI_OVPN_USER" ]; then
+            OPENVPN_USER="$CLI_OVPN_USER"
+        else
+            read_input -p "Gib deinen OpenVPN Benutzernamen ein: " OPENVPN_USER
+        fi
+        if [ -n "$CLI_OVPN_PASS" ]; then
+            OPENVPN_PASS="$CLI_OVPN_PASS"
+        else
+            read_secret -p "Gib dein OpenVPN Passwort ein: " OPENVPN_PASS
+        fi
         echo ""
         OPENVPN_USER=${OPENVPN_USER:-"dummy_user"}
         OPENVPN_PASS=${OPENVPN_PASS:-"dummy_pass"}
     else
         VPN_TYPE="wireguard"
         echo ""
-        if [ "$DRY_RUN" = true ]; then
+        if [ "$DRY_RUN" = true ] && [ -z "$CLI_WG_KEY" ]; then
             WIREGUARD_PRIVATE_KEY="c29tZXJhbmRvbXdpcmVndWFyZHByaXZhdGVrZXkxMjM0NTY="
             WIREGUARD_ADDRESSES="10.64.0.1/32"
         else
-            while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
-                read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
-                if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
-                    echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
-                fi
-            done
-            read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+            if [ -n "$CLI_WG_KEY" ]; then
+                WIREGUARD_PRIVATE_KEY="$CLI_WG_KEY"
+            else
+                while [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; do
+                    read_input -p "Füge deinen WireGuard Private Key ein: " WIREGUARD_PRIVATE_KEY
+                    if [ -z "${WIREGUARD_PRIVATE_KEY:-}" ]; then
+                        if [ "$NON_INTERACTIVE" = true ]; then
+                            WIREGUARD_PRIVATE_KEY="c29tZXJhbmRvbXdpcmVndWFyZHByaXZhdGVrZXkxMjM0NTY="
+                            break
+                        fi
+                        echo -e "${YELLOW}⚠️  Der WireGuard Private Key darf nicht leer sein, da Gluetun sonst nicht starten kann.${NC}"
+                    fi
+                done
+            fi
+            if [ -n "$CLI_WG_IP" ]; then
+                WIREGUARD_ADDRESSES="$CLI_WG_IP"
+            else
+                read_input -p "Deine zugewiesene WireGuard-IP (z. B. 10.64.0.1/32): " WIREGUARD_ADDRESSES
+            fi
+            WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-"10.64.0.1/32"}
         fi
     fi
 
-    read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
+    if [ -n "$CLI_VPN_COUNTRIES" ]; then
+        VPN_COUNTRIES="$CLI_VPN_COUNTRIES"
+    else
+        read_input -p "Gewünschte VPN Server-Länder [Standard: Netherlands,Germany]: " VPN_COUNTRIES
+    fi
     VPN_COUNTRIES=${VPN_COUNTRIES:-"Netherlands,Germany"}
 
     # Lokales Heimnetzwerk für Gluetun Firewall ermitteln
@@ -416,11 +642,15 @@ if [ "$VPN_MODE_CHOICE" = "2" ]; then
             DETECTED_SUBNET="192.168.178.0/24"
         fi
     fi
-    echo ""
-    echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall Bypass):${NC}"
-    echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
-    read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
-    CHOSEN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
+    if [ -n "$CLI_SUBNET" ]; then
+        CHOSEN_SUBNET="$CLI_SUBNET"
+    else
+        echo ""
+        echo -e "${CYAN}▶ Lokale Heimnetz-Erkennung (Gluetun Firewall Bypass):${NC}"
+        echo -e "Erkanntes lokales Subnetz: ${BOLD}${DETECTED_SUBNET}${NC}"
+        read_input -p "Lokales Subnetz übernehmen (Enter) oder manuell anpassen: " CUSTOM_SUBNET
+        CHOSEN_SUBNET=${CUSTOM_SUBNET:-$DETECTED_SUBNET}
+    fi
 else
     echo -e "${GREEN}✓ Direktmodus gewählt: Verbindungen laufen ohne VPN direkt über SSL/TLS (Port 563).${NC}"
 fi
@@ -442,7 +672,12 @@ TAILSCALE_DETECTED_IP=$(tailscale ip -4 2>/dev/null || true)
 WANT_TAILSCALE=false
 TAILSCALE_IP=""
 
-if [ -n "$TAILSCALE_DETECTED_IP" ]; then
+if [ "$CLI_TAILSCALE" = true ]; then
+    WANT_TAILSCALE=true
+    [ -n "$TAILSCALE_DETECTED_IP" ] && TAILSCALE_IP="$TAILSCALE_DETECTED_IP"
+elif [ "$CLI_TAILSCALE" = false ]; then
+    WANT_TAILSCALE=false
+elif [ -n "$TAILSCALE_DETECTED_IP" ]; then
     echo -e "${GREEN}✓ Aktiver Tailscale-Dienst auf diesem System erkannt (IP: ${BOLD}${TAILSCALE_DETECTED_IP}${GREEN}).${NC}"
     read_input -p "Möchtest du Tailscale in diesen Stack einbinden? [J/n]: " TAILSCALE_INPUT
     TAILSCALE_INPUT=${TAILSCALE_INPUT:-J}
@@ -454,8 +689,12 @@ if [ -n "$TAILSCALE_DETECTED_IP" ]; then
         echo -e "${YELLOW}Tailscale-Einbindung übersprungen.${NC}"
     fi
 else
-    read_input -p "Möchtest du Tailscale für sicheren Fernzugriff einrichten und einbinden? [J/n]: " TAILSCALE_INPUT
-    TAILSCALE_INPUT=${TAILSCALE_INPUT:-J}
+    if [ "$NON_INTERACTIVE" = true ]; then
+        TAILSCALE_INPUT="n"
+    else
+        read_input -p "Möchtest du Tailscale für sicheren Fernzugriff einrichten und einbinden? [J/n]: " TAILSCALE_INPUT
+        TAILSCALE_INPUT=${TAILSCALE_INPUT:-J}
+    fi
     if [[ "$TAILSCALE_INPUT" =~ ^[jJyY]$ ]]; then
         WANT_TAILSCALE=true
         echo -e "${GREEN}✓ Tailscale wird nach dem Start des Stacks eingerichtet.${NC}"
@@ -466,16 +705,17 @@ fi
 
 # Firewall-Bypass für Gluetun finalisieren: Tailscale nur hinzufügen, wenn gewünscht!
 if [ "$USE_VPN" = true ]; then
+    LAN_SUBNET="${CHOSEN_SUBNET}"
+    if [[ "$LAN_SUBNET" != *"172.16.0.0/12"* ]]; then
+        LAN_SUBNET="${LAN_SUBNET},172.16.0.0/12"
+    fi
     if [ "$WANT_TAILSCALE" = true ]; then
-        if [[ "$CHOSEN_SUBNET" != *"100.64.0.0/10"* ]]; then
-            LAN_SUBNET="${CHOSEN_SUBNET},100.64.0.0/10"
-        else
-            LAN_SUBNET="${CHOSEN_SUBNET}"
+        if [[ "$LAN_SUBNET" != *"100.64.0.0/10"* ]]; then
+            LAN_SUBNET="${LAN_SUBNET},100.64.0.0/10"
         fi
-        echo -e "${GREEN}✓ Gluetun Firewall-Bypass gesetzt: Lokales Netz (${CHOSEN_SUBNET}) & Tailscale (100.64.0.0/10).${NC}"
+        echo -e "${GREEN}✓ Gluetun Firewall-Bypass gesetzt: Lokales Netz (${CHOSEN_SUBNET}), Docker-Bridge (172.16.0.0/12) & Tailscale (100.64.0.0/10).${NC}"
     else
-        LAN_SUBNET="${CHOSEN_SUBNET}"
-        echo -e "${GREEN}✓ Gluetun Firewall-Bypass auf lokales Heimnetz beschränkt (${CHOSEN_SUBNET}). Kein Tailscale-Bypass.${NC}"
+        echo -e "${GREEN}✓ Gluetun Firewall-Bypass auf lokales Heimnetz (${CHOSEN_SUBNET}) & Docker-Bridge (172.16.0.0/12) gesetzt.${NC}"
     fi
 fi
 
@@ -487,11 +727,11 @@ TARGET_HOME=$(getent passwd "$TARGET_USER" 2>/dev/null | cut -d: -f6 || true)
 TARGET_HOME=${TARGET_HOME:-${HOME:-/root}}
 
 IS_TEMP_DRY_RUN_DIR=false
-if [ -f "$ORIGINAL_DIR/docker-compose.example.yml" ] || [ "$(basename "$ORIGINAL_DIR")" = "Usenet-Kompass" ]; then
-    DEFAULT_INSTALL_DIR="$ORIGINAL_DIR"
-elif [ "$DRY_RUN" = true ]; then
+if [ "$DRY_RUN" = true ]; then
     DEFAULT_INSTALL_DIR=$(mktemp -d -t usenet-kompass-dryrun-XXXXXX 2>/dev/null || echo "/tmp/usenet-kompass-dryrun")
     IS_TEMP_DRY_RUN_DIR=true
+elif [ -f "$ORIGINAL_DIR/docker-compose.example.yml" ] || [ "$(basename "$ORIGINAL_DIR")" = "Usenet-Kompass" ]; then
+    DEFAULT_INSTALL_DIR="$ORIGINAL_DIR"
 else
     DEFAULT_INSTALL_DIR="${TARGET_HOME}/usenet-kompass"
 fi
@@ -502,7 +742,13 @@ echo -e "▶ SCHRITT 4: Installationsverzeichnis festlegen"
 echo -e "==================================================================${NC}"
 echo -e "  In welchem Ordner soll dein Usenet-Stack eingerichtet werden?"
 echo -e "  Standard-Pfad: ${BOLD}${DEFAULT_INSTALL_DIR}${NC}"
-read_input -p "Pfad übernehmen (Enter) oder individuellen Pfad eingeben: " USER_DIR_INPUT
+if [ -n "$CLI_DIR" ]; then
+    USER_DIR_INPUT="$CLI_DIR"
+elif [ "$NON_INTERACTIVE" = true ]; then
+    USER_DIR_INPUT="$DEFAULT_INSTALL_DIR"
+else
+    read_input -p "Pfad übernehmen (Enter) oder individuellen Pfad eingeben: " USER_DIR_INPUT
+fi
 INSTALL_DIR="${USER_DIR_INPUT:-$DEFAULT_INSTALL_DIR}"
 # Tilde (~) im Pfad expandieren falls vom Nutzer eingegeben
 INSTALL_DIR="${INSTALL_DIR/#\~/$TARGET_HOME}"
@@ -937,14 +1183,22 @@ fi
 CONFLICTING_CONTAINERS=$($DOCKER_BIN ps -a --format '{{.Names}}' 2>/dev/null | grep -E "^(gluetun|sonarr|radarr|prowlarr|jellyfin|seerr|jellyseerr|${SELECTED_DOWNLOADER})$" || true)
 
 START_NOW="J"
-if [ -n "$CONFLICTING_CONTAINERS" ]; then
+if [ "$CLI_SKIP_START" = true ]; then
+    START_NOW="n"
+elif [ -n "$CONFLICTING_CONTAINERS" ]; then
     echo -e "${YELLOW}⚠️  ACHTUNG: Auf diesem System existieren bereits Container mit identischen Namen:${NC}"
     echo -e "${BOLD}${CONFLICTING_CONTAINERS}${NC}"
-    read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
+    if [ "$NON_INTERACTIVE" = true ]; then
+        REMOVE_CONFLICTS="N"
+    else
+        read_input -p "Möchtest du diese bestehenden Container stoppen und entfernen, um den neuen Stack zu starten? [j/N]: " REMOVE_CONFLICTS
+    fi
     REMOVE_CONFLICTS=${REMOVE_CONFLICTS:-N}
     if [[ "$REMOVE_CONFLICTS" =~ ^[jJyY]$ ]]; then
         echo -e "${CYAN}Stoppe und entferne kollidierende Container...${NC}"
-        echo "$CONFLICTING_CONTAINERS" | xargs -r $DOCKER_BIN rm -f
+        echo "$CONFLICTING_CONTAINERS" | while read -r cname; do
+            [ -n "$cname" ] && $DOCKER_BIN rm -f "$cname" >/dev/null 2>&1 || true
+        done
     else
         echo -e "\n${YELLOW}Hinweis: Die neue docker-compose.yml wurde erstellt, wird aber wegen der bestehenden Container nicht gestartet.${NC}"
         START_NOW="n"
@@ -952,8 +1206,12 @@ if [ -n "$CONFLICTING_CONTAINERS" ]; then
 fi
 
 if [ "$START_NOW" != "n" ]; then
-    read_input -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
-    START_NOW=${START_NOW:-J}
+    if [ "$NON_INTERACTIVE" = true ]; then
+        START_NOW="J"
+    else
+        read_input -p "Möchtest du den Stack jetzt direkt im Hintergrund starten? [J/n]: " START_NOW
+        START_NOW=${START_NOW:-J}
+    fi
 fi
 
 if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
@@ -969,7 +1227,7 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     if [ "$USE_VPN" = true ]; then
         echo -e "${CYAN}⏳ Warte kurz auf VPN-Tunnelverbindung für den Sicherheits-Check...${NC}"
         VPN_JSON=""
-        for i in {1..10}; do
+        for _ in {1..10}; do
             VPN_JSON=$($DOCKER_BIN exec gluetun wget -qO- --timeout=5 https://ipinfo.io/json 2>/dev/null || true)
             if [[ "$VPN_JSON" == *"\"ip\":"* ]]; then
                 break
@@ -1007,8 +1265,14 @@ if [[ "$START_NOW" =~ ^[jJyY]$ ]]; then
     echo -e "${BOLD}▶ Möchtest du die Medien-Apps jetzt vollautomatisch verknüpfen?${NC}"
     echo -e "  Verbindet Prowlarr ↔ Sonarr ↔ Radarr ↔ ${DOWNLOADER_SERVICE_NAME}"
     echo -e "  und richtet die Root-Folder (/data/media) automatisch ein."
-    read_input -p "Apps jetzt automatisch verknüpfen? [J/n]: " RUN_LINK
-    RUN_LINK=${RUN_LINK:-J}
+    if [ "$CLI_SKIP_LINK" = true ]; then
+        RUN_LINK="n"
+    elif [ "$NON_INTERACTIVE" = true ]; then
+        RUN_LINK="J"
+    else
+        read_input -p "Apps jetzt automatisch verknüpfen? [J/n]: " RUN_LINK
+        RUN_LINK=${RUN_LINK:-J}
+    fi
     if [[ "$RUN_LINK" =~ ^[jJyY]$ ]]; then
         if [ -f "$INSTALL_DIR/link-apps.sh" ]; then
             chmod +x "$INSTALL_DIR/link-apps.sh"
@@ -1030,7 +1294,7 @@ fi
 # ------------------------------------------------------------------------------
 # 7.3 OPTIONALER FERNZUGRIFF MIT TAILSCALE
 # ------------------------------------------------------------------------------
-if [ "$WANT_TAILSCALE" = true ]; then
+if [ "$WANT_TAILSCALE" = true ] && [ "$CLI_SKIP_START" = false ]; then
     if [ -z "$TAILSCALE_IP" ]; then
         echo -e "${CYAN}------------------------------------------------------------------${NC}"
         echo -e "${BOLD}▶ Richte Tailscale für sicheren Fernzugriff ein...${NC}"
@@ -1089,11 +1353,15 @@ echo -e "   Vollständige Anleitung: ${BOLD}https://github.com/KAiSER086/Usenet-
 # ------------------------------------------------------------------------------
 # 9.0 INTERAKTIVE SCHRITT-FÜR-SCHRITT ANLEITUNG (JELLYFIN & SEERR)
 # ------------------------------------------------------------------------------
-echo -e "${CYAN}------------------------------------------------------------------${NC}"
-echo -e "${BOLD}▶ Möchtest du jetzt den Schritt-für-Schritt Einrichtungsassistenten"
-echo -e "  für Jellyfin & Seerr starten?${NC}"
-read_input -p "Ersteinrichtung jetzt Schritt für Schritt durchgehen? [J/n]: " RUN_FRONTEND_GUIDE
-RUN_FRONTEND_GUIDE=${RUN_FRONTEND_GUIDE:-J}
+if [ "$CLI_SKIP_START" = false ] && [ "$CLI_SKIP_GUIDE" = false ] && [ "$NON_INTERACTIVE" = false ]; then
+    echo -e "${CYAN}------------------------------------------------------------------${NC}"
+    echo -e "${BOLD}▶ Möchtest du jetzt den Schritt-für-Schritt Einrichtungsassistenten"
+    echo -e "  für Jellyfin & Seerr starten?${NC}"
+    read_input -p "Ersteinrichtung jetzt Schritt für Schritt durchgehen? [J/n]: " RUN_FRONTEND_GUIDE
+    RUN_FRONTEND_GUIDE=${RUN_FRONTEND_GUIDE:-J}
+else
+    RUN_FRONTEND_GUIDE="n"
+fi
 
 if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     # API-Keys für Seerr aus den Configs auslesen
@@ -1133,7 +1401,7 @@ if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     else
         echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC}"
     fi
-    echo -e "2. Wähle ${BOLD}„Mit Jellyfin anmelden“${NC}."
+    echo -e "2. Wähle ${BOLD}\"Mit Jellyfin anmelden\"${NC}."
     echo -e "3. Gib folgende Verbindungsdaten für Jellyfin ein:"
     echo -e "   • ${BOLD}Jellyfin-URL:${NC}  ${GREEN}http://jellyfin:8096${NC}"
     echo -e "   • ${BOLD}Benutzername:${NC}  Dein soeben erstellter Jellyfin-Admin"
