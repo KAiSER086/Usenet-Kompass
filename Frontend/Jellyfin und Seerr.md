@@ -92,7 +92,7 @@ Füge Seerr zu deiner `docker-compose.yml` hinzu:
     depends_on:
       - radarr
       - sonarr
-      - gluetun
+      # - gluetun # Nur einkommentieren, falls du das VPN-Setup mit Gluetun nutzt
     restart: unless-stopped
 ```
 
@@ -106,7 +106,7 @@ docker compose up -d
 
 ### Seerr konfigurieren
 
-Öffne `http://<deine-tailscale-ip>:5055` im Browser und folge dem Einrichtungsassistenten:
+Öffne `http://<deine-tailscale-ip>:5055` (oder `http://<deine-server-ip>:5055`) im Browser und folge dem Einrichtungsassistenten:
 
 1. **Mit Jellyfin verbinden:**
    * Melde dich mit deinem Jellyfin-Konto an.
@@ -114,15 +114,29 @@ docker compose up -d
    * Wähle die zu synchronisierenden Mediatheken aus.
 
 2. **Radarr & Sonarr verbinden:**
-   > ⚠️ **Wichtig für das Docker-Netzwerk:** Da Radarr und Sonarr über das Netzwerk von `gluetun` laufen, erreichst du sie innerhalb des Docker-Netzwerks über den Hostnamen **`gluetun`** (oder alternativ über die IP deines Servers).
+
+   > [!NOTE]
+   > **Wichtig für das Docker-Netzwerk (je nach gewähltem Modus):**
+   > * **Ohne VPN (Direkt-Modus / Standard):** Alle Dienste laufen im regulären Docker-Bridge-Netzwerk. Seerr erreicht die Apps direkt und sauber über deren Dienstnamen:
+   >   * Hostname für Radarr: **`radarr`**
+   >   * Hostname für Sonarr: **`sonarr`**
+   > * **Mit VPN (Gluetun-Tunneling):** Radarr und Sonarr teilen sich den Netzwerk-Stack von Gluetun (`network_mode: "service:gluetun"`). Externe Container im Docker-Netzwerk (wie Seerr) erreichen sie über den Hostnamen des VPN-Containers:
+   >   * Hostname für Radarr & Sonarr: **`gluetun`** (oder alternativ deine Server-IP)
 
    * **Radarr (Filme):**
-     * **Hostname / IP:** `gluetun` (oder deine Server-IP)
+     * **Standardserver:** Aktivieren
+     * **Servername:** `Radarr`
+     * **Hostname / IP:** **`radarr`** *(ohne VPN)* bzw. **`gluetun`** *(mit VPN)* – oder deine Server-IP
      * **Port:** **`7878`**
      * **API Key:** Aus Radarr unter *Einstellungen > Allgemein > Sicherheit*.
+     * **Stammordner:** `/data/media/movies`
+
    * **Sonarr (Serien):**
-     * **Hostname / IP:** `gluetun` (oder deine Server-IP)
+     * **Standardserver:** Aktivieren
+     * **Servername:** `Sonarr`
+     * **Hostname / IP:** **`sonarr`** *(ohne VPN)* bzw. **`gluetun`** *(mit VPN)* – oder deine Server-IP
      * **Port:** **`8989`**
      * **API Key:** Aus Sonarr unter *Einstellungen > Allgemein > Sicherheit*.
+     * **Stammordner:** `/data/media/tv`
 
-3. **Fertigstellen:** Nun ist dein automatisierter Medien-Workflow komplett einsatzbereit!
+3. **Fertigstellen:** Klicke bei beiden Servern auf **„Verbindung testen“** und anschließend auf **„Speichern“**. Nun ist dein automatisierter Medien-Workflow komplett einsatzbereit!
