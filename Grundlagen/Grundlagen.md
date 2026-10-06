@@ -76,7 +76,7 @@ Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**
 
 * **Vorteile:** Keine Hardware-Anschaffungskosten, professionelles Hosting im Rechenzentrum mit garantierter Gigabit-Anbindung (oft 1–2,5 Gbit/s symmetrisch) und fester öffentlicher IP. Perfekt, wenn das heimische Internet zu langsam ist oder der private Router nicht durch 24/7-Downloads ausgelastet werden soll.
 * **Typisches Setup:** Günstige Instanzen mit 2–4 vCPUs (z. B. AMD EPYC bei Hetzner Cloud, Netcup etc.) und NVMe-Speicher.
-* **Beachte:** Da sich virtuelle CPUs die Host-Ressourcen teilen, ist eine saubere Konfiguration der Thread- und Verbindungsanzahl (wie im Performance-Tuning in [Kapitel 5.0](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget) gemessen) essenziell. Für größere Mediatheken empfiehlt sich die Anbindung von zusätzlichem Block-Storage oder einer Storage-Box.
+* **Beachte:** Da sich virtuelle CPUs die Host-Ressourcen teilen, ist eine saubere Konfiguration der Thread- und Verbindungsanzahl (wie im Performance-Tuning in [Kapitel 5.0](../Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget) gemessen) essenziell. Für größere Mediatheken empfiehlt sich die Anbindung von zusätzlichem Block-Storage oder einer Storage-Box.
 
 ---
 

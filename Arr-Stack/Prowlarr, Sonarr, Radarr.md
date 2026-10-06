@@ -268,7 +268,7 @@ Jedes gefundene Release wird von Sonarr/Radarr anhand seiner Metadaten und Relea
 2. Klicke auf das **Plus (+)** und wähle **Import**.
 3. Kopiere die offiziellen JSON-Definitionen aus den TRaSH Guides:
    * **Radarr:** [TRaSH Guides Radarr Custom Formats](https://trash-guides.info/Radarr/Radarr-collection-of-custom-formats/#german)
-   * **Sonarr:** [TRaSH Guides Sonarr Custom Formats](https://trash-guides.info/Sonarr/Sonarr-collection-of-custom-formats/#german)
+   * **Sonarr:** [TRaSH Guides Sonarr Custom Formats](https://trash-guides.info/Sonarr/sonarr-collection-of-custom-formats/#german)
 4. Füge mindestens die Formate **`German DL`**, **`German`** und **`German Forced`** hinzu und speichere sie ab.
 
 #### 2. Punkte (Scores) im Qualitätsprofil zuweisen
