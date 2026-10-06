@@ -143,3 +143,9 @@ Navigiere in Seerr zu **Einstellungen > Dienste** und füge deine Server hinzu:
 
 #### Schritt 3: Fertigstellen
 Klicke bei beiden Servern auf **„Verbindung testen“** und anschließend auf **„Speichern“**. Nun ist dein automatisierter Medien-Workflow komplett einsatzbereit!
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**8.0 Finaler Stack**](../Docker%20Compose%20Stack/Finaler%20Stack.md) ➔ |

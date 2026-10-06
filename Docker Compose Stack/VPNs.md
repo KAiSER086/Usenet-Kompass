@@ -220,3 +220,9 @@ Damit Tailscale immer und von überall eine direkte Punkt-zu-Punkt-Verbindung he
 3. Router-Einstellung speichern.
 
 Sobald der UDP-Port `41641` weitergeleitet wird, kann dein Abspielgerät die NAT-Barriere sofort durchbrechen. Streams laufen ab diesem Moment als ungedrosseltes **Direct Play** über Tailscale.
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**3.0 Docker Stack**](Docker%20Compose%20Stack.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) ➔ |

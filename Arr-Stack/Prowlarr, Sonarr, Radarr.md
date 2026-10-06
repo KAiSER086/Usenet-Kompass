@@ -285,3 +285,9 @@ Jedes gefundene Release wird von Sonarr/Radarr anhand seiner Metadaten und Relea
 5. Klicke auf **Save**.
 
 Ab sofort wählt der Stack bei jeder Suchanfrage vollautomatisch die für den deutschsprachigen Raum optimale Version aus – ganz ohne manuelle Kontrolle!
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**7.0 Frontend (Jellyfin & Seerr)**](../Frontend/Jellyfin%20und%20Seerr.md) ➔ |

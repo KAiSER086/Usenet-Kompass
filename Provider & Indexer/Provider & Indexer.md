@@ -1,4 +1,4 @@
-﻿# 2.0 Provider und Indexer
+# 2.0 Provider und Indexer
 
 ## 2.1 Usenet-Provider wählen
 
@@ -54,3 +54,9 @@ Ein Indexer ist die Suchmaschine für das Usenet. Da moderne Uploads verschlüss
 #### Deutsche Usenet-Boards (für manuelle Suche)
 
 Zu den bekanntesten deutschen Boards zählen **Fileleechers**, **Sky of Usenet** oder **House of Usenet (HoU)**. Diese erfordern meist geschlossene Registrierungen oder Einladungen und dienen als manuelle Ergänzung zu deinem automatisierten Stack.
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**3.0 Docker Stack**](../Docker%20Compose%20Stack/Docker%20Compose%20Stack.md) ➔ |

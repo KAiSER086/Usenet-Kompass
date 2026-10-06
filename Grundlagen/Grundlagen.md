@@ -86,3 +86,9 @@ Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**
 
 * **Direct Play (Standard):** Moderne Smart-TVs, Apple TV, Fire TV Sticks und Smartphones spielen nahezu alle Videoformate (H.264, HEVC, MKV) direkt ab – der Server reicht die Datei ohne CPU-Last weiter.
 * **Transkodierung:** Wird nur nötig, wenn du von unterwegs streamst und dein Upload zu langsam für die volle 4K-Bitrate ist, oder wenn ein alter Browser ein Videoformat nicht nativ unterstützt.
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| *Start* | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**2.0 Provider & Indexer**](../Provider%20%26%20Indexer/Provider%20%26%20Indexer.md) ➔ |

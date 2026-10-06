@@ -1,4 +1,4 @@
-﻿# Usenet-Lexikon
+# Usenet-Lexikon
 
 ## Grundlegende Begriffe
 
@@ -48,3 +48,9 @@
 * **x264 / AVC:** Klassischer, hochkompatibler Videocodec für HD-Inhalte.
 * **x265 / HEVC:** Moderner Videocodec mit deutlich besserer Kompression; Standard für 4K/HDR und platzsparende 1080p-Releases.
 * **MKV (Matroska):** Flexibles Containerformat für Video, mehrere Audiospuren und Untertitel.
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**8.0 Finaler Stack**](../Docker%20Compose%20Stack/Finaler%20Stack.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) ➔ |

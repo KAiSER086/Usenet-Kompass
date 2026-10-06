@@ -39,6 +39,29 @@ if [ ! -d "$CONFIG_DIR" ]; then
     exit 1
 fi
 
+# Port-Konfiguration aus .env laden (falls vorhanden), ansonsten Standard-Ports nutzen
+PORT_PROWLARR=9696
+PORT_SONARR=8989
+PORT_RADARR=7878
+PORT_SABNZBD=8080
+PORT_NZBGET=6789
+
+if [ -f "$INSTALL_DIR/.env" ]; then
+    while IFS='=' read -r key val || [ -n "$key" ]; do
+        [[ "$key" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "$key" ]] && continue
+        key=$(echo "$key" | tr -d '[:space:]')
+        val=$(echo "$val" | tr -d '[:space:]' | tr -d '"' | tr -d "'")
+        case "$key" in
+            PORT_PROWLARR) [ -n "$val" ] && PORT_PROWLARR="$val" ;;
+            PORT_SONARR)   [ -n "$val" ] && PORT_SONARR="$val" ;;
+            PORT_RADARR)   [ -n "$val" ] && PORT_RADARR="$val" ;;
+            PORT_SABNZBD)  [ -n "$val" ] && PORT_SABNZBD="$val" ;;
+            PORT_NZBGET)   [ -n "$val" ] && PORT_NZBGET="$val" ;;
+        esac
+    done < "$INSTALL_DIR/.env"
+fi
+
 echo -e "${CYAN}▶ Prüfe Erreichbarkeit der APIs & lese Konfigurationen aus...${NC}"
 
 # 1.0 WARTE BIS APIS BEREIT SIND
@@ -62,9 +85,9 @@ wait_for_api() {
     return 0
 }
 
-wait_for_api "Prowlarr" "9696" "/ping" || true
-wait_for_api "Sonarr"   "8989" "/ping" || true
-wait_for_api "Radarr"   "7878" "/ping" || true
+wait_for_api "Prowlarr" "$PORT_PROWLARR" "/ping" || true
+wait_for_api "Sonarr"   "$PORT_SONARR"   "/ping" || true
+wait_for_api "Radarr"   "$PORT_RADARR"   "/ping" || true
 
 # 2.0 API-KEYS EXTRAHIEREN
 extract_xml_key() {
@@ -111,26 +134,26 @@ fi
 echo -e "\n${CYAN}▶ Richte Medien-Verzeichnisse (Root Folders) ein...${NC}"
 
 # Sonarr: /data/media/tv
-EXISTING_SONARR_RF=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/rootfolder 2>/dev/null || true)
+EXISTING_SONARR_RF=$(curl -s -H "X-Api-Key: $SONARR_KEY" "http://localhost:${PORT_SONARR}/api/v3/rootfolder" 2>/dev/null || true)
 if [[ "$EXISTING_SONARR_RF" != *"/data/media/tv"* ]]; then
     curl -s -X POST \
         -H "Content-Type: application/json" \
         -H "X-Api-Key: $SONARR_KEY" \
         -d '{"path": "/data/media/tv"}' \
-        http://localhost:8989/api/v3/rootfolder >/dev/null 2>&1 || true
+        "http://localhost:${PORT_SONARR}/api/v3/rootfolder" >/dev/null 2>&1 || true
     echo -e "  ${GREEN}✓ Sonarr Root-Folder angelegt: /data/media/tv${NC}"
 else
     echo -e "  ${GREEN}✓ Sonarr Root-Folder bereits vorhanden: /data/media/tv${NC}"
 fi
 
 # Radarr: /data/media/movies
-EXISTING_RADARR_RF=$(curl -s -H "X-Api-Key: $RADARR_KEY" http://localhost:7878/api/v3/rootfolder 2>/dev/null || true)
+EXISTING_RADARR_RF=$(curl -s -H "X-Api-Key: $RADARR_KEY" "http://localhost:${PORT_RADARR}/api/v3/rootfolder" 2>/dev/null || true)
 if [[ "$EXISTING_RADARR_RF" != *"/data/media/movies"* ]]; then
     curl -s -X POST \
         -H "Content-Type: application/json" \
         -H "X-Api-Key: $RADARR_KEY" \
         -d '{"path": "/data/media/movies"}' \
-        http://localhost:7878/api/v3/rootfolder >/dev/null 2>&1 || true
+        "http://localhost:${PORT_RADARR}/api/v3/rootfolder" >/dev/null 2>&1 || true
     echo -e "  ${GREEN}✓ Radarr Root-Folder angelegt: /data/media/movies${NC}"
 else
     echo -e "  ${GREEN}✓ Radarr Root-Folder bereits vorhanden: /data/media/movies${NC}"
@@ -157,7 +180,7 @@ fi
 # 4.0 APPS IN PROWLARR REGISTRIEREN
 echo -e "\n${CYAN}▶ Verknüpfe Sonarr & Radarr mit Prowlarr...${NC}"
 
-EXISTING_PROWLARR_APPS=$(curl -s -H "X-Api-Key: $PROWLARR_KEY" http://localhost:9696/api/v1/applications 2>/dev/null || true)
+EXISTING_PROWLARR_APPS=$(curl -s -H "X-Api-Key: $PROWLARR_KEY" "http://localhost:${PORT_PROWLARR}/api/v1/applications" 2>/dev/null || true)
 
 # Sonarr in Prowlarr
 if [[ "$EXISTING_PROWLARR_APPS" != *"Sonarr"* ]]; then
@@ -185,7 +208,7 @@ EOF
         -H "Content-Type: application/json" \
         -H "X-Api-Key: $PROWLARR_KEY" \
         -d "$SONARR_PAYLOAD" \
-        http://localhost:9696/api/v1/applications >/dev/null 2>&1 || true
+        "http://localhost:${PORT_PROWLARR}/api/v1/applications" >/dev/null 2>&1 || true
     echo -e "  ${GREEN}✓ Sonarr erfolgreich in Prowlarr eingebunden (fullSync).${NC}"
 else
     echo -e "  ${GREEN}✓ Sonarr bereits in Prowlarr vorhanden.${NC}"
@@ -215,7 +238,7 @@ EOF
         -H "Content-Type: application/json" \
         -H "X-Api-Key: $PROWLARR_KEY" \
         -d "$RADARR_PAYLOAD" \
-        http://localhost:9696/api/v1/applications >/dev/null 2>&1 || true
+        "http://localhost:${PORT_PROWLARR}/api/v1/applications" >/dev/null 2>&1 || true
     echo -e "  ${GREEN}✓ Radarr erfolgreich in Prowlarr eingebunden (fullSync).${NC}"
 else
     echo -e "  ${GREEN}✓ Radarr bereits in Prowlarr vorhanden.${NC}"
@@ -231,7 +254,7 @@ if [ "$DOWNLOADER_TYPE" = "nzbget" ]; then
     NZBGET_PASS=${NZBGET_PASS:-"tegbzn6789"}
 
     # Sonarr -> NZBGet (Kategorie: tv)
-    EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/downloadclient 2>/dev/null || true)
+    EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" "http://localhost:${PORT_SONARR}/api/v3/downloadclient" 2>/dev/null || true)
     if [[ "$EXISTING_SONARR_DC" != *"NZBGet"* ]]; then
         NZBGET_SONARR_PAYLOAD=$(cat <<EOF
 {
@@ -257,14 +280,14 @@ EOF
             -H "Content-Type: application/json" \
             -H "X-Api-Key: $SONARR_KEY" \
             -d "$NZBGET_SONARR_PAYLOAD" \
-            http://localhost:8989/api/v3/downloadclient >/dev/null 2>&1 || true
+            "http://localhost:${PORT_SONARR}/api/v3/downloadclient" >/dev/null 2>&1 || true
         echo -e "  ${GREEN}✓ NZBGet als Download-Client in Sonarr registriert.${NC}"
     else
         echo -e "  ${GREEN}✓ NZBGet bereits in Sonarr registriert.${NC}"
     fi
 
     # Radarr -> NZBGet (Kategorie: movies)
-    EXISTING_RADARR_DC=$(curl -s -H "X-Api-Key: $RADARR_KEY" http://localhost:7878/api/v3/downloadclient 2>/dev/null || true)
+    EXISTING_RADARR_DC=$(curl -s -H "X-Api-Key: $RADARR_KEY" "http://localhost:${PORT_RADARR}/api/v3/downloadclient" 2>/dev/null || true)
     if [[ "$EXISTING_RADARR_DC" != *"NZBGet"* ]]; then
         NZBGET_RADARR_PAYLOAD=$(cat <<EOF
 {
@@ -290,14 +313,14 @@ EOF
             -H "Content-Type: application/json" \
             -H "X-Api-Key: $RADARR_KEY" \
             -d "$NZBGET_RADARR_PAYLOAD" \
-            http://localhost:7878/api/v3/downloadclient >/dev/null 2>&1 || true
+            "http://localhost:${PORT_RADARR}/api/v3/downloadclient" >/dev/null 2>&1 || true
         echo -e "  ${GREEN}✓ NZBGet als Download-Client in Radarr registriert.${NC}"
     else
         echo -e "  ${GREEN}✓ NZBGet bereits in Radarr registriert.${NC}"
     fi
 
 elif [ "$DOWNLOADER_TYPE" = "sabnzbd" ]; then
-    wait_for_api "SABnzbd" "8080" "" || true
+    wait_for_api "SABnzbd" "$PORT_SABNZBD" "" || true
     SAB_API_KEY=""
     for i in {1..30}; do
         SAB_API_KEY=$(grep -E "^api_key" "$CONFIG_DIR/sabnzbd/sabnzbd.ini" 2>/dev/null | awk -F'=' '{gsub(/[ \t]/, "", $2); print $2}' || true)
@@ -306,17 +329,17 @@ elif [ "$DOWNLOADER_TYPE" = "sabnzbd" ]; then
     done
     
     if [ -n "$SAB_API_KEY" ]; then
-        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=host_whitelist&value=sabnzbd,gluetun,localhost,127.0.0.1&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
-        curl -s "http://localhost:8080/api?mode=add_category&name=tv&dir=tv&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
-        curl -s "http://localhost:8080/api?mode=add_category&name=movies&dir=movies&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
-        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=complete_dir&value=/data/usenet/complete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
-        curl -s "http://localhost:8080/api?mode=set_config&section=misc&keyword=download_dir&value=/data/usenet/incomplete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
-        curl -s "http://localhost:8080/api?mode=save_config&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=set_config&section=misc&keyword=host_whitelist&value=sabnzbd,gluetun,localhost,127.0.0.1&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=add_category&name=tv&dir=tv&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=add_category&name=movies&dir=movies&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=set_config&section=misc&keyword=complete_dir&value=/data/usenet/complete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=set_config&section=misc&keyword=download_dir&value=/data/usenet/incomplete&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
+        curl -s "http://localhost:${PORT_SABNZBD}/api?mode=save_config&apikey=${SAB_API_KEY}" >/dev/null 2>&1 || true
         echo -e "  ${GREEN}✓ SABnzbd: Host-Whitelist, TRaSH-Pfade (/data/usenet) & Kategorien (tv, movies) konfiguriert.${NC}"
     fi
     
     # Sonarr -> SABnzbd (Kategorie: tv)
-    EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" http://localhost:8989/api/v3/downloadclient 2>/dev/null || true)
+    EXISTING_SONARR_DC=$(curl -s -H "X-Api-Key: $SONARR_KEY" "http://localhost:${PORT_SONARR}/api/v3/downloadclient" 2>/dev/null || true)
     if [[ "$EXISTING_SONARR_DC" != *"SABnzbd"* ]]; then
         SAB_SONARR_PAYLOAD=$(cat <<EOF
 {
@@ -341,14 +364,14 @@ EOF
             -H "Content-Type: application/json" \
             -H "X-Api-Key: $SONARR_KEY" \
             -d "$SAB_SONARR_PAYLOAD" \
-            http://localhost:8989/api/v3/downloadclient >/dev/null 2>&1 || true
+            "http://localhost:${PORT_SONARR}/api/v3/downloadclient" >/dev/null 2>&1 || true
         echo -e "  ${GREEN}✓ SABnzbd als Download-Client in Sonarr registriert.${NC}"
     else
         echo -e "  ${GREEN}✓ SABnzbd bereits in Sonarr registriert.${NC}"
     fi
 
     # Radarr -> SABnzbd (Kategorie: movies)
-    EXISTING_RADARR_DC=$(curl -s -H "X-Api-Key: $RADARR_KEY" http://localhost:7878/api/v3/downloadclient 2>/dev/null || true)
+    EXISTING_RADARR_DC=$(curl -s -H "X-Api-Key: $RADARR_KEY" "http://localhost:${PORT_RADARR}/api/v3/downloadclient" 2>/dev/null || true)
     if [[ "$EXISTING_RADARR_DC" != *"SABnzbd"* ]]; then
         SAB_RADARR_PAYLOAD=$(cat <<EOF
 {
@@ -373,7 +396,7 @@ EOF
             -H "Content-Type: application/json" \
             -H "X-Api-Key: $RADARR_KEY" \
             -d "$SAB_RADARR_PAYLOAD" \
-            http://localhost:7878/api/v3/downloadclient >/dev/null 2>&1 || true
+            "http://localhost:${PORT_RADARR}/api/v3/downloadclient" >/dev/null 2>&1 || true
         echo -e "  ${GREEN}✓ SABnzbd als Download-Client in Radarr registriert.${NC}"
     else
         echo -e "  ${GREEN}✓ SABnzbd bereits in Radarr registriert.${NC}"
@@ -386,7 +409,7 @@ fi
 echo -e "\n${CYAN}▶ Konfiguriere TRaSH-Guides Naming Schemes & DACH Custom Formats...${NC}"
 
 if command -v python3 &>/dev/null; then
-    python3 - "$SONARR_KEY" "$RADARR_KEY" << 'EOF'
+    python3 - "$SONARR_KEY" "$RADARR_KEY" "$PORT_SONARR" "$PORT_RADARR" << 'EOF'
 import sys
 import json
 import urllib.request
@@ -394,6 +417,11 @@ import urllib.error
 
 sonarr_key = sys.argv[1] if len(sys.argv) > 1 else ""
 radarr_key = sys.argv[2] if len(sys.argv) > 2 else ""
+sonarr_port = sys.argv[3] if len(sys.argv) > 3 else "8989"
+radarr_port = sys.argv[4] if len(sys.argv) > 4 else "7878"
+
+sonarr_base = f"http://localhost:{sonarr_port}"
+radarr_base = f"http://localhost:{radarr_port}"
 
 def api_request(url, method="GET", data=None, key=""):
     headers = {
@@ -412,7 +440,7 @@ def api_request(url, method="GET", data=None, key=""):
 # --- SONARR ---
 if sonarr_key:
     # 1. TRaSH Naming Scheme
-    naming = api_request("http://localhost:8989/api/v3/config/naming", key=sonarr_key)
+    naming = api_request(f"{sonarr_base}/api/v3/config/naming", key=sonarr_key)
     if isinstance(naming, dict) and "renameEpisodes" in naming:
         naming["renameEpisodes"] = True
         naming["replaceIllegalCharacters"] = True
@@ -421,18 +449,18 @@ if sonarr_key:
         naming["animeEpisodeFormat"] = "{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle} [{Custom Formats }{Quality Full}]{[MediaInfo VideoDynamicRangeType]}[{MediaInfo VideoBitDepth}bit]{[MediaInfo VideoCodec]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}]{-Release Group}"
         naming["seriesFolderFormat"] = "{Series TitleYear} [tvdb-{TvdbId}]"
         naming["seasonFolderFormat"] = "Season {season:00}"
-        if api_request("http://localhost:8989/api/v3/config/naming", method="PUT", data=naming, key=sonarr_key) is not None:
+        if api_request(f"{sonarr_base}/api/v3/config/naming", method="PUT", data=naming, key=sonarr_key) is not None:
             print("  \033[0;32m✓ Sonarr: TRaSH Naming Scheme angewendet (inkl. MediaInfo & Custom Formats).\033[0m")
 
     # 2. Media Management: downloadPropersAndRepacks
-    mm = api_request("http://localhost:8989/api/v3/config/mediamanagement", key=sonarr_key)
+    mm = api_request(f"{sonarr_base}/api/v3/config/mediamanagement", key=sonarr_key)
     if isinstance(mm, dict) and "downloadPropersAndRepacks" in mm:
         mm["downloadPropersAndRepacks"] = "doNotPrefer"
-        if api_request("http://localhost:8989/api/v3/config/mediamanagement", method="PUT", data=mm, key=sonarr_key) is not None:
+        if api_request(f"{sonarr_base}/api/v3/config/mediamanagement", method="PUT", data=mm, key=sonarr_key) is not None:
             print("  \033[0;32m✓ Sonarr: Propers & Repacks auf 'doNotPrefer' gesetzt.\033[0m")
 
     # 3. Custom Formats
-    cfs = api_request("http://localhost:8989/api/v3/customformat", key=sonarr_key)
+    cfs = api_request(f"{sonarr_base}/api/v3/customformat", key=sonarr_key)
     existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
 
     cf_german_dl = {
@@ -450,11 +478,11 @@ if sonarr_key:
     }
     existing_cf_dl = next((c for c in cfs if c.get("name") == "German DL"), None) if isinstance(cfs, list) else None
     if existing_cf_dl is None:
-        if api_request("http://localhost:8989/api/v3/customformat", method="POST", data=cf_german_dl, key=sonarr_key):
+        if api_request(f"{sonarr_base}/api/v3/customformat", method="POST", data=cf_german_dl, key=sonarr_key):
             print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' registriert.\033[0m")
     else:
         cf_german_dl["id"] = existing_cf_dl["id"]
-        if api_request(f"http://localhost:8989/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=sonarr_key):
+        if api_request(f"{sonarr_base}/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=sonarr_key):
             print("  \033[0;32m✓ Sonarr: Custom Format 'German DL' aktualisiert.\033[0m")
 
     if "German" not in existing_cf_names:
@@ -471,13 +499,13 @@ if sonarr_key:
                 }
             ]
         }
-        if api_request("http://localhost:8989/api/v3/customformat", method="POST", data=cf_german, key=sonarr_key):
+        if api_request(f"{sonarr_base}/api/v3/customformat", method="POST", data=cf_german, key=sonarr_key):
             print("  \033[0;32m✓ Sonarr: Custom Format 'German' registriert.\033[0m")
     else:
         print("  \033[0;32m✓ Sonarr: Custom Format 'German' bereits vorhanden.\033[0m")
 
     # 4. Quality Profiles Scoring
-    profiles = api_request("http://localhost:8989/api/v3/qualityprofile", key=sonarr_key)
+    profiles = api_request(f"{sonarr_base}/api/v3/qualityprofile", key=sonarr_key)
     if isinstance(profiles, list):
         for p in profiles:
             format_items = p.get("formatItems", [])
@@ -488,23 +516,23 @@ if sonarr_key:
                     fi["score"] = 1000
             p["upgradeAllowed"] = True
             p["cutoffFormatScore"] = 1500
-            api_request(f"http://localhost:8989/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=sonarr_key)
+            api_request(f"{sonarr_base}/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=sonarr_key)
         print("  \033[0;32m✓ Sonarr: Alle Qualitätsprofile mit DACH-Scoring (German DL +1500, German +1000) versehen.\033[0m")
 
 # --- RADARR ---
 if radarr_key:
     # 1. TRaSH Naming Scheme
-    naming = api_request("http://localhost:7878/api/v3/config/naming", key=radarr_key)
+    naming = api_request(f"{radarr_base}/api/v3/config/naming", key=radarr_key)
     if isinstance(naming, dict) and "renameMovies" in naming:
         naming["renameMovies"] = True
         naming["replaceIllegalCharacters"] = True
         naming["standardMovieFormat"] = "{Movie CleanTitle} {(Release Year)} [imdb-{ImdbId}] - {[Custom Formats ]}{[Quality Full]}{[MediaInfo 3D]}{[MediaInfo VideoDynamicRangeType]}[{MediaInfo AudioCodec} { MediaInfo AudioChannels}][{MediaInfo VideoCodec}][-Release Group]"
         naming["movieFolderFormat"] = "{Movie CleanTitle} ({Release Year}) [imdb-{ImdbId}]"
-        if api_request("http://localhost:7878/api/v3/config/naming", method="PUT", data=naming, key=radarr_key) is not None:
+        if api_request(f"{radarr_base}/api/v3/config/naming", method="PUT", data=naming, key=radarr_key) is not None:
             print("  \033[0;32m✓ Radarr: TRaSH Naming Scheme angewendet (inkl. MediaInfo & Custom Formats).\033[0m")
 
     # 2. Custom Formats
-    cfs = api_request("http://localhost:7878/api/v3/customformat", key=radarr_key)
+    cfs = api_request(f"{radarr_base}/api/v3/customformat", key=radarr_key)
     existing_cf_names = [c.get("name") for c in cfs] if isinstance(cfs, list) else []
 
     cf_german_dl = {
@@ -522,11 +550,11 @@ if radarr_key:
     }
     existing_cf_dl = next((c for c in cfs if c.get("name") == "German DL"), None) if isinstance(cfs, list) else None
     if existing_cf_dl is None:
-        if api_request("http://localhost:7878/api/v3/customformat", method="POST", data=cf_german_dl, key=radarr_key):
+        if api_request(f"{radarr_base}/api/v3/customformat", method="POST", data=cf_german_dl, key=radarr_key):
             print("  \033[0;32m✓ Radarr: Custom Format 'German DL' registriert.\033[0m")
     else:
         cf_german_dl["id"] = existing_cf_dl["id"]
-        if api_request(f"http://localhost:7878/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=radarr_key):
+        if api_request(f"{radarr_base}/api/v3/customformat/{existing_cf_dl['id']}", method="PUT", data=cf_german_dl, key=radarr_key):
             print("  \033[0;32m✓ Radarr: Custom Format 'German DL' aktualisiert.\033[0m")
 
     if "German" not in existing_cf_names:
@@ -543,13 +571,13 @@ if radarr_key:
                 }
             ]
         }
-        if api_request("http://localhost:7878/api/v3/customformat", method="POST", data=cf_german, key=radarr_key):
+        if api_request(f"{radarr_base}/api/v3/customformat", method="POST", data=cf_german, key=radarr_key):
             print("  \033[0;32m✓ Radarr: Custom Format 'German' registriert.\033[0m")
     else:
         print("  \033[0;32m✓ Radarr: Custom Format 'German' bereits vorhanden.\033[0m")
 
     # 3. Quality Profiles Scoring
-    profiles = api_request("http://localhost:7878/api/v3/qualityprofile", key=radarr_key)
+    profiles = api_request(f"{radarr_base}/api/v3/qualityprofile", key=radarr_key)
     if isinstance(profiles, list):
         for p in profiles:
             format_items = p.get("formatItems", [])
@@ -560,7 +588,7 @@ if radarr_key:
                     fi["score"] = 1000
             p["upgradeAllowed"] = True
             p["cutoffFormatScore"] = 1500
-            api_request(f"http://localhost:7878/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=radarr_key)
+            api_request(f"{radarr_base}/api/v3/qualityprofile/{p['id']}", method="PUT", data=p, key=radarr_key)
         print("  \033[0;32m✓ Radarr: Alle Qualitätsprofile mit DACH-Scoring (German DL +1500, German +1000) versehen.\033[0m")
 
 EOF

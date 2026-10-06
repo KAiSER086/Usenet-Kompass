@@ -21,14 +21,14 @@ services:
     container_name: sabnzbd
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000} # Deine PUID (Terminal: 'id -u')
-      - PGID=${PGID:-1000} # Deine PGID (Terminal: 'id -g')
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID} # Deine PUID (Terminal: 'id -u')
+      - PGID=${PGID} # Deine PGID (Terminal: 'id -g')
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sabnzbd:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sabnzbd:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "8080:8080" # SABnzbd WebUI
+      - "${PORT_SABNZBD}:8080" # SABnzbd WebUI
     restart: unless-stopped
 
   # Option B: NZBGet (Ressourcen-Leichtgewicht für < 2 GB RAM inkl. Direct Unpack)
@@ -37,14 +37,14 @@ services:
   #   container_name: nzbget
   #   <<: *default-logging
   #   environment:
-  #     - PUID=${PUID:-1000}
-  #     - PGID=${PGID:-1000}
-  #     - TZ=${TZ:-Europe/Berlin}
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #   volumes:
-  #     - ${CONFIG_DIR:-./config}/nzbget:/config
-  #     - ${DATA_DIR:-./data}:/data
+  #     - ${CONFIG_DIR}/nzbget:/config
+  #     - ${DATA_DIR}:/data
   #   ports:
-  #     - "6789:6789" # NZBGet WebUI
+  #     - "${PORT_NZBGET}:6789" # NZBGet WebUI
   #   restart: unless-stopped
 
   # --- Arr-Stack (Automatisierung & Indexer-Management) ---
@@ -54,13 +54,13 @@ services:
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/prowlarr:/config
+      - ${CONFIG_DIR}/prowlarr:/config
     ports:
-      - "9696:9696" # Prowlarr WebUI & API
+      - "${PORT_PROWLARR}:9696" # Prowlarr WebUI & API
     restart: unless-stopped
 
   sonarr:
@@ -68,14 +68,14 @@ services:
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sonarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "8989:8989" # Sonarr WebUI & API
+      - "${PORT_SONARR}:8989" # Sonarr WebUI & API
     depends_on:
       - sabnzbd # oder nzbget
     restart: unless-stopped
@@ -85,14 +85,14 @@ services:
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/radarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "7878:7878" # Radarr WebUI & API
+      - "${PORT_RADARR}:7878" # Radarr WebUI & API
     depends_on:
       - sabnzbd # oder nzbget
     restart: unless-stopped
@@ -104,19 +104,19 @@ services:
     container_name: jellyfin
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/jellyfin:/config
-      - ${DATA_DIR:-./data}/media:/data/media
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${DATA_DIR}/media:/data/media
     # Optional für Intel QuickSync / VAAPI Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
     # group_add:
     #   - "107" # GID der Gruppe 'render' auf dem Host (getent group render | cut -d: -f3)
     ports:
-      - "8096:8096" # Jellyfin WebUI
+      - "${PORT_JELLYFIN}:8096" # Jellyfin WebUI
     restart: unless-stopped
 
   seerr:
@@ -125,11 +125,11 @@ services:
     <<: *default-logging
     init: true
     environment:
-      - TZ=${TZ:-Europe/Berlin}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/seerr:/app/config
+      - ${CONFIG_DIR}/seerr:/app/config
     ports:
-      - "5055:5055" # Seerr WebUI
+      - "${PORT_SEERR}:5055" # Seerr WebUI
     depends_on:
       - radarr
       - sonarr

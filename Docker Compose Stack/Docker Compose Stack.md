@@ -122,7 +122,24 @@ cp .env.example .env
 nano .env
 ```
 
-Hier trägst du deine Benutzer-IDs (`id -u` und `id -g`), deine Zeitzone und ggf. deine VPN-Zugangsdaten ein.
+Hier trägst du deine Benutzer-IDs (`id -u` und `id -g`), deine Zeitzone, deine WebUI-Ports und ggf. deine VPN-Zugangsdaten ein.
+
+### Single Source of Truth: Konfiguration über `.env`
+Der Usenet-Kompass folgt dem Prinzip der **Single Source of Truth**: Alle benutzer- und serverspezifischen Einstellungen – wie Benutzer-IDs (`PUID`/`PGID`), Pfade, VPN-Keys und WebUI-Ports – werden **ausschließlich in der `.env`-Datei** gepflegt. Die `docker-compose.yml` bleibt die unveränderte, saubere Blaupause. Das verhindert doppelte Werte und macht Updates zum Kinderspiel.
+
+#### Port-Weiterleitung verstehen (`"${PORT_SABNZBD}:8080"`)
+Auf vielen Heimservern laufen bereits andere Webdienste – beispielsweise Pi-hole oder ein bestehender Webserver auf Port 8080. Wenn ein Standardport belegt ist, bricht Docker mit der Fehlermeldung `bind: address already in use` ab.
+
+In den Compose-Vorlagen sieht ein Port-Mapping daher so aus:
+```text
+"${PORT_SABNZBD} : 8080"
+ └──────┬──────┘   └──┬─┘
+  Host (Server)    Container (Intern)
+```
+
+* **Linke Seite (Host-Port, variabel in `.env`):** Bestimmt, unter welchem Port dein Server Anfragen von außen empfängt (z. B. dein Browser unter `http://server-ip:8085`).
+* **Rechte Seite (Container-Port, fest):** Der unveränderliche Standardport, auf dem die Software intern im Container lauscht (z. B. intern immer `8080`).
+* **Einfach veranschaulicht (Wie eine Weiche):** Du sagst Docker damit im Grunde: *„Empfange Signale von außen über Port 8085 und leite sie intern im Container an Port 8080 weiter.“* Der Dienst im Container bekommt davon gar nichts mit und arbeitet ganz normal auf seinem Standardport. So kannst du Portkonflikte kinderleicht über deine `.env` lösen, ohne die Compose-Vorlagen bearbeiten zu müssen! Container-interne Verbindungen (wie Sonarr ➔ SABnzbd) sprechen den Dienst weiterhin direkt über dessen Standardport an.
 
 ### Schutz vor vollen Festplatten (Docker Log-Rotation)
 Docker speichert Container-Logs standardmäßig unbegrenzt. Läuft ein Downloader oder Arr-Dienst über längere Zeit, können Logs gigabyteweise Speicherplatz füllen und insbesondere auf SD-Karten (z. B. beim Raspberry Pi) oder kleinen SSDs zum Systemstillstand führen.
@@ -140,4 +157,6 @@ Damit ist garantiert, dass ein Dienst niemals mehr als 30 MB (3 Dateien à 10 MB
 
 ---
 
-Jetzt können wir mit der Einrichtung des VPN und Mesh-Netzwerks fortfahren.
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**2.0 Provider & Indexer**](../Provider%20%26%20Indexer/Provider%20%26%20Indexer.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**4.0 VPNs & Mesh-Netzwerke**](VPNs.md) ➔ |

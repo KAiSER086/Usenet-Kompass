@@ -26,6 +26,14 @@ CLI_SKIP_START=false
 CLI_SKIP_LINK=false
 CLI_SKIP_GUIDE=false
 
+PORT_SABNZBD="8080"
+PORT_NZBGET="6789"
+PORT_PROWLARR="9696"
+PORT_SONARR="8989"
+PORT_RADARR="7878"
+PORT_JELLYFIN="8096"
+PORT_SEERR="5055"
+
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --dry-run|--test|-t)
@@ -489,10 +497,12 @@ fi
 if [ "$DOWNLOADER_CHOICE" = "2" ]; then
     SELECTED_DOWNLOADER="nzbget"
     DOWNLOADER_PORT="6789"
+    DOWNLOADER_PORT_VAR="PORT_NZBGET"
     DOWNLOADER_SERVICE_NAME="NZBGet"
 else
     SELECTED_DOWNLOADER="sabnzbd"
     DOWNLOADER_PORT="8080"
+    DOWNLOADER_PORT_VAR="PORT_SABNZBD"
     DOWNLOADER_SERVICE_NAME="SABnzbd"
 fi
 echo -e "${GREEN}✓ Ausgewählter Downloader: ${DOWNLOADER_SERVICE_NAME}${NC}"
@@ -766,6 +776,31 @@ fi
 cd "$INSTALL_DIR"
 echo -e "${GREEN}✓ Installationsordner gesetzt: ${BOLD}${INSTALL_DIR}${NC}"
 
+# Vorhandene Port-Variablen einlesen, falls bereits eine .env existiert
+if [ -f "$INSTALL_DIR/.env" ]; then
+    while IFS='=' read -r key val || [ -n "$key" ]; do
+        [[ "$key" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "$key" ]] && continue
+        key=$(echo "$key" | tr -d '[:space:]')
+        val=$(echo "$val" | tr -d '[:space:]' | tr -d '"' | tr -d "'")
+        case "$key" in
+            PORT_SABNZBD) [ -n "$val" ] && PORT_SABNZBD="$val" ;;
+            PORT_NZBGET)  [ -n "$val" ] && PORT_NZBGET="$val" ;;
+            PORT_PROWLARR) [ -n "$val" ] && PORT_PROWLARR="$val" ;;
+            PORT_SONARR)  [ -n "$val" ] && PORT_SONARR="$val" ;;
+            PORT_RADARR)  [ -n "$val" ] && PORT_RADARR="$val" ;;
+            PORT_JELLYFIN) [ -n "$val" ] && PORT_JELLYFIN="$val" ;;
+            PORT_SEERR)   [ -n "$val" ] && PORT_SEERR="$val" ;;
+        esac
+    done < "$INSTALL_DIR/.env"
+fi
+
+if [ "$SELECTED_DOWNLOADER" = "nzbget" ]; then
+    ACTIVE_DOWNLOADER_PORT="${PORT_NZBGET}"
+else
+    ACTIVE_DOWNLOADER_PORT="${PORT_SABNZBD}"
+fi
+
 # ------------------------------------------------------------------------------
 # 5.0 VERZEICHNISSTRUKTUR ANLEGEN (TRaSH-GUIDES STANDARD)
 # ------------------------------------------------------------------------------
@@ -849,6 +884,15 @@ PGID=${CURRENT_GID}
 TZ=Europe/Berlin
 CONFIG_DIR=./config
 DATA_DIR=./data
+
+# --- WebUI & Port-Konfiguration ---
+PORT_SABNZBD=${PORT_SABNZBD}
+PORT_NZBGET=${PORT_NZBGET}
+PORT_PROWLARR=${PORT_PROWLARR}
+PORT_SONARR=${PORT_SONARR}
+PORT_RADARR=${PORT_RADARR}
+PORT_JELLYFIN=${PORT_JELLYFIN}
+PORT_SEERR=${PORT_SEERR}
 EOF
 
 if [ "$USE_VPN" = true ]; then
@@ -901,8 +945,8 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
-      - VPN_SERVICE_PROVIDER=\${VPN_SERVICE_PROVIDER:-${VPN_PROVIDER}}
-      - VPN_TYPE=\${VPN_TYPE:-${VPN_TYPE}}
+      - VPN_SERVICE_PROVIDER=\${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=\${VPN_TYPE}
 EOF
 
 if [ "$VPN_TYPE" = "wireguard" ]; then
@@ -918,18 +962,18 @@ EOF
 fi
 
 cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
-      - SERVER_COUNTRIES=\${SERVER_COUNTRIES:-${VPN_COUNTRIES}}
-      - FIREWALL_OUTBOUND_SUBNETS=\${FIREWALL_OUTBOUND_SUBNETS:-${LAN_SUBNET}}
-      - TZ=\${TZ:-Europe/Berlin}
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
+      - SERVER_COUNTRIES=\${SERVER_COUNTRIES}
+      - FIREWALL_OUTBOUND_SUBNETS=\${FIREWALL_OUTBOUND_SUBNETS}
+      - TZ=\${TZ}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
     ports:
-      - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}" # Downloader (${DOWNLOADER_SERVICE_NAME}) WebUI
-      - "7878:7878" # Radarr WebUI & API
-      - "8989:8989" # Sonarr WebUI & API
-      - "9696:9696" # Prowlarr WebUI & API
+      - "\${${DOWNLOADER_PORT_VAR}}:${DOWNLOADER_PORT}" # Downloader (${DOWNLOADER_SERVICE_NAME}) WebUI
+      - "\${PORT_RADARR}:7878" # Radarr WebUI & API
+      - "\${PORT_SONARR}:8989" # Sonarr WebUI & API
+      - "\${PORT_PROWLARR}:9696" # Prowlarr WebUI & API
     volumes:
-      - \${CONFIG_DIR:-./config}/gluetun:/gluetun
+      - \${CONFIG_DIR}/gluetun:/gluetun
     restart: unless-stopped
 
   # --- Downloader: ${DOWNLOADER_SERVICE_NAME} ---
@@ -938,12 +982,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: ${SELECTED_DOWNLOADER}
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/${SELECTED_DOWNLOADER}:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/${SELECTED_DOWNLOADER}:/config
+      - \${DATA_DIR}:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -955,11 +999,11 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/prowlarr:/config
+      - \${CONFIG_DIR}/prowlarr:/config
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -970,12 +1014,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/sonarr:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/sonarr:/config
+      - \${DATA_DIR}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -987,12 +1031,12 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/radarr:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/radarr:/config
+      - \${DATA_DIR}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -1018,14 +1062,14 @@ services:
     container_name: ${SELECTED_DOWNLOADER}
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/${SELECTED_DOWNLOADER}:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/${SELECTED_DOWNLOADER}:/config
+      - \${DATA_DIR}:/data
     ports:
-      - "${DOWNLOADER_PORT}:${DOWNLOADER_PORT}"
+      - "\${${DOWNLOADER_PORT_VAR}}:${DOWNLOADER_PORT}"
     restart: unless-stopped
 
   # --- Arr-Stack (Automation & Indexer) ---
@@ -1034,13 +1078,13 @@ services:
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/prowlarr:/config
+      - \${CONFIG_DIR}/prowlarr:/config
     ports:
-      - "9696:9696"
+      - "\${PORT_PROWLARR}:9696"
     restart: unless-stopped
 
   sonarr:
@@ -1048,14 +1092,14 @@ services:
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/sonarr:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/sonarr:/config
+      - \${DATA_DIR}:/data
     ports:
-      - "8989:8989"
+      - "\${PORT_SONARR}:8989"
     depends_on:
       - ${SELECTED_DOWNLOADER}
     restart: unless-stopped
@@ -1065,14 +1109,14 @@ services:
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/radarr:/config
-      - \${DATA_DIR:-./data}:/data
+      - \${CONFIG_DIR}/radarr:/config
+      - \${DATA_DIR}:/data
     ports:
-      - "7878:7878"
+      - "\${PORT_RADARR}:7878"
     depends_on:
       - ${SELECTED_DOWNLOADER}
     restart: unless-stopped
@@ -1087,14 +1131,14 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     container_name: jellyfin
     <<: *default-logging
     environment:
-      - PUID=\${PUID:-1000}
-      - PGID=\${PGID:-1000}
-      - TZ=\${TZ:-Europe/Berlin}
+      - PUID=\${PUID}
+      - PGID=\${PGID}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/jellyfin:/config
-      - \${DATA_DIR:-./data}/media:/data/media
+      - \${CONFIG_DIR}/jellyfin:/config
+      - \${DATA_DIR}/media:/data/media
     ports:
-      - "8096:8096"
+      - "\${PORT_JELLYFIN}:8096"
     restart: unless-stopped
 EOF
 
@@ -1119,11 +1163,11 @@ cat <<EOF >> "$INSTALL_DIR/docker-compose.yml"
     <<: *default-logging
     init: true
     environment:
-      - TZ=\${TZ:-Europe/Berlin}
+      - TZ=\${TZ}
     volumes:
-      - \${CONFIG_DIR:-./config}/seerr:/app/config
+      - \${CONFIG_DIR}/seerr:/app/config
     ports:
-      - "5055:5055"
+      - "\${PORT_SEERR}:5055"
     depends_on:
       - radarr
       - sonarr
@@ -1324,21 +1368,21 @@ echo -e "${CYAN}================================================================
 echo -e "                   DEINE WEB-INTERFACES                           "
 echo -e "==================================================================${NC}"
 echo -e "📁 ${BOLD}Installationsordner:${NC}            ${INSTALL_DIR}"
-echo -e "🍿 ${BOLD}Seerr (Medien-Anfragen):${NC}         http://${SERVER_IP}:5055"
+echo -e "🍿 ${BOLD}Seerr (Medien-Anfragen):${NC}         http://${SERVER_IP}:${PORT_SEERR}"
 if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
-    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:5055"
+    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:${PORT_SEERR}"
 fi
-echo -e "🎬 ${BOLD}Jellyfin (Medienserver):${NC}         http://${SERVER_IP}:8096"
+echo -e "🎬 ${BOLD}Jellyfin (Medienserver):${NC}         http://${SERVER_IP}:${PORT_JELLYFIN}"
 if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
-    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:8096"
+    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:${PORT_JELLYFIN}"
 fi
-echo -e "⚡ ${BOLD}${DOWNLOADER_SERVICE_NAME} (Downloader):${NC}         http://${SERVER_IP}:${DOWNLOADER_PORT}"
+echo -e "⚡ ${BOLD}${DOWNLOADER_SERVICE_NAME} (Downloader):${NC}         http://${SERVER_IP}:${ACTIVE_DOWNLOADER_PORT}"
 if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
-    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:${DOWNLOADER_PORT}"
+    echo -e "   └─ Unterwegs (Tailscale):        http://${TAILSCALE_IP}:${ACTIVE_DOWNLOADER_PORT}"
 fi
-echo -e "📺 ${BOLD}Sonarr (Serien-Manager):${NC}         http://${SERVER_IP}:8989"
-echo -e "🎬 ${BOLD}Radarr (Film-Manager):${NC}           http://${SERVER_IP}:7878"
-echo -e "🔍 ${BOLD}Prowlarr (Indexer-Hub):${NC}          http://${SERVER_IP}:9696"
+echo -e "📺 ${BOLD}Sonarr (Serien-Manager):${NC}         http://${SERVER_IP}:${PORT_SONARR}"
+echo -e "🎬 ${BOLD}Radarr (Film-Manager):${NC}           http://${SERVER_IP}:${PORT_RADARR}"
+echo -e "🔍 ${BOLD}Prowlarr (Indexer-Hub):${NC}          http://${SERVER_IP}:${PORT_PROWLARR}"
 echo -e "${CYAN}=================================================================="
 if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
     echo -e "${YELLOW}⚡ Performance-Tipp für Jellyfin via Tailscale:${NC}"
@@ -1380,9 +1424,9 @@ if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     echo -e "       🎬 Schritt 1 / 3: Jellyfin Medienserver einrichten        "
     echo -e "==================================================================${NC}"
     if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
-        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:8096${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:8096${NC})"
+        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:${PORT_JELLYFIN}${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:${PORT_JELLYFIN}${NC})"
     else
-        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:8096${NC}"
+        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:${PORT_JELLYFIN}${NC}"
     fi
     echo -e "2. Wähle die Sprache und erstelle dein ${BOLD}Admin-Benutzerkonto${NC}."
     echo -e "3. Füge deine zwei Mediatheken hinzu:"
@@ -1397,9 +1441,9 @@ if [[ "$RUN_FRONTEND_GUIDE" =~ ^[jJyY]$ ]]; then
     echo -e "       🍿 Schritt 2 / 3: Seerr Anfrage-Portal initialisieren     "
     echo -e "==================================================================${NC}"
     if [ "$WANT_TAILSCALE" = true ] && [ -n "$TAILSCALE_IP" ]; then
-        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:5055${NC})"
+        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:${PORT_SEERR}${NC} (oder via Tailscale: ${BOLD}http://${TAILSCALE_IP}:${PORT_SEERR}${NC})"
     else
-        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:5055${NC}"
+        echo -e "1. Öffne im Browser: ${BOLD}http://${SERVER_IP}:${PORT_SEERR}${NC}"
     fi
     echo -e "2. Wähle ${BOLD}\"Mit Jellyfin anmelden\"${NC}."
     echo -e "3. Gib folgende Verbindungsdaten für Jellyfin ein:"

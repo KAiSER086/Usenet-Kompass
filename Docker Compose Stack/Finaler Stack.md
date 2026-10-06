@@ -5,7 +5,8 @@ Hier findest du die vollständigen, harmonisierten `docker-compose.yml`-Vorlagen
 > [!TIP]
 > **Ausfallsicherheit & Saubere Konfiguration:**
 > * **Integrierte Log-Rotation:** Alle Vorlagen nutzen einen wiederverwendbaren Logging-Block (`max-size: 10m`, `max-file: 3`), damit Docker-Logs deine Festplatte oder microSD-Karte niemals unbemerkt füllen können.
-> * **Umgebungsvariablen (`.env`):** Du kannst die Vorlage `.env.example` nach `.env` kopieren (`cp .env.example .env`), um Benutzer-IDs (`PUID`/`PGID`), Pfade (`CONFIG_DIR`/`DATA_DIR`) oder VPN-Keys zentral und sicher auszulagern.
+> * **Umgebungsvariablen (`.env`):** Du kannst die Vorlage `.env.example` nach `.env` kopieren (`cp .env.example .env`), um Benutzer-IDs (`PUID`/`PGID`), WebUI-Ports (`PORT_*`), Pfade (`CONFIG_DIR`/`DATA_DIR`) oder VPN-Keys zentral und sicher auszulagern – ohne Portkonflikte auf bestehenden Servern.
+> * **Sicherheits-Fallback (`:-`):** Alle Variablen in den Vorlagen nutzen das Format `${VARIABLE:-standardwert}` (z. B. `"${PORT_SABNZBD:-8080}:8080"`). Das bedeutet: Wenn ein Eintrag in deiner `.env` fehlt, startet Docker Compose trotzdem sicher mit dem Standardport, statt mit Fehlern abzubrechen.
 
 ### Schnellstart mit `.env`
 ```bash
@@ -45,23 +46,23 @@ services:
       - /dev/net/tun:/dev/net/tun
     environment:
       # --- VPN Konfiguration ---
-      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-mullvad} # z. B. mullvad, protonvpn, ivpn, custom
-      - VPN_TYPE=${VPN_TYPE:-wireguard} # wireguard oder openvpn
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-dein-wireguard-private-key}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-10.64.0.1/32} # Deine WireGuard-IP
-      - SERVER_COUNTRIES=${SERVER_COUNTRIES:-Netherlands,Germany}
-      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS:-192.168.178.0/24} # Erlaube Zugriff aus dem lokalen Heimnetz (bei Tailscale: 192.168.178.0/24,100.64.0.0/10)
-      - TZ=${TZ:-Europe/Berlin}
-      - PUID=${PUID:-1000} # Deine PUID
-      - PGID=${PGID:-1000} # Deine PGID
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER} # z. B. mullvad, protonvpn, ivpn, custom
+      - VPN_TYPE=${VPN_TYPE} # wireguard oder openvpn
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES} # Deine WireGuard-IP
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - FIREWALL_OUTBOUND_SUBNETS=${FIREWALL_OUTBOUND_SUBNETS} # Erlaube Zugriff aus dem lokalen Heimnetz (bei Tailscale: 192.168.178.0/24,100.64.0.0/10)
+      - TZ=${TZ}
+      - PUID=${PUID} # Deine PUID
+      - PGID=${PGID} # Deine PGID
     ports:
-      - "8080:8080" # SABnzbd WebUI
-      - "6789:6789" # NZBGet WebUI (falls genutzt)
-      - "7878:7878" # Radarr WebUI & API
-      - "8989:8989" # Sonarr WebUI & API
-      - "9696:9696" # Prowlarr WebUI & API
+      - "${PORT_SABNZBD}:8080" # SABnzbd WebUI
+      - "${PORT_NZBGET}:6789" # NZBGet WebUI (falls genutzt)
+      - "${PORT_RADARR}:7878" # Radarr WebUI & API
+      - "${PORT_SONARR}:8989" # Sonarr WebUI & API
+      - "${PORT_PROWLARR}:9696" # Prowlarr WebUI & API
     volumes:
-      - ${CONFIG_DIR:-./config}/gluetun:/gluetun
+      - ${CONFIG_DIR}/gluetun:/gluetun
     restart: unless-stopped
 
   # --- Usenet Downloader (Wähle SABnzbd ODER NZBGet) ---
@@ -71,12 +72,12 @@ services:
     container_name: sabnzbd
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sabnzbd:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sabnzbd:/config
+      - ${DATA_DIR}:/data
     restart: unless-stopped
     depends_on:
       - gluetun
@@ -87,12 +88,12 @@ services:
   #   container_name: nzbget
   #   <<: *default-logging
   #   environment:
-  #     - PUID=${PUID:-1000}
-  #     - PGID=${PGID:-1000}
-  #     - TZ=${TZ:-Europe/Berlin}
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #   volumes:
-  #     - ${CONFIG_DIR:-./config}/nzbget:/config
-  #     - ${DATA_DIR:-./data}:/data
+  #     - ${CONFIG_DIR}/nzbget:/config
+  #     - ${DATA_DIR}:/data
   #   restart: unless-stopped
   #   depends_on:
   #     - gluetun
@@ -105,11 +106,11 @@ services:
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/prowlarr:/config
+      - ${CONFIG_DIR}/prowlarr:/config
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -120,12 +121,12 @@ services:
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sonarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${DATA_DIR}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -137,12 +138,12 @@ services:
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/radarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
     network_mode: "service:gluetun"
     depends_on:
       - gluetun
@@ -156,19 +157,19 @@ services:
     container_name: jellyfin
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/jellyfin:/config
-      - ${DATA_DIR:-./data}/media:/data/media
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${DATA_DIR}/media:/data/media
     # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
     # group_add:
     #   - "107" # GID der Gruppe 'render' auf dem Host (getent group render | cut -d: -f3)
     ports:
-      - "8096:8096"
+      - "${PORT_JELLYFIN}:8096"
     restart: unless-stopped
 
   seerr:
@@ -177,11 +178,11 @@ services:
     <<: *default-logging
     init: true
     environment:
-      - TZ=${TZ:-Europe/Berlin}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/seerr:/app/config
+      - ${CONFIG_DIR}/seerr:/app/config
     ports:
-      - "5055:5055"
+      - "${PORT_SEERR}:5055"
     depends_on:
       - radarr
       - sonarr
@@ -212,14 +213,14 @@ services:
     container_name: sabnzbd
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sabnzbd:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sabnzbd:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "8080:8080"
+      - "${PORT_SABNZBD}:8080"
     restart: unless-stopped
 
   # nzbget:
@@ -227,14 +228,14 @@ services:
   #   container_name: nzbget
   #   <<: *default-logging
   #   environment:
-  #     - PUID=${PUID:-1000}
-  #     - PGID=${PGID:-1000}
-  #     - TZ=${TZ:-Europe/Berlin}
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TZ}
   #   volumes:
-  #     - ${CONFIG_DIR:-./config}/nzbget:/config
-  #     - ${DATA_DIR:-./data}:/data
+  #     - ${CONFIG_DIR}/nzbget:/config
+  #     - ${DATA_DIR}:/data
   #   ports:
-  #     - "6789:6789"
+  #     - "${PORT_NZBGET}:6789"
   #   restart: unless-stopped
 
   # --- Arr-Stack (Automatisierung & Indexer-Management) ---
@@ -244,13 +245,13 @@ services:
     container_name: prowlarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/prowlarr:/config
+      - ${CONFIG_DIR}/prowlarr:/config
     ports:
-      - "9696:9696"
+      - "${PORT_PROWLARR}:9696"
     restart: unless-stopped
 
   sonarr:
@@ -258,14 +259,14 @@ services:
     container_name: sonarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/sonarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "8989:8989"
+      - "${PORT_SONARR}:8989"
     depends_on:
       - sabnzbd # oder nzbget
     restart: unless-stopped
@@ -275,14 +276,14 @@ services:
     container_name: radarr
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/radarr:/config
-      - ${DATA_DIR:-./data}:/data
+      - ${CONFIG_DIR}/radarr:/config
+      - ${DATA_DIR}:/data
     ports:
-      - "7878:7878"
+      - "${PORT_RADARR}:7878"
     depends_on:
       - sabnzbd # oder nzbget
     restart: unless-stopped
@@ -294,19 +295,19 @@ services:
     container_name: jellyfin
     <<: *default-logging
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Berlin}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/jellyfin:/config
-      - ${DATA_DIR:-./data}/media:/data/media
+      - ${CONFIG_DIR}/jellyfin:/config
+      - ${DATA_DIR}/media:/data/media
     # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
     # group_add:
     #   - "107" # GID der Gruppe 'render' auf dem Host
     ports:
-      - "8096:8096"
+      - "${PORT_JELLYFIN}:8096"
     restart: unless-stopped
 
   seerr:
@@ -315,11 +316,11 @@ services:
     <<: *default-logging
     init: true
     environment:
-      - TZ=${TZ:-Europe/Berlin}
+      - TZ=${TZ}
     volumes:
-      - ${CONFIG_DIR:-./config}/seerr:/app/config
+      - ${CONFIG_DIR}/seerr:/app/config
     ports:
-      - "5055:5055"
+      - "${PORT_SEERR}:5055"
     depends_on:
       - radarr
       - sonarr
@@ -334,6 +335,59 @@ services:
 > * **Medien:** Sonarr importiert Serien nach `/data/media/tv`, Radarr Filme nach `/data/media/movies`, und Jellyfin streamt aus `/data/media`.
 > * **Der entscheidende Vorteil:** Sonarr und Radarr verschieben fertige Dateien per **Instant Atomic Move (`rename()`) in Millisekunden** – komplett ohne doppelte Schreiblast oder lange Wartezeiten auf der Festplatte.
 
-> 📌 **Hinweis zur internen Kommunikation:**
-> * **In Variante A (Mit Gluetun):** Da `sabnzbd`, `prowlarr`, `sonarr` und `radarr` über das Gluetun-Netzwerk laufen (`network_mode: "service:gluetun"`), kommunizieren sie untereinander per `127.0.0.1` (localhost). Dienste außerhalb wie `seerr` erreichen Sonarr und Radarr über den Hostnamen **`gluetun`** (z. B. `http://gluetun:7878`).
-> * **In Variante B (Ohne VPN):** Alle Dienste laufen im gemeinsamen Docker-Bridge-Netzwerk und erreichen sich direkt über ihre Containernamen (z. B. `http://sonarr:8989`, `http://radarr:7878`, `http://prowlarr:9696`, `http://sabnzbd:8080`).
+> 📌 **Hinweis zur internen Kommunikation & Port-Weiterleitung:**
+> * **Port-Weiterleitung wie eine Weiche:** Wenn du z. B. `PORT_SABNZBD=8085` wählst, sagst du Docker: *„Empfange Anfragen von außen auf Port 8085 und leite sie intern an Port 8080 im Container weiter.“* So umgehst du Portkonflikte auf dem Host (z. B. wenn Port 8080 schon belegt ist) spielend leicht, während die Anwendung intern ganz normal auf Port 8080 arbeitet.
+> * **Container-zu-Container:** Die interne Kommunikation bleibt davon völlig unberührt, da Dienste untereinander immer auf die standardisierten internen Ports zugreifen:
+>   - **In Variante A (Mit Gluetun):** Da `sabnzbd`, `prowlarr`, `sonarr` und `radarr` über das Gluetun-Netzwerk laufen (`network_mode: "service:gluetun"`), kommunizieren sie untereinander per `127.0.0.1` (localhost). Dienste außerhalb wie `seerr` erreichen Sonarr und Radarr über den Hostnamen **`gluetun`** (z. B. `http://gluetun:7878`).
+>   - **In Variante B (Ohne VPN):** Alle Dienste laufen im gemeinsamen Docker-Bridge-Netzwerk und erreichen sich direkt über ihre Containernamen (z. B. `http://sonarr:8989`, `http://radarr:7878`, `http://prowlarr:9696`, `http://sabnzbd:8080`).
+
+---
+
+## 8.1 Wartung, Updates & Backup
+
+Ein Docker-Stack ist extrem stabil und pflegeleicht. Dennoch erscheinen regelmäßig Updates für Sonarr, Radarr, Jellyfin und Co., die neue Funktionen, Performance-Verbesserungen und Sicherheits-Patches liefern.
+
+### Stack aktualisieren (in 3 einfachen Schritten)
+
+Wechsle in das Verzeichnis deines Stacks und führe folgende Befehle aus:
+
+```bash
+cd ~/usenet-kompass # bzw. dein Installationsverzeichnis
+
+# 1. Neueste Image-Versionen aller Dienste herunterladen
+docker compose pull
+
+# 2. Container mit den neuen Images im Hintergrund neu erstellen
+docker compose up -d --remove-orphans
+
+# 3. Alte, nicht mehr genutzte Image-Schichten von der Festplatte löschen
+docker image prune -f
+```
+
+> [!NOTE]
+> **Bleiben meine Daten und Konfigurationen beim Update erhalten?**
+> **Ja, zu 100%!** Alle deine Einstellungen, API-Keys und Datenbanken liegen außerhalb der Container im Ordner `./config`, und deine Mediendateien im Ordner `./data`. Docker aktualisiert lediglich den Programmcode innerhalb des Containers – deine Daten bleiben vollständig unberührt.
+
+### Nützliche Verwaltungsbefehle
+
+* **Stack sauber stoppen:** `docker compose down`
+* **Stack neu starten:** `docker compose restart`
+* **Live-Logs eines Dienstes beobachten:** `docker compose logs -f sonarr` (oder `sabnzbd`, `gluetun`, `jellyfin`)
+* **Status aller Container prüfen:** `docker compose ps`
+
+### Datensicherung (Backup)
+
+Um ein vollständiges Backup deines Stacks zu erstellen, reicht es aus, den Ordner `config/` sowie deine `.env` und `docker-compose.yml` zu sichern:
+
+```bash
+# Schnelles Archiv aller Einstellungen und Datenbanken erstellen
+tar -czvf usenet-kompass-backup-$(date +%F).tar.gz config/ .env docker-compose.yml
+```
+
+Im Falle einer Server-Neuinstallation oder eines Hardware-Wechsels entpackst du dieses Archiv einfach auf dem neuen System und startest den Stack mit `docker compose up -d` – deine gesamte Bibliothek und Konfiguration ist sofort wieder exakt wie zuvor einsatzbereit.
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**7.0 Frontend**](../Frontend/Jellyfin%20und%20Seerr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**Glossar: Usenet-Lexikon**](../Lexikon/Lexikon.md) ➔ |

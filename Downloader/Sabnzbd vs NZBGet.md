@@ -241,3 +241,9 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
 6. **Speichern:** Klicke auf **"Save all changes"** (und ggf. **"Reload NZBGet"**) und teste mit **"Test Connection"**.
 
 ![NZBGet-Provider](nzbget-provider.gif)
+
+---
+
+| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| :--- | :---: | ---: |
+| ⬅️ [**4.0 VPNs & Netzwerk**](../Docker%20Compose%20Stack/VPNs.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) ➔ |
