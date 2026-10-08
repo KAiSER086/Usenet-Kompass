@@ -97,8 +97,8 @@ Ein alter Mythos besagt oft, dass man Verbindungen künstlich drosseln müsse. U
 
 ### 3. Erkenntnisse
 1. **SABnzbd vs. NZBGet auf Multi-Core (6 vCPUs):**
-   * **SABnzbd deklassiert NZBGet bei Multi-Gigabit:** Während NZBGet auf sparsamer Hardware (RPi) noch gleichauf liegt, zieht SABnzbd auf starken Servern dank moderner C-SIMD-Erweiterungen (`sabctools`) und dynamischem TCP-Window-Scaling meilenweit davon (**363,3 MB/s vs. 135,8 MB/s bei 50 Verbindungen** – SABnzbd ist fast **3x so schnell**).
-   * Bei NZBGet bringt eine Erhöhung von 20 auf 50 Verbindungen keinen Zuwachs mehr (fällt sogar leicht von 155 MB/s auf 136 MB/s ab), während SABnzbd linear bis auf 363 MB/s skaliert.
+   * **Warum waren beide auf dem Raspberry Pi 5 gleich schnell?** Auf dem Pi limitierte die **500-Mbit/s-Internetleitung** (physikalische Netto-Grenze bei ~59,3 MB/s) beide Downloader gleichermaßen. Keines der Programme kam dort an sein Rechen- oder Durchsatzlimit.
+   * **Warum deklassiert SABnzbd NZBGet auf dem 6-vCPU-Server?** Bei offener Multi-Gigabit-Anbindung im Rechenzentrum entscheidet die Software-Architektur: SABnzbds moderne C-SIMD-Engine (`sabctools` mit AVX2), aggressives TCP-Window-Scaling und der konfigurierte RAM-Schreibcache schöpfen 50 Verbindungen linear bis auf **363,3 MB/s** aus. NZBGet hingegen stößt bei vielen parallelen SSL-Sockets an Thread-/Lock-Grenzen (**135,8 MB/s bei 50 Verbindungen** – SABnzbd ist fast **3x so schnell**).
 2. **VPN-Leistungsverlust ermittelt (-60 % bis -74 %):**
    * Bei identischen **20 Verbindungen** sinkt die Downloadrate durch den WireGuard-Tunnel von **233,1 MB/s auf 93,0 MB/s – ein Einbruch um exakt 60,1 %** bei doppelter CPU-Last (~52 % statt ~29 %).
    * Im Vergleich zum vollen Leitungs-Maximum ohne VPN (50 Verbindungen mit 363,3 MB/s) bremst der VPN-Tunnel den Durchsatz sogar um **74,4 %** aus.
