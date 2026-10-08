@@ -90,15 +90,20 @@ Ein alter Mythos besagt oft, dass man Verbindungen künstlich drosseln müsse. U
 | **Cloud VPS (2 vCPU AMD)** | **NZBGet** | **20** | **47,10 MB/s** | **21,2 s** | ~25 % |
 | **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,80 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Thread Overload) |
 | **Cloud VPS (6 vCPU) + VPN** | **SABnzbd** | **20** | **93,00 MB/s (VPN-Limit)** | **10,0 s** | ~52 % |
+| **Cloud VPS (6 vCPU) Direkt** | **NZBGet** | **20** | **155,14 MB/s** | **7,0 s** | ~32 % |
 | **Cloud VPS (6 vCPU) Direkt** | **SABnzbd** | **20** | **233,10 MB/s** | **4,0 s** | ~29 % |
+| **Cloud VPS (6 vCPU) Direkt** | **NZBGet** | **50** | **135,75 MB/s** | **8,0 s** | ~30 % |
 | **Cloud VPS (6 vCPU) Direkt** | **SABnzbd** | **50** | **363,30 MB/s (Maximum)** | **2,0 s** | ~28 % |
 
 ### 3. Erkenntnisse
-1. **VPN-Leistungsverlust ermittelt (-60 % bis -74 %):**
+1. **SABnzbd vs. NZBGet auf Multi-Core (6 vCPUs):**
+   * **SABnzbd deklassiert NZBGet bei Multi-Gigabit:** Während NZBGet auf sparsamer Hardware (RPi) noch gleichauf liegt, zieht SABnzbd auf starken Servern dank moderner C-SIMD-Erweiterungen (`sabctools`) und dynamischem TCP-Window-Scaling meilenweit davon (**363,3 MB/s vs. 135,8 MB/s bei 50 Verbindungen** – SABnzbd ist fast **3x so schnell**).
+   * Bei NZBGet bringt eine Erhöhung von 20 auf 50 Verbindungen keinen Zuwachs mehr (fällt sogar leicht von 155 MB/s auf 136 MB/s ab), während SABnzbd linear bis auf 363 MB/s skaliert.
+2. **VPN-Leistungsverlust ermittelt (-60 % bis -74 %):**
    * Bei identischen **20 Verbindungen** sinkt die Downloadrate durch den WireGuard-Tunnel von **233,1 MB/s auf 93,0 MB/s – ein Einbruch um exakt 60,1 %** bei doppelter CPU-Last (~52 % statt ~29 %).
    * Im Vergleich zum vollen Leitungs-Maximum ohne VPN (50 Verbindungen mit 363,3 MB/s) bremst der VPN-Tunnel den Durchsatz sogar um **74,4 %** aus.
-2. **Kein CPU-Zusammenbruch auf 6 vCPUs:** Auf virtualisierten 2-vCPU-Kernen brach der Durchsatz ab 20 Verbindungen um 27 % ein. Mit 6 vCPUs entfällt dieses Context-Switch-Thrashing komplett: Selbst bei 50 Verbindungen und über 360 MB/s bleibt die CPU bei entspannten ~28 % Last.
-3. **Fazit:** Wer maximale Downloadraten über Gigabit erzielen will, nutzt die native SSL-Verschlüsselung des Usenet-Providers (Port 563) ohne zwischengeschalteten VPN-Tunnel.
+3. **Kein CPU-Zusammenbruch auf 6 vCPUs:** Auf virtualisierten 2-vCPU-Kernen brach der Durchsatz ab 20 Verbindungen um 27 % ein. Mit 6 vCPUs entfällt dieses Context-Switch-Thrashing komplett: Selbst bei 50 Verbindungen und über 360 MB/s bleibt die CPU bei entspannten ~28 % Last.
+4. **Fazit:** Wer maximale Downloadraten über Gigabit erzielen will, setzt auf **SABnzbd** mit nativer SSL-Verschlüsselung des Usenet-Providers (Port 563) ohne zwischengeschalteten VPN-Tunnel.
 
 </details>
 
