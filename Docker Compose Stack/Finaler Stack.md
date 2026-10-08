@@ -301,16 +301,11 @@ services:
     volumes:
       - ${CONFIG_DIR}/jellyfin:/config
       - ${DATA_DIR}/media:/data/media
-    # --- Performance-Optionen je nach Server-Klasse ---
-    # Option 1 (Tier 2): Intel QuickSync Hardware-Transcoding:
+    # Optional für Intel QuickSync Hardware-Transcoding:
     # devices:
     #   - /dev/dri:/dev/dri
     # group_add:
     #   - "107" # GID der Gruppe 'render' auf dem Host
-    # Option 2 (Tier 3): SSD-Schutz via RAM-Cache für Transcoding (ab 8 GB Server-RAM):
-    # tmpfs:
-    #   - /config/cache/transcodes:size=1536M
-    # mem_limit: 4096m
     ports:
       - "${PORT_JELLYFIN}:8096"
     restart: unless-stopped

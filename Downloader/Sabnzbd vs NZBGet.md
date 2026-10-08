@@ -80,32 +80,25 @@ Ein alter Mythos besagt oft, dass man Verbindungen künstlich drosseln müsse. U
 
 ### 2. Durchsatz & Downloadzeit (1 GB Testdatei)
 
-#### A. Vergleich: Kleine Systeme vs. 2-vCPU VPS (WireGuard-VPN)
 | Server & Setup | Downloader | Verbindungen | Durchsatz | Downloadzeit | CPU-Auslastung |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **RPi 5 (NVMe + 1G Cache)** | **SABnzbd** | **20** | **59,3 MB/s (100 % Leitung)** | **18,0 s** | ~35–45 % |
-| **RPi 5 (NVMe)** | **NZBGet** | **20** | **59,3 MB/s (100 % Leitung)** | **20,0 s** | ~15–20 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **10** | **64,0 MB/s** | **15,6 s** | ~40 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **20** | **63,8 MB/s** | **15,7 s** | ~55 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,8 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Thread Overload) |
+| **RPi 5 (NVMe + 1G Cache)** | **SABnzbd** | **20** | **59,34 MB/s (100 % Leitung)** | **18,0 s** | ~35–45 % |
+| **RPi 5 (NVMe)** | **NZBGet** | **20** | **59,34 MB/s (100 % Leitung)** | **20,0 s** | ~15–20 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **10** | **64,00 MB/s** | **15,6 s** | ~40 % |
+| **Cloud VPS (2 vCPU AMD)** | **NZBGet** | **10** | **39,40 MB/s** | **25,4 s** | ~18 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **20** | **63,80 MB/s** | **15,7 s** | ~55 % |
+| **Cloud VPS (2 vCPU AMD)** | **NZBGet** | **20** | **47,10 MB/s** | **21,2 s** | ~25 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,80 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Thread Overload) |
+| **Cloud VPS (6 vCPU) + VPN** | **SABnzbd** | **20** | **93,00 MB/s (VPN-Limit)** | **10,0 s** | ~52 % |
+| **Cloud VPS (6 vCPU) Direkt** | **SABnzbd** | **20** | **233,10 MB/s** | **4,0 s** | ~29 % |
+| **Cloud VPS (6 vCPU) Direkt** | **SABnzbd** | **50** | **363,30 MB/s (Maximum)** | **2,0 s** | ~28 % |
 
-#### B. Skalierter Cloud VPS (6 vCPU / 8 GB RAM): No-VPN Direkt vs. Gluetun VPN
-| Modus | Downloader | Verbindungen | Netto-Durchsatz | Downloadzeit | CPU-Auslastung | Performance-Bewertung |
-| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **Gluetun (WireGuard)** | SABnzbd | 8 | 55,6 MB/s | 17,0 s | ~36 % | VPN dämpft Single-Stream |
-| **Gluetun (WireGuard)** | SABnzbd | 12 | 80,4 MB/s | 12,0 s | ~46 % | Gute Steigerung |
-| **Gluetun (WireGuard)** | SABnzbd | **16–20** | **92,3–93,0 MB/s** | **10,0 s** | **~52 %** | 🔒 **VPN Maximum (~750 Mbit/s)** |
-| **Gluetun (WireGuard)** | SABnzbd | 30–40 | 90,0–97,6 MB/s | 10,0 s | ~54 % | VPN-Tunnel-Sättigung |
-| **Direkt (No-VPN SSL)** | SABnzbd | 8 | 73,5 MB/s | 13,0 s | ~19 % | Ungesättigt |
-| **Direkt (No-VPN SSL)** | SABnzbd | 16 | 190,6 MB/s | 5,0 s | ~29 % | Schneller als 1,5 Gbit/s |
-| **Direkt (No-VPN SSL)** | SABnzbd | 20 | 233,1 MB/s | 4,0 s | ~29 % | ~1,8 Gbit/s Netto |
-| **Direkt (No-VPN SSL)** | SABnzbd | 30 | 331,8 MB/s | 2,0 s | ~29 % | ~2,7 Gbit/s Netto |
-| **Direkt (No-VPN SSL)** | SABnzbd | **50** | **363,3 MB/s** | **2,0 s** | **~28 %** | 🚀 **Volle Sättigung (~3 Gbit/s Netto)** |
-
-### 3. Zentrale Erkenntnisse
-1. **CPU-Flaschenhals komplett weg:** Auf 6 vCPUs bricht nichts mehr ein. Selbst bei 50 Verbindungen und über 360 MB/s bleibt die CPU bei unter 30 % Last.
-2. **Der VPN-Flaschenhals:** Über WireGuard liegt das Limit bei ~93 MB/s. Mehr Verbindungen erzeugen nur unnötige CPU-Kryptolast im Tunnel.
-3. **Direkt-Modus (SSL Port 563):** Provider-seitiges SSL reicht für vollständige Privatsphäre völlig aus, spart 50 % CPU und katapultiert die Rate auf 363 MB/s (1.000 MB in 2 Sekunden).
+### 3. Erkenntnisse
+1. **VPN-Leistungsverlust ermittelt (-60 % bis -74 %):**
+   * Bei identischen **20 Verbindungen** sinkt die Downloadrate durch den WireGuard-Tunnel von **233,1 MB/s auf 93,0 MB/s – ein Einbruch um exakt 60,1 %** bei doppelter CPU-Last (~52 % statt ~29 %).
+   * Im Vergleich zum vollen Leitungs-Maximum ohne VPN (50 Verbindungen mit 363,3 MB/s) bremst der VPN-Tunnel den Durchsatz sogar um **74,4 %** aus.
+2. **Kein CPU-Zusammenbruch auf 6 vCPUs:** Auf virtualisierten 2-vCPU-Kernen brach der Durchsatz ab 20 Verbindungen um 27 % ein. Mit 6 vCPUs entfällt dieses Context-Switch-Thrashing komplett: Selbst bei 50 Verbindungen und über 360 MB/s bleibt die CPU bei entspannten ~28 % Last.
+3. **Fazit:** Wer maximale Downloadraten über Gigabit erzielen will, nutzt die native SSL-Verschlüsselung des Usenet-Providers (Port 563) ohne zwischengeschalteten VPN-Tunnel.
 
 </details>
 

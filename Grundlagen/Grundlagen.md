@@ -62,23 +62,20 @@ Obwohl Docker auch auf Windows und macOS läuft, wurde es **nativ für Linux ent
 
 Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**, **Debian** oder **Ubuntu Server**. Diese Systeme sind extrem stabil, booten in Sekunden und sind ideal für den Dauerbetrieb.
 
-#### 🍓 Tier 1: Budget & Single-Board-Computer (z. B. Raspberry Pi 5 oder 1–2 vCPU VPS)
+#### 🍓 Option 1: Raspberry Pi 5 mit DietPi (Der stromsparende Homeserver)
 
-* **Hardware:** Raspberry Pi 4/5 (DietPi), sparsame Thin-Clients oder Cloud-Einsteiger-VPS (1–2 vCPUs, 1–2 GB RAM).
-* **Vorteile:** Extrem sparsam (3–5 Watt) bzw. minimale monatliche Serverkosten (3–4 €/Monat).
-* **Fokus:** Schlanke Konfiguration. Ideal für NZBGet oder SABnzbd mit kleinerem Puffer (512M) und 15–20 Verbindungen. Video-Transkodierung in Jellyfin sollte deaktiviert bleiben (Direct Play only).
+* **Vorteile:** Sehr geringer Stromverbrauch (ca. 3–5 Watt), geräuschlos, kompakt und vollkommen ausreichend für Downloader (SABnzbd/NZBGet), *arr-Apps und Direct-Play-Streaming.
+* **Beachte:** Ein Single-Board-Computer (ARM CPU) stößt an Grenzen bei rechenintensiver Video-Transkodierung in Echtzeit.
 
-#### 💻 Tier 2: Midrange Homeserver (z. B. Intel N100 / N97 Mini-PC)
+#### 💻 Option 2: Intel N100 / N97 Mini-PC (Die moderne Allround-Empfehlung)
 
-* **Hardware:** Kompakte x86-Mini-PCs (120–150 €) mit 4 Kernen, 8–16 GB RAM und NVMe-SSD (Leerlauf ca. 6 Watt).
-* **Vorteile:** Verfügen über **Intel Quick Sync Video (QSV)** und können dank iGPU mehrere 4K-Videostreams in Jellyfin in Hardware transkodieren.
-* **Fokus:** Der perfekte Allrounder für zu Hause mit Streaming über Tailscale an mobile Endgeräte.
+* **Vorteile:** Kompakte x86-Mini-PCs mit Intel N100 Prozessor kosten oft nur 120–150 € und verbrauchen im Leerlauf ebenfalls nur ca. 6 Watt. Sie verfügen über **Intel Quick Sync Video (QSV)** und können mehrere 4K-Videostreams in Jellyfin mühelos in Hardware transkodieren.
+* **Ideal für:** Nutzer, die eine vollwertige Multimedia-Zentrale zu Hause suchen und häufig von unterwegs streamen möchten.
 
-#### 🚀 Tier 3: Power Cloud VPS & Dedicated Server (z. B. 6+ vCPUs / Hetzner / Netcup)
+#### ☁️ Option 3: Cloud VPS & Dedicated Server (Das flexible Offsite-Setup)
 
-* **Hardware:** 6+ vCPUs (AMD EPYC) oder dedizierte Bare-Metal Root-Server, 8–32+ GB RAM, Enterprise NVMe-SSDs und Multi-Gigabit-Netzwerk (1–2,5 Gbit/s symmetrisch).
-* **Vorteile:** Keine Drosselungen, keine Hardware-Kaufkosten, massive Datendurchsätze. 
-* **Fokus:** **Kompromisslose Höchstleistung.** Hier wird SABnzbd mit 1,5–2 GB RAM-Schreibcache und **50 Verbindungen** gefahren: Durchsätze von **über 360 MB/s (~3 Gbit/s Netto)** lassen 1-GB-Dateien in 2 Sekunden auf der SSD landen. Reines Provider-SSL (Port 563) spart CPU-Kryptolast gegenüber VPN-Tunneln und reizt die High-Speed-Ports im Rechenzentrum voll aus. Für Jellyfin können Transcode-Puffer im schnellen RAM (`tmpfs`) eingerichtet werden, um SSDs vor Schreibzyklen zu schützen.
+* **Vorteile:** Keine Hardware-Anschaffungskosten, professionelles Hosting im Rechenzentrum mit garantierter Gigabit- oder Multi-Gigabit-Anbindung (oft 1–2,5 Gbit/s symmetrisch) und fester öffentlicher IP. Perfekt, wenn das heimische Internet zu langsam ist oder der private Router nicht durch 24/7-Downloads ausgelastet werden soll.
+* **Typisches Setup:** Instanzen mit 2–6+ vCPUs (z. B. AMD EPYC bei Hetzner Cloud, Netcup etc.) und NVMe-Speicher. Auf leistungsstarken Systemen lassen sich Usenet-Downloads direkt über SSL (Port 563) mit maximalen Durchsätzen von über 360 MB/s betreiben.
 
 ---
 
