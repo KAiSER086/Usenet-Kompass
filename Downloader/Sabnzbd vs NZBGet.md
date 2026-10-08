@@ -38,14 +38,19 @@ Usenet-Downloads bestehen aus tausenden winzigen Segmenten (Artikeln), die paral
 
 ---
 
-### 🔌 Der Verbindungs-Sweet-Spot: 15–20 Verbindungen (Weniger ist oft mehr!)
+### 🔌 Der Verbindungs-Sweet-Spot: Wie viele Verbindungen sind optimal?
 
 Ein weit verbreiteter Irrglaube lautet: *„Je mehr Verbindungen ich im Downloader eintrage, desto schneller wird der Download.“*
 
-Unsere Messungen zeigen das genaue Gegenteil:
-* **Das Optimum liegt bei 15 bis 20 Verbindungen.** Damit reizt du eine 500-Mbit/s- oder gar Gigabit-Leitung bereits zu 100 % aus.
-* **Mehr Verbindungen schaden der Performance:** Auf einem 2-vCPU Server brach die Downloadrate beim Wechsel von 20 auf 30 Verbindungen um **27 % ein** (von 64 MB/s auf 46,8 MB/s). Grund dafür ist **Context-Switch-Thrashing**: Der Linux-Kernel muss permanent zwischen den Dutzenden Threads des Downloaders im Userspace und der WireGuard-Kryptographie im Kernel hin- und herwechseln.
-* **Empfehlung:** Beginne stets mit **15 Verbindungen**. Erhöhe nur dann schrittweise in 2er-Schritten, wenn deine vertragliche Bandbreite noch nicht voll erreicht wird.
+Unsere Messungen zeigen, wie stark Hardware-Dimensionierung und Netzwerk-Modus das Optimum beeinflussen:
+* **Der Alltags-Sweet-Spot liegt bei 15 bis 20 Verbindungen:**
+  * **Bei WireGuard-VPN (Gluetun):** Hier ist bei 16–20 Verbindungen die volle VPN-Bandbreite (~750–800 Mbit/s Netto) erreicht. Mehr Verbindungen belasten lediglich die CPU und bringen keinen Geschwindigkeitszuwachs.
+  * **Auf kleinen Servern (2 vCPU):** Mehr als 20 Verbindungen führen zu **Context-Switch-Thrashing** – die Downloadrate brach im Test von 64 MB/s auf 46,8 MB/s ein (-27 %).
+* **High-Speed No-VPN (SSL Port 563 auf 6+ vCPUs):**
+  * Stehen ausreichend CPU-Kerne zur Verfügung und wird die Verbindung direkt per SSL (ohne zwischengeschalteten VPN-Tunnel) aufgebaut, skaliert SABnzbd dank C-Erweiterungen (`sabctools`) fast linear nach oben: Bei 30 Verbindungen werden über **330 MB/s** (~2,7 Gbit/s) erreicht, bei 50 Verbindungen sogar **363 MB/s** – bei einer CPU-Auslastung von unter 30 %.
+* **Praxis-Empfehlung:**
+  * Im **VPN-Betrieb:** Fest auf **16 bis 20 Verbindungen** einstellen.
+  * Im **Direkt-Betrieb (SSL):** Starte mit **20 Verbindungen** (~230 MB/s). Bei extrem schnellen Leitungen (> 2,5 Gbit/s) und starker CPU schrittweise auf 30 erhöhen.
 
 ---
 
@@ -62,29 +67,42 @@ Unsere Messungen zeigen das genaue Gegenteil:
 ---
 
 <details>
-<summary><b>📊 Reale Hardware-Benchmark-Ergebnisse ansehen (RPi 5 vs. Cloud VPS)</b></summary>
+<summary><b>📊 Reale Hardware-Benchmark-Ergebnisse ansehen (RPi 5 vs. 2-vCPU vs. 6-vCPU Server)</b></summary>
 
 ### 1. Testumgebung & Messmethodik
-* **Raspberry Pi 5:** Broadcom BCM2712 (4x Cortex-A76 @ 2.4 GHz), 8 GB LPDDR4X, PCIe NVMe SSD, 500 Mbit/s Internetanschluss via WireGuard-VPN (MTU 1420).
-* **Cloud VPS:** 2 vCPUs (AMD EPYC 7002/9004), 4 GB RAM, Enterprise NVMe, 1 Gbit/s Uplink via WireGuard-VPN.
-* **Test-Payload:** 1.000 MB Usenet-Testarchiv über SSL/TLS (Port 563). Theoretisches Netto-Maximum bei 500 Mbit/s unter Abzug von IP-, TCP-, TLS-, WireGuard- und yEnc-Overhead: **~59,34 MB/s**.
+* **Raspberry Pi 5:** Broadcom BCM2712 (4x Cortex-A76 @ 2.4 GHz), 8 GB RAM, NVMe SSD, 500 Mbit/s via WireGuard-VPN.
+* **Cloud VPS (2 vCPU):** 2 vCPUs (AMD EPYC), 4 GB RAM, Enterprise NVMe, 1 Gbit/s Uplink via WireGuard-VPN.
+* **Cloud VPS (6 vCPU):** 6 vCPUs (AMD EPYC), 8 GB RAM, Enterprise NVMe, Multi-Gigabit Uplink – getestet mit und ohne WireGuard-VPN (Gluetun).
+* **Test-Payload:** Offizielles 1.000 MB SABnzbd-Testarchiv über Eweka SSL/TLS (Port 563).
 
 ### 2. Durchsatz & Downloadzeit (1 GB Testdatei)
 
+#### A. Vergleich: Kleine Systeme vs. 2-vCPU VPS (WireGuard-VPN)
 | Server & Setup | Downloader | Verbindungen | Durchsatz | Downloadzeit | CPU-Auslastung |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **RPi 5 (NVMe + 1G Cache)** | **SABnzbd** | **20** | **59,34 MB/s (100 % Netto-Sättigung)** | **18,0 s** | ~35–45 % |
-| **RPi 5 (NVMe)** | **NZBGet** | **20** | **59,34 MB/s (100 % Netto-Sättigung)** | **20,0 s** | ~15–20 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **10** | **64,00 MB/s** | **15,6 s** | ~40 % |
-| **Cloud VPS (2 vCPU AMD)** | **NZBGet** | **10** | **39,40 MB/s** | **25,4 s** | ~18 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **20** | **63,80 MB/s** | **15,7 s** | ~55 % |
-| **Cloud VPS (2 vCPU AMD)** | **NZBGet** | **20** | **47,10 MB/s** | **21,2 s** | ~25 % |
-| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,80 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Context Switches) |
+| **RPi 5 (NVMe + 1G Cache)** | **SABnzbd** | **20** | **59,3 MB/s (100 % Leitung)** | **18,0 s** | ~35–45 % |
+| **RPi 5 (NVMe)** | **NZBGet** | **20** | **59,3 MB/s (100 % Leitung)** | **20,0 s** | ~15–20 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **10** | **64,0 MB/s** | **15,6 s** | ~40 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **20** | **63,8 MB/s** | **15,7 s** | ~55 % |
+| **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,8 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Thread Overload) |
 
-### 3. Erkenntnisse
-1. Auf dem Raspberry Pi 5 erreichen beide Downloader dank C-Erweiterungen die identische, maximale Netto-Bandbreite der Internetleitung.
-2. Der Flaschenhals bei früheren Messungen (Einbruch auf ~33 MB/s) wurde eindeutig als mechanisches Festplatten-Thrashing ohne Cache identifiziert.
-3. Mehr als 20 Verbindungen bieten keinen Mehrwert und führen auf virtualisierten Kernen zu Performanceverlusten durch Thread-Wechsel.
+#### B. Skalierter Cloud VPS (6 vCPU / 8 GB RAM): No-VPN Direkt vs. Gluetun VPN
+| Modus | Downloader | Verbindungen | Netto-Durchsatz | Downloadzeit | CPU-Auslastung | Besonderheit |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| **Gluetun (WireGuard)** | SABnzbd | 8 | 55,6 MB/s | 17,0 s | ~36 % | VPN dämpft Single-Stream |
+| **Gluetun (WireGuard)** | SABnzbd | 12 | 80,4 MB/s | 12,0 s | ~46 % | Gute Steigerung |
+| **Gluetun (WireGuard)** | SABnzbd | **16–20** | **92,3–93,0 MB/s** | **10,0 s** | **~52 %** | ⭐ **VPN Sweet-Spot (~750 Mbit/s)** |
+| **Gluetun (WireGuard)** | SABnzbd | 30–40 | 90,0–97,6 MB/s | 10,0 s | ~54 % | VPN-Server-Plateau |
+| **Direkt (No-VPN SSL)** | SABnzbd | 8 | 73,5 MB/s | 13,0 s | ~19 % | Ungesättigt |
+| **Direkt (No-VPN SSL)** | SABnzbd | 16 | 190,6 MB/s | 5,0 s | ~29 % | Schneller als 1,5 Gbit/s |
+| **Direkt (No-VPN SSL)** | SABnzbd | **20** | **233,1 MB/s** | **4,0 s** | **~29 %** | ⭐ **Alltags-Sweet-Spot (~1,8 Gbit/s)** |
+| **Direkt (No-VPN SSL)** | SABnzbd | 30 | 331,8 MB/s | 2,0 s | ~29 % | Extremer Durchsatz (~2,7 Gbit/s) |
+| **Direkt (No-VPN SSL)** | SABnzbd | 50 | 363,3 MB/s | 2,0 s | ~29 % | Absolutes Maximum (~3 Gbit/s) |
+
+### 3. Zentrale Erkenntnisse
+1. **CPU-Flaschenhals eliminiert:** Auf 6 vCPUs bricht der Durchsatz bei 30+ Verbindungen nicht mehr ein. Die CPU bleibt dank Python-SIMD (`sabctools`) selbst bei 360 MB/s unter 30 % Last.
+2. **Der VPN-Flaschenhals:** Über WireGuard liegt der Sweet-Spot bei 16–20 Verbindungen (~93 MB/s). Mehr Verbindungen erhöhen nur die CPU-Kryptolast, überwinden aber nicht das Durchsatz-Limit des VPN-Tunnels.
+3. **Direkt-Modus (SSL Port 563):** Wer den VPN-Tunnel weglässt und auf die providerseitige SSL-Verschlüsselung setzt, spart die Hälfte an CPU-Ressourcen und erreicht bei schnellen Server-Anbindungen bis zu 360 MB/s (1 GB in 2 Sekunden).
 
 </details>
 
