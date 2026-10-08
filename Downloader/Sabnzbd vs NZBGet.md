@@ -38,19 +38,22 @@ Usenet-Downloads bestehen aus tausenden winzigen Segmenten (Artikeln), die paral
 
 ---
 
-### 🔌 Der Verbindungs-Sweet-Spot: Wie viele Verbindungen sind optimal?
+### 🔌 Verbindungen optimal einstellen: Das Maximum herausholen
 
-Ein weit verbreiteter Irrglaube lautet: *„Je mehr Verbindungen ich im Downloader eintrage, desto schneller wird der Download.“*
+Ein alter Mythos besagt oft, dass man Verbindungen künstlich drosseln müsse. Unsere Messungen zeigen jedoch glasklar, worauf es ankommt: **Deine CPU-Power und der gewählte Netzwerkmodus.**
 
-Unsere Messungen zeigen, wie stark Hardware-Dimensionierung und Netzwerk-Modus das Optimum beeinflussen:
-* **Der Alltags-Sweet-Spot liegt bei 15 bis 20 Verbindungen:**
-  * **Bei WireGuard-VPN (Gluetun):** Hier ist bei 16–20 Verbindungen die volle VPN-Bandbreite (~750–800 Mbit/s Netto) erreicht. Mehr Verbindungen belasten lediglich die CPU und bringen keinen Geschwindigkeitszuwachs.
-  * **Auf kleinen Servern (2 vCPU):** Mehr als 20 Verbindungen führen zu **Context-Switch-Thrashing** – die Downloadrate brach im Test von 64 MB/s auf 46,8 MB/s ein (-27 %).
-* **High-Speed No-VPN (SSL Port 563 auf 6+ vCPUs):**
-  * Stehen ausreichend CPU-Kerne zur Verfügung und wird die Verbindung direkt per SSL (ohne zwischengeschalteten VPN-Tunnel) aufgebaut, skaliert SABnzbd dank C-Erweiterungen (`sabctools`) fast linear nach oben: Bei 30 Verbindungen werden über **330 MB/s** (~2,7 Gbit/s) erreicht, bei 50 Verbindungen sogar **363 MB/s** – bei einer CPU-Auslastung von unter 30 %.
-* **Praxis-Empfehlung:**
-  * Im **VPN-Betrieb:** Fest auf **16 bis 20 Verbindungen** einstellen.
-  * Im **Direkt-Betrieb (SSL):** Starte mit **20 Verbindungen** (~230 MB/s). Bei extrem schnellen Leitungen (> 2,5 Gbit/s) und starker CPU schrittweise auf 30 erhöhen.
+* **VPN-Betrieb (Gluetun WireGuard):**
+  * Hier ist bei **16 bis 20 Verbindungen** die Obergrenze des Tunnels (~750–800 Mbit/s bzw. ~93 MB/s) erreicht. Mehr Verbindungen erhöhen lediglich die Krypto-Last der CPU, bringen aber keinen Durchsatzgewinn mehr.
+* **Kleine Server (2 vCPUs):**
+  * Auf extrem schwachen 2-vCPU-Systemen bricht der Durchsatz ab 20–30 Verbindungen durch Context-Switch-Overhead ein (-27 %). Hier bleibt 15–20 Verbindungen das Limit.
+* **High-Speed Direkt-Modus (SSL Port 563 auf starken Servern / 6+ vCPUs):**
+  * **Vollgas statt Schongang:** Wer einen modernen Server mit 6+ Kernen betreibt und direkt per SSL verbindet, muss nichts drosseln!
+  * Dank Hardware-SIMD-Beschleunigung (`sabctools`) skaliert SABnzbd mühelos auf **50 Verbindungen**: Wir messen **363,3 MB/s Netto-Download (~3 Gbit/s)** – eine 1 GB Datei ist in **2 Sekunden** auf der SSD, während die CPU bei entspannten **~28 % Last** bleibt!
+
+> [!TIP]
+> **Praxis-Konfiguration für maximale Performance:**
+> * Läuft dein Downloader über **VPN (Gluetun)**: Trage **20 Verbindungen** ein.
+> * Läuft dein Downloader **Direkt über SSL (Port 563)** und dein Server hat ausreichend Power (4–6+ vCPUs): Trage **50 Verbindungen** (oder das Provider-Maximum) ein und hole das absolute Leitungs- und Servermaximum heraus!
 
 ---
 
@@ -87,22 +90,22 @@ Unsere Messungen zeigen, wie stark Hardware-Dimensionierung und Netzwerk-Modus d
 | **Cloud VPS (2 vCPU AMD)** | **SABnzbd** | **30** | **46,8 MB/s (-27 % Einbruch)** | **21,4 s** | ~85 % (Thread Overload) |
 
 #### B. Skalierter Cloud VPS (6 vCPU / 8 GB RAM): No-VPN Direkt vs. Gluetun VPN
-| Modus | Downloader | Verbindungen | Netto-Durchsatz | Downloadzeit | CPU-Auslastung | Besonderheit |
+| Modus | Downloader | Verbindungen | Netto-Durchsatz | Downloadzeit | CPU-Auslastung | Performance-Bewertung |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
 | **Gluetun (WireGuard)** | SABnzbd | 8 | 55,6 MB/s | 17,0 s | ~36 % | VPN dämpft Single-Stream |
 | **Gluetun (WireGuard)** | SABnzbd | 12 | 80,4 MB/s | 12,0 s | ~46 % | Gute Steigerung |
-| **Gluetun (WireGuard)** | SABnzbd | **16–20** | **92,3–93,0 MB/s** | **10,0 s** | **~52 %** | ⭐ **VPN Sweet-Spot (~750 Mbit/s)** |
-| **Gluetun (WireGuard)** | SABnzbd | 30–40 | 90,0–97,6 MB/s | 10,0 s | ~54 % | VPN-Server-Plateau |
+| **Gluetun (WireGuard)** | SABnzbd | **16–20** | **92,3–93,0 MB/s** | **10,0 s** | **~52 %** | 🔒 **VPN Maximum (~750 Mbit/s)** |
+| **Gluetun (WireGuard)** | SABnzbd | 30–40 | 90,0–97,6 MB/s | 10,0 s | ~54 % | VPN-Tunnel-Sättigung |
 | **Direkt (No-VPN SSL)** | SABnzbd | 8 | 73,5 MB/s | 13,0 s | ~19 % | Ungesättigt |
 | **Direkt (No-VPN SSL)** | SABnzbd | 16 | 190,6 MB/s | 5,0 s | ~29 % | Schneller als 1,5 Gbit/s |
-| **Direkt (No-VPN SSL)** | SABnzbd | **20** | **233,1 MB/s** | **4,0 s** | **~29 %** | ⭐ **Alltags-Sweet-Spot (~1,8 Gbit/s)** |
-| **Direkt (No-VPN SSL)** | SABnzbd | 30 | 331,8 MB/s | 2,0 s | ~29 % | Extremer Durchsatz (~2,7 Gbit/s) |
-| **Direkt (No-VPN SSL)** | SABnzbd | 50 | 363,3 MB/s | 2,0 s | ~29 % | Absolutes Maximum (~3 Gbit/s) |
+| **Direkt (No-VPN SSL)** | SABnzbd | 20 | 233,1 MB/s | 4,0 s | ~29 % | ~1,8 Gbit/s Netto |
+| **Direkt (No-VPN SSL)** | SABnzbd | 30 | 331,8 MB/s | 2,0 s | ~29 % | ~2,7 Gbit/s Netto |
+| **Direkt (No-VPN SSL)** | SABnzbd | **50** | **363,3 MB/s** | **2,0 s** | **~28 %** | 🚀 **Volle Sättigung (~3 Gbit/s Netto)** |
 
 ### 3. Zentrale Erkenntnisse
-1. **CPU-Flaschenhals eliminiert:** Auf 6 vCPUs bricht der Durchsatz bei 30+ Verbindungen nicht mehr ein. Die CPU bleibt dank Python-SIMD (`sabctools`) selbst bei 360 MB/s unter 30 % Last.
-2. **Der VPN-Flaschenhals:** Über WireGuard liegt der Sweet-Spot bei 16–20 Verbindungen (~93 MB/s). Mehr Verbindungen erhöhen nur die CPU-Kryptolast, überwinden aber nicht das Durchsatz-Limit des VPN-Tunnels.
-3. **Direkt-Modus (SSL Port 563):** Wer den VPN-Tunnel weglässt und auf die providerseitige SSL-Verschlüsselung setzt, spart die Hälfte an CPU-Ressourcen und erreicht bei schnellen Server-Anbindungen bis zu 360 MB/s (1 GB in 2 Sekunden).
+1. **CPU-Flaschenhals komplett weg:** Auf 6 vCPUs bricht nichts mehr ein. Selbst bei 50 Verbindungen und über 360 MB/s bleibt die CPU bei unter 30 % Last.
+2. **Der VPN-Flaschenhals:** Über WireGuard liegt das Limit bei ~93 MB/s. Mehr Verbindungen erzeugen nur unnötige CPU-Kryptolast im Tunnel.
+3. **Direkt-Modus (SSL Port 563):** Provider-seitiges SSL reicht für vollständige Privatsphäre völlig aus, spart 50 % CPU und katapultiert die Rate auf 363 MB/s (1.000 MB in 2 Sekunden).
 
 </details>
 
