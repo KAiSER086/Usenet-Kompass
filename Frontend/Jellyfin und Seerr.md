@@ -37,7 +37,24 @@ Füge den folgenden Codeblock in deine `docker-compose.yml` ein:
 
 > **Wichtiger Hinweis zu den Pfaden (TRaSH-Guides):** Wir binden `./data/media:/data/media` ein. Damit greift Jellyfin direkt auf die von Sonarr und Radarr einsortierten Filme (`/data/media/movies`) und Serien (`/data/media/tv`) zu.
 
-#### ⚡ Optional: Hardware-Transcoding mit Intel QuickSync (QSV) aktivieren
+### ⚙️ Transcoding-Strategie je nach Server-Klasse (Optimal abgestimmt)
+
+Je nachdem, auf welcher Hardware dein Stack läuft, solltest du Jellyfin passend konfigurieren, um Abstürze oder unnötige Belastungen zu vermeiden:
+
+* **Tier 1 (Budget VPS & RPi ohne GPU):**
+  * **Video-Transcoding verbieten:** Unter **Dashboard > Benutzer > [Benutzername] > Zugriff** den Haken bei *„Videowiedergabe, die eine Transkodierung erfordert, erlauben“* **deaktivieren**.
+  * Audio-Transkodierung und Remuxing (Container-Wechsel ohne Re-Encoding) aktiviert lassen. Fast alle modernen Endgeräte beherrschen Direct Play – so schützt du einen schwachen Server vor 100 % CPU-Last.
+* **Tier 2 (Intel N100 / Homeserver mit iGPU):**
+  * Nutze **Intel QuickSync (QSV)** (siehe Anleitung unten). Die integrierte GPU übernimmt mehrere 4K-Streams bei unter 10 Watt Leistungsaufnahme.
+* **Tier 3 (Power VPS / Dedicated Server ab 6 vCPUs):**
+  * **Transcoding-Cache im RAM (`tmpfs`):** Wenn viele Streams laufen oder Software-Transcoding genutzt wird, schreibe Transcode-Fragmente niemals auf die SSD, um Schreibzyklen zu sparen:
+    ```yaml
+    tmpfs:
+      - /config/cache/transcodes:size=1536M
+    ```
+  * 6+ vCPUs packen bei Bedarf 1–2 Streams problemlos in reiner Software (CPU), ohne dass das Gesamtsystem einfriert.
+
+#### ⚡ Option A: Hardware-Transcoding mit Intel QuickSync (QSV) aktivieren (Tier 2)
 
 Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, kann Jellyfin Videos extrem stromsparend über die integrierte Grafikeinheit transkodieren. Damit der Container mit deinem Benutzer (`PUID=1000`) auf die GPU zugreifen darf, benötigt er Zugriff auf die Gruppe `render`:
 
@@ -49,6 +66,16 @@ Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, 
    ```
 2. Trage die ausgegebene Zahl (z. B. `107`) bei `group_add` ein und aktiviere `devices` sowie `group_add` in der `docker-compose.yml`.
 3. In Jellyfin unter **Dashboard > Wiedergabe > Transkodierung** wählst du als Hardwarebeschleunigung **Intel QuickSync (QSV)** aus.
+
+#### 🚀 Option B: SSD-Schutz durch RAM-Cache (`tmpfs`) auf starken Servern (Tier 3)
+
+Auf Servern mit 8+ GB RAM empfiehlt es sich, das Transcode-Verzeichnis im Arbeitsspeicher abzulegen:
+```yaml
+    mem_limit: 4096m
+    tmpfs:
+      - /config/cache/transcodes:size=1536M
+```
+* **Effekt:** Transcode-Segmente werden blitzschnell im RAM gehalten und nach Wiedergabeende rückstandsfrei verworfen – die NVMe-SSD wird mit 0 MB Schreiblast geschont.
 
 ---
 
