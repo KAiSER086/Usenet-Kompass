@@ -40,33 +40,19 @@ Usenet-Downloads bestehen aus tausenden winzigen Segmenten (Artikeln), die paral
 
 ### 🔌 Wie viele Verbindungen sollte ich eintragen? (Warum weniger oft mehr ist)
 
-Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbindungen, also trage ich auch 50 ein.“*
+Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbindungen, also trage ich auch 50 ein.“* In der Praxis führt das auf vielen Systemen jedoch zum Gegenteil: **Der Download wird langsamer und die CPU überlastet.**
 
-In der Praxis führt das auf vielen Systemen jedoch zum genauen Gegenteil: **Der Download wird langsamer und die CPU überlastet.**
-
----
-
-#### 🧠 Warum zu viele Verbindungen kontraproduktiv sind
-
-Jede Verbindung ist ein eigener verschlüsselter TLS-Tunnel mit eigenen Datenpaketen und Bestätigungen. 
-
-1. **Das "Stau-auf-der-Autobahn"-Prinzip (Context Switching):**
-   * Wenn ein Server mit 2 oder 4 Kernen gleichzeitig 50 Verbindungen verwalten muss, ist der Prozessor fast nur noch damit beschäftigt, zwischen den 50 Aufgaben hin- und herzuwechseln (**Context Switching**), anstatt Daten zu schreiben.
-   * **In unseren Messungen:** Auf einem 2-vCPU-Server brach der Durchsatz beim Wechsel von 20 auf 30 Verbindungen um **27 % ein** (von 64 MB/s auf 46 MB/s), während die CPU-Last auf 85 % hochschoss.
-2. **Die Leitung ist sowieso voll:**
-   * An einem normalen Gigabit-Anschluss (1.000 Mbit/s) liefern **15 bis 20 Verbindungen bereits die vollen ~115 MB/s Netto** (100 % Leitungs-Maximum).
-   * 50 Verbindungen machen den Download an einer Gigabit-Leitung **keinen einzigen Millimeter schneller** – sie erzeugen lediglich unnötige Systemlast.
-
----
-
-#### 🎯 Die goldene Daumenregel für deine Einstellungen:
+> [!NOTE]
+> **Das „Stau-auf-der-Autobahn“-Prinzip (Context Switching):**  
+> Jede Verbindung ist ein eigener verschlüsselter TLS-Tunnel. Wenn ein Server mit wenigen Kernen (1–2 vCPUs) 50 Verbindungen verwalten muss, ist der Prozessor fast nur noch mit dem Hin- und Herwechseln zwischen den Aufgaben beschäftigt (**Context Switching**).  
+> **Das Messergebnis:** Auf einem 2-vCPU-Server brach der Durchsatz ab 20 Verbindungen um **27 % ein** (von 64 auf 46 MB/s), während die CPU auf 85 % hochschoss. Zudem liefern an einem normalen 1-Gbit/s-Anschluss bereits **15–20 Verbindungen die vollen ~115 MB/s Netto** – mehr Verbindungen machen die Leitung nicht schneller als voll.
 
 | Dein Setup | Empfohlene Verbindungen | Warum? |
 | :--- | :---: | :--- |
 | **Heimnetz / Gigabit (bis 1.000 Mbit/s)** | **15 – 20** | Reizt die Leitung zu 100 % aus bei minimaler CPU-Last. |
 | **Kleiner Server / VPS (1–2 vCPUs)** | **15** | Verhindert CPU-Überlastung und Einbrüche durch Thread-Wechsel. |
-| **VPN-Betrieb (Gluetun WireGuard)** | **15 – 20** | Mehr Verbindungen überwinden das VPN-Limit nicht, sondern fressen nur CPU. |
-| **Multi-Gigabit Cloud-Server (> 2,5 Gbit/s)** | **40 – 50** | Nur auf starken Servern (ab 6 Kernen) und Multi-Gigabit-Anbindung nötig, um 300+ MB/s zu ziehen. |
+| **VPN-Betrieb (Gluetun WireGuard)** | **15 – 20** | Mehr Verbindungen überwinden das VPN-Limit (~93 MB/s) nicht. |
+| **Multi-Gigabit Cloud-Server (> 2,5 Gbit/s)** | **40 – 50** | Nur auf starken Servern (ab 6 vCPUs) und Multi-Gigabit-Anbindung nötig, um 300+ MB/s zu ziehen. |
 
 > [!TIP]
 > **Praxis-Tipp:** Starte immer mit **15 Verbindungen**. Wenn du deine vertragliche Leitungsgeschwindigkeit erreichst, belasse es dabei! Erhöhe nur in 2er-Schritten, falls deine Leitung noch nicht voll ausgelastet wird.
