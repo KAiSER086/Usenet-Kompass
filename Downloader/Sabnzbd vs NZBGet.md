@@ -38,22 +38,38 @@ Usenet-Downloads bestehen aus tausenden winzigen Segmenten (Artikeln), die paral
 
 ---
 
-### 🔌 Verbindungen optimal einstellen: Das Maximum herausholen
+### 🔌 Wie viele Verbindungen sollte ich eintragen? (Warum weniger oft mehr ist)
 
-Ein alter Mythos besagt oft, dass man Verbindungen künstlich drosseln müsse. Unsere Messungen zeigen jedoch glasklar, worauf es ankommt: **Deine CPU-Power und der gewählte Netzwerkmodus.**
+Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbindungen, also trage ich auch 50 ein.“*
 
-* **VPN-Betrieb (Gluetun WireGuard):**
-  * Hier ist bei **16 bis 20 Verbindungen** die Obergrenze des Tunnels (~750–800 Mbit/s bzw. ~93 MB/s) erreicht. Mehr Verbindungen erhöhen lediglich die Krypto-Last der CPU, bringen aber keinen Durchsatzgewinn mehr.
-* **Kleine Server (2 vCPUs):**
-  * Auf extrem schwachen 2-vCPU-Systemen bricht der Durchsatz ab 20–30 Verbindungen durch Context-Switch-Overhead ein (-27 %). Hier bleibt 15–20 Verbindungen das Limit.
-* **High-Speed Direkt-Modus (SSL Port 563 auf starken Servern / 6+ vCPUs):**
-  * **Vollgas statt Schongang:** Wer einen modernen Server mit 6+ Kernen betreibt und direkt per SSL verbindet, muss nichts drosseln!
-  * Dank Hardware-SIMD-Beschleunigung (`sabctools`) skaliert SABnzbd mühelos auf **50 Verbindungen**: Wir messen **363,3 MB/s Netto-Download (~3 Gbit/s)** – eine 1 GB Datei ist in **2 Sekunden** auf der SSD, während die CPU bei entspannten **~28 % Last** bleibt!
+In der Praxis führt das auf vielen Systemen jedoch zum genauen Gegenteil: **Der Download wird langsamer und die CPU überlastet.**
+
+---
+
+#### 🧠 Warum zu viele Verbindungen kontraproduktiv sind
+
+Jede Verbindung ist ein eigener verschlüsselter TLS-Tunnel mit eigenen Datenpaketen und Bestätigungen. 
+
+1. **Das "Stau-auf-der-Autobahn"-Prinzip (Context Switching):**
+   * Wenn ein Server mit 2 oder 4 Kernen gleichzeitig 50 Verbindungen verwalten muss, ist der Prozessor fast nur noch damit beschäftigt, zwischen den 50 Aufgaben hin- und herzuwechseln (**Context Switching**), anstatt Daten zu schreiben.
+   * **In unseren Messungen:** Auf einem 2-vCPU-Server brach der Durchsatz beim Wechsel von 20 auf 30 Verbindungen um **27 % ein** (von 64 MB/s auf 46 MB/s), während die CPU-Last auf 85 % hochschoss.
+2. **Die Leitung ist sowieso voll:**
+   * An einem normalen Gigabit-Anschluss (1.000 Mbit/s) liefern **15 bis 20 Verbindungen bereits die vollen ~115 MB/s Netto** (100 % Leitungs-Maximum).
+   * 50 Verbindungen machen den Download an einer Gigabit-Leitung **keinen einzigen Millimeter schneller** – sie erzeugen lediglich unnötige Systemlast.
+
+---
+
+#### 🎯 Die goldene Daumenregel für deine Einstellungen:
+
+| Dein Setup | Empfohlene Verbindungen | Warum? |
+| :--- | :---: | :--- |
+| **Heimnetz / Gigabit (bis 1.000 Mbit/s)** | **15 – 20** | Reizt die Leitung zu 100 % aus bei minimaler CPU-Last. |
+| **Kleiner Server / VPS (1–2 vCPUs)** | **15** | Verhindert CPU-Überlastung und Einbrüche durch Thread-Wechsel. |
+| **VPN-Betrieb (Gluetun WireGuard)** | **15 – 20** | Mehr Verbindungen überwinden das VPN-Limit nicht, sondern fressen nur CPU. |
+| **Multi-Gigabit Cloud-Server (> 2,5 Gbit/s)** | **40 – 50** | Nur auf starken Servern (ab 6 Kernen) und Multi-Gigabit-Anbindung nötig, um 300+ MB/s zu ziehen. |
 
 > [!TIP]
-> **Praxis-Konfiguration für maximale Performance:**
-> * Läuft dein Downloader über **VPN (Gluetun)**: Trage **20 Verbindungen** ein.
-> * Läuft dein Downloader **Direkt über SSL (Port 563)** und dein Server hat ausreichend Power (4–6+ vCPUs): Trage **50 Verbindungen** (oder das Provider-Maximum) ein und hole das absolute Leitungs- und Servermaximum heraus!
+> **Praxis-Tipp:** Starte immer mit **15 Verbindungen**. Wenn du deine vertragliche Leitungsgeschwindigkeit erreichst, belasse es dabei! Erhöhe nur in 2er-Schritten, falls deine Leitung noch nicht voll ausgelastet wird.
 
 ---
 
