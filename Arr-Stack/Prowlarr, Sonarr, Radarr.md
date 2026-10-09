@@ -162,6 +162,22 @@ Deutsche Indexer strukturieren Releases häufig über spezifische Newznab-Katego
 
 ### 6.3.2 Sonarr & Radarr einrichten
 
+> [!TIP]
+> #### ⚡ Automatisches 10-Sekunden-Setup mit `link-apps.sh` (Empfohlen)
+> Wenn du dir das manuelle Anlegen von Root-Ordnern, Download-Clients, API-Verknüpfungen und das mühsame Abtippen von Custom Formats sparen möchtest, nutze unser mitgeliefertes Automatisierungs-Skript:
+> ```bash
+> chmod +x link-apps.sh
+> ./link-apps.sh
+> ```
+> **Was das Skript vollautomatisch für dich erledigt:**
+> * Liest alle API-Keys (Sonarr, Radarr, Prowlarr, Downloader) direkt aus den Konfigurationsdateien aus.
+> * Verknüpft Prowlarr mit Sonarr & Radarr (`fullSync` inklusive aller DACH-Kategorien).
+> * Bindet SABnzbd/NZBGet inklusive korrekter Kategorien (`movies` / `tv`) in Sonarr & Radarr ein.
+> * Hinterlegt die standardisierten Root-Ordner (`/data/media/movies` und `/data/media/tv`).
+> * Richtet das TRaSH-Naming-Scheme und deutsche Custom Formats (`German DL` +1500, `German` +1000) vollständig schlüsselfertig ein.
+>
+> *(Wer die Konfiguration dennoch manuell Schritt für Schritt nachvollziehen möchte, folgt der Anleitung unten).*
+
 * **Webinterfaces öffnen:**
   * **Sonarr:** `http://<deine-tailscale-ip>:8989`
   * **Radarr:** `http://<deine-tailscale-ip>:7878`

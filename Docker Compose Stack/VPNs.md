@@ -11,7 +11,7 @@ Usenet-Verbindungen werden standardmäßig über **SSL/TLS (Port 563)** aufgebau
 | Kriterium | Direktanbindung (Ohne VPN) | Mit VPN (Gluetun-Tunneling) |
 | :--- | :--- | :--- |
 | **Verschlüsselung** | **SSL/TLS (Port 563)** direkt zum Usenet-Server. | Doppelte Verschlüsselung: **WireGuard/OpenVPN** + SSL/TLS. |
-| **Download-Performance** | **100 % native Leitungsgeschwindigkeit**, keine MTU-Reduktion (1500), 0 % CPU-Overhead für Tunnel-Kryptographie. | Bis zu 100 % bei WireGuard; mögliche Einbußen bei vielen parallelen Verbindungen oder schwachen Kernen. |
+| **Download-Performance** | **100 % native Leitungsgeschwindigkeit**, keine MTU-Reduktion (1500), 0 % CPU-Overhead. Skaliert auf schnellen Servern bis **360+ MB/s (~3 Gbit/s)**. | Durch WireGuard-Kryptografie gedeckelt bei ca. **90–95 MB/s (Einbuße um 60–75 %)** gegenüber ungetunneltem SSL. |
 | **Kosten** | **0 €** (kein VPN-Abonnement erforderlich). | Kosten für einen VPN-Anbieter (z. B. Mullvad, ProtonVPN). |
 | **Sichtbarkeit gegenüber ISP** | ISP sieht Datenaustausch mit News-Server-IP (Inhalte & Dateinamen bleiben unsichtbar). | ISP sieht ausschließlich verschlüsselten UDP-Traffic zum VPN-Server. |
 | **Schutz vor ISP-Drosselung** | Abhängig vom ISP; einige Anbieter drosseln Usenet-Traffic in Stoßzeiten. | Wirksam: ISP kann Usenet-Pakete nicht identifizieren oder drosseln. |
