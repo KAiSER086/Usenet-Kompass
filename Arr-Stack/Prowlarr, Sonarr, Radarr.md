@@ -4,7 +4,7 @@
 
 Die **"Arr"-Apps** (Prowlarr, Radarr, Sonarr etc.) bilden das automatische Kontrollzentrum deines privaten Medienservers. Sie eliminieren das fehleranfällige manuelle Suchen, Herunterladen, Entpacken und Einsortieren von Medien:
 
-* **Prowlarr:** Der zentrale Proxy und Indexer-Manager. Du hinterlegst deine Usenet-Indexer (z. B. *Treasure-Maps*, *NewzBay*, *NZBGeek*, *DrunkenSlug*) nur ein einziges Mal in Prowlarr. Die App testet die Schnittstellen, überwacht API-Limits und synchronisiert die Such- und RSS-Feeds vollautomatisch mit Sonarr und Radarr.
+* **Prowlarr:** Der zentrale Proxy und Indexer-Manager. Du hinterlegst deine Usenet-Indexer (z. B. *Treasure-Maps*, *videothek.io*, *NewzBay*, *NZBGeek*, *DrunkenSlug*) nur ein einziges Mal in Prowlarr. Die App testet die Schnittstellen, überwacht API-Limits und synchronisiert die Such- und RSS-Feeds vollautomatisch mit Sonarr und Radarr.
 * **Radarr:** Der spezialisierte Film-Manager. Radarr überwacht Wunschlisten, sucht anhand konfigurierter Qualitäts- und Sprachprofile nach Veröffentlichungen, übergibt NZB-Dateien an den Downloader (SABnzbd oder NZBGet) und importiert den fertigen Film nach Abschluss strukturiert in deine Mediathek.
 * **Sonarr:** Der Serien-Manager. Identisch im Konzept zu Radarr, aber optimiert für die komplexe Episoden- und Staffel-Logik von TV-Serien, Daily Shows und Anime (inkl. Staffelpakete, automatische Umbenennung und Qualitäts-Upgrades bei besseren Releases).
 

@@ -10,6 +10,7 @@
 [![Tailscale](https://img.shields.io/badge/Mesh%20VPN-Tailscale-2C5EAA?style=for-the-badge&logo=tailscale&logoColor=white)](https://tailscale.com/)
 [![WireGuard](https://img.shields.io/badge/Tunnel-WireGuard-88171A?style=for-the-badge&logo=wireguard&logoColor=white)](https://www.wireguard.com/)
 [![GitHub Stars](https://img.shields.io/github/stars/KAiSER086/Usenet-Kompass?style=for-the-badge&color=E3B341&logo=github)](https://github.com/KAiSER086/Usenet-Kompass/stargazers)
+[![GitHub Discussions](https://img.shields.io/badge/Discussions-Hilfe%20%26%20Austausch-0969DA?style=for-the-badge&logo=github)](https://github.com/KAiSER086/Usenet-Kompass/discussions)
 [![License: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 <br>
@@ -95,13 +96,14 @@ flowchart LR
 | Kapitel | Leitfaden | Kerninhalte |
 |:---:|:---|:---|
 | **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Hardware-Wahl (Pi 5, Mini-PC oder Cloud VPS), Transkodierung, SSL/TLS vs. VPN |
-| **`2.0`** | **[Provider & Indexer](Provider%20%26%20Indexer/Provider%20%26%20Indexer.md#20-provider-und-indexer)** | Retention, Backbones, Block-Accounts, deutsche Indexer (*Treasure-Maps*, *NewzBay*) |
+| **`2.0`** | **[Provider & Indexer](Provider%20%26%20Indexer/Provider%20%26%20Indexer.md#20-provider-und-indexer)** | Retention, Backbones, Block-Accounts, deutsche Indexer (*Treasure-Maps*, *videothek.io*, *NewzBay*) |
 | **`3.0`** | **[Docker Vorbereitung](Docker%20Compose%20Stack/Docker%20Compose%20Stack.md#30-der-docker-compose-stack)** | Container-Grundlagen, Installation unter Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch |
 | **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-netzwerk--und-vpn-konfiguration)** | Direktanbindung vs. VPN (Gluetun), LAN-Bypass und Tailscale-Einbindung |
 | **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | Vergleich von SABnzbd und NZBGet, Direct Unpack, I/O-Tuning und Benchmarks |
 | **`6.0`** | **[Automatisierung](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr-Sync, standardisierte Speicherpfade (`/data`), German DL Custom Formats |
 | **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Seerr.md#70-jellyfin--seerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Seerr |
 | **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige `docker-compose.yml`-Vorlagen (mit/ohne VPN), Wartung, Updates & Backup |
+| **`9.0`** | **[FAQ & Troubleshooting](FAQ/FAQ.md#90-faq--fehlerbehebung-troubleshooting)** | Lösungen für häufige Fehler: ExFAT/NTFS-Rechte, Gluetun-Ports, Host-Header, Atomic Moves |
 | **`Glossar`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Fachbegriffe verständlich erklärt: Retention, PAR2, Remux, German DL, Newznab |
 
 ---
@@ -163,6 +165,8 @@ chmod +x link-apps.sh
 ---
 
 <div align="center">
+
+### ⭐ Unterstütze das Projekt
 
 Wenn dir das Projekt hilft, freue ich mich über einen Stern auf GitHub.
 

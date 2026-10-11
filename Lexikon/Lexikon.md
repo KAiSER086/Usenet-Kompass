@@ -53,4 +53,4 @@
 
 | ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**8.0 Finaler Stack**](../Docker%20Compose%20Stack/Finaler%20Stack.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) ➔ |
+| ⬅️ [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) ➔ |

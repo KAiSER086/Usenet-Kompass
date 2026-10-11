@@ -100,6 +100,7 @@ Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbi
 ### 3. Erkenntnisse
 1. **SABnzbd vs. NZBGet auf Multi-Core (6 vCPUs):**
    * **Warum waren beide auf dem Raspberry Pi 5 gleich schnell?** Auf dem Pi limitierte die **500-Mbit/s-Internetleitung** (physikalische Netto-Grenze bei ~59,3 MB/s) beide Downloader gleichermaßen. Keines der Programme kam dort an sein Rechen- oder Durchsatzlimit.
+   * **Skaliert der Raspberry Pi 5 an Gigabit?** Ja, an einem 1-Gbit/s-Anschluss lastet der Raspberry Pi 5 (mit NVMe-SSD) die vollen ~112–115 MB/s Netto-Downloadrate problemlos aus.
    * **Warum deklassiert SABnzbd NZBGet auf dem 6-vCPU-Server?** Bei offener Multi-Gigabit-Anbindung im Rechenzentrum entscheidet die Software-Architektur: SABnzbds moderne C-SIMD-Engine (`sabctools` mit AVX2), aggressives TCP-Window-Scaling und der konfigurierte RAM-Schreibcache schöpfen 50 Verbindungen linear bis auf **363,3 MB/s** aus. NZBGet hingegen stößt bei vielen parallelen SSL-Sockets an Thread-/Lock-Grenzen (**135,8 MB/s bei 50 Verbindungen** – SABnzbd ist fast **3x so schnell**).
 2. **VPN-Leistungsverlust ermittelt (-60 % bis -74 %):**
    * Bei identischen **20 Verbindungen** sinkt die Downloadrate durch den WireGuard-Tunnel von **233,1 MB/s auf 93,0 MB/s – ein Einbruch um exakt 60,1 %** bei doppelter CPU-Last (~52 % statt ~29 %).

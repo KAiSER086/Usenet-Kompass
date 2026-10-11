@@ -390,4 +390,4 @@ Im Falle einer Server-Neuinstallation oder eines Hardware-Wechsels entpackst du 
 
 | ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**7.0 Frontend**](../Frontend/Jellyfin%20und%20Seerr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**Glossar: Usenet-Lexikon**](../Lexikon/Lexikon.md) ➔ |
+| ⬅️ [**7.0 Frontend**](../Frontend/Jellyfin%20und%20Seerr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) ➔ |
