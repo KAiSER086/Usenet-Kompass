@@ -1,6 +1,6 @@
 # 5.0 Usenet Downloader: SABnzbd vs. NZBGet
 
-Nachdem dein sicheres Netzwerk mit Gluetun und Tailscale steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier die beiden führenden Optionen vor – **SABnzbd** (unsere Standard-Empfehlung) und **NZBGet** (die leichtgewichtige Alternative für speicherarme Systeme).
+Nachdem dein Netzwerk (wahlweise mit Gluetun und Tailscale oder als reines lokales Setup) steht, geht es an das Herzstück deines Setups: den Usenet-Downloader. Wir stellen dir hier die beiden führenden Optionen vor – **SABnzbd** (unsere Standard-Empfehlung) und **NZBGet** (die leichtgewichtige Alternative für speicherarme Systeme).
 
 ---
 

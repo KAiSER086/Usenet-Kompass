@@ -1,6 +1,6 @@
 # 4.0 Netzwerk- und VPN-Konfiguration
 
-Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, widmen wir uns der Netzwerkarchitektur deines Stacks. Hierbei hast du die freie Wahl zwischen zwei bewährten Ansätzen: **Direktanbindung ohne VPN** oder **zusätzliches VPN-Tunneling mit Gluetun**. Anschließend richten wir den sicheren Fernzugriff via **Tailscale** ein.
+Nachdem wir die zentralen Konzepte verstanden und Docker Compose eingerichtet haben, widmen wir uns der Netzwerkarchitektur deines Stacks. Hierbei hast du die freie Wahl zwischen zwei bewährten Ansätzen: **Direktanbindung ohne VPN** oder **zusätzliches VPN-Tunneling mit Gluetun**. Bei Bedarf richten wir anschließend optional den sicheren Fernzugriff via **Tailscale** ein.
 
 ---
 
@@ -25,7 +25,7 @@ Usenet-Verbindungen werden standardmäßig über **SSL/TLS (Port 563)** aufgebau
   * Du maximale Übertragungsraten und minimale Systemkomplexität anstrebst.
   * Dein Internetanbieter keine gezielten Drosselungen für Usenet-Ports vornimmt.
   * Du auf ein zusätzliches monatliches VPN-Abonnement verzichten möchtest.
-  * *Hinweis:* Du kannst in diesem Fall direkt mit **[Kapitel 4.3: Tailscale für sicheren Fernzugriff](#43-tailscale-dienst-auf-dem-host-system-hinzufügen)** fortfahren und den Gluetun-Schritt überspringen!
+  * *Hinweis:* Du kannst in diesem Fall den Gluetun-Schritt überspringen! Wenn du auch keinen Fernzugriff von unterwegs benötigst, überspringst du ebenso Tailscale ([Kapitel 4.3](#43-optional-tailscale-dienst-auf-dem-host-system-hinzufügen)) und betreibst den Stack als reines, lokales Minimal-Setup im eigenen Heimnetzwerk.
 
 * **Wähle VPN (Gluetun), wenn:**
   * Du deinen gesamten Usenet- und Indexer-Traffic gegenüber deinem Provider vollständig maskieren möchtest.
@@ -143,9 +143,13 @@ Die angezeigte IP-Adresse muss nun mit der deines gewählten VPN-Servers überei
 
 ---
 
-## 4.3 Tailscale-Dienst auf dem Host-System hinzufügen
+## 4.3 Optional: Tailscale-Dienst auf dem Host-System hinzufügen
 
-Nachdem das VPN-Fundament steht, richten wir den sicheren Fernzugriff ein. Tailscale installieren wir direkt auf dem Host-System. So kannst du zuverlässig auf den Server zugreifen, ohne dass es zu Routing-Konflikten mit Docker oder Gluetun kommt.
+> [!NOTE]
+> **Reiner Heimnetz-Betrieb?**  
+> Wenn du deine Medien und Webinterfaces ausschließlich zu Hause im lokalen WLAN/LAN nutzen möchtest und keinen Zugriff von unterwegs benötigst, ist dieser Schritt **vollständig optional**. Du kannst Tailscale einfach überspringen und direkt mit [Kapitel 5.0 (Usenet Downloader)](../Downloader/Sabnzbd%20vs%20NZBGet.md) fortfahren. Alle Webinterfaces erreichst du lokal ganz normal über die IP-Adresse deines Servers (z. B. `http://192.168.178.50:8080`).
+
+Nachdem das Netzwerk steht, richten wir bei Bedarf den sicheren Fernzugriff ein. Tailscale installieren wir direkt auf dem Host-System. So kannst du zuverlässig auf den Server zugreifen, ohne dass es zu Routing-Konflikten mit Docker oder Gluetun kommt.
 
 **Tailscale installieren:** Öffne ein Terminal auf deinem Host-System und führe folgenden Befehl aus:
 

@@ -77,6 +77,11 @@ Für diesen Guide empfiehlt sich eine schlanke Linux-Distribution wie **DietPi**
 * **Vorteile:** Keine Hardware-Anschaffungskosten, professionelles Hosting im Rechenzentrum mit garantierter Gigabit- oder Multi-Gigabit-Anbindung (oft 1–2,5 Gbit/s symmetrisch) und fester öffentlicher IP. Perfekt, wenn das heimische Internet zu langsam ist oder der private Router nicht durch 24/7-Downloads ausgelastet werden soll.
 * **Typisches Setup:** Instanzen mit 2–6+ vCPUs (z. B. AMD EPYC bei Hetzner Cloud, Netcup etc.) und NVMe-Speicher. Auf leistungsstarken Systemen lassen sich Usenet-Downloads direkt über SSL (Port 563) mit maximalen Durchsätzen von über 360 MB/s betreiben.
 
+#### 🗄️ Option 4: Bestehendes NAS (Synology, QNAP, Unraid, TrueNAS)
+
+* **Vorteile:** Wer bereits ein 24/7 laufendes NAS besitzt, kann den Stack direkt darauf betreiben (z. B. via *Container Manager* ab DSM 7.2 auf Synology oder Docker Compose auf Unraid/TrueNAS), ohne zusätzliche Hardware anschaffen zu müssen.
+* **Beachte:** Günstige Einsteiger-NAS nutzen oft sparsame ARM- oder Celeron-Prozessoren, die bei parallelem Entpacken (PAR2/RAR) oder Video-Transkodierung in Jellyfin an ihre Leistungsgrenzen stoßen. Viele Nutzer kombinieren daher ihr NAS als reinen Netzwerkspeicher mit einem günstigen N100 Mini-PC oder Raspberry Pi 5 für die eigentliche Rechenlast.
+
 ---
 
 ### Was ist Transkodierung und wann ist sie nötig?
