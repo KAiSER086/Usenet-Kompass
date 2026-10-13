@@ -42,7 +42,7 @@ Ein Indexer ist die Suchmaschine für das Usenet. Da moderne Uploads verschlüss
 #### Private Indexer mit Fokus auf deutschem Content
 
 * **Treasure-Maps (ehemals SceneNZBs):** Der wichtigste und umfangreichste Indexer für deutsche Produktionen, Synchronisationen und German DL Releases. Die Registrierung ist in der Regel dauerhaft geöffnet.
-* **videothek.io:** Etablierter Indexer mit starkem Fokus auf deutschem Content (Filme und Serien). Die Registrierung ist offen und er bietet hervorragende Prowlarr- und Newznab-API-Unterstützung.
+* **videothek.io:** Etablierter Indexer mit starkem Fokus auf deutschsprachigem Content. Nach einem umfassenden Relaunch bietet die Plattform eine moderne Web-UI und deckt neben Filmen und Serien nun auch Audio-Inhalte (Musik und Hörbücher) ab. Die Registrierung ist offen und er bietet hervorragende Prowlarr- und Newznab-API-Unterstützung.
 * **NewzBay:** Spezialisiert auf deutschen Content. Die Registrierung ist meist geschlossen (Zugang nur via User-Invite).
 * **NZB.life:** Gute Ergänzung für deutschsprachige Veröffentlichungen.
 
@@ -58,6 +58,6 @@ Zu den bekanntesten deutschen Boards zählen **Fileleechers**, **Sky of Usenet**
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**3.0 Docker Stack**](../Docker%20Compose%20Stack/Docker%20Compose%20Stack.md) ➔ |
+| [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**3.0 Docker Stack**](../Docker%20Compose%20Stack/Docker%20Compose%20Stack.md) |

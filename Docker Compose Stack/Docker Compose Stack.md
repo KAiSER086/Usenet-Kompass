@@ -139,7 +139,7 @@ In den Compose-Vorlagen sieht ein Port-Mapping daher so aus:
 
 * **Linke Seite (Host-Port, variabel in `.env`):** Bestimmt, unter welchem Port dein Server Anfragen von außen empfängt (z. B. dein Browser unter `http://server-ip:8085`).
 * **Rechte Seite (Container-Port, fest):** Der unveränderliche Standardport, auf dem die Software intern im Container lauscht (z. B. intern immer `8080`).
-* **Einfach veranschaulicht (Wie eine Weiche):** Du sagst Docker damit im Grunde: *„Empfange Signale von außen über Port 8085 und leite sie intern im Container an Port 8080 weiter.“* Der Dienst im Container bekommt davon gar nichts mit und arbeitet ganz normal auf seinem Standardport. So kannst du Portkonflikte kinderleicht über deine `.env` lösen, ohne die Compose-Vorlagen bearbeiten zu müssen! Container-interne Verbindungen (wie Sonarr ➔ SABnzbd) sprechen den Dienst weiterhin direkt über dessen Standardport an.
+* **Einfach veranschaulicht (Wie eine Weiche):** Du sagst Docker damit im Grunde: *„Empfange Signale von außen über Port 8085 und leite sie intern im Container an Port 8080 weiter.“* Der Dienst im Container bekommt davon gar nichts mit und arbeitet ganz normal auf seinem Standardport. So kannst du Portkonflikte kinderleicht über deine `.env` lösen, ohne die Compose-Vorlagen bearbeiten zu müssen! Container-interne Verbindungen (wie Sonarr -> SABnzbd) sprechen den Dienst weiterhin direkt über dessen Standardport an.
 
 ### Schutz vor vollen Festplatten (Docker Log-Rotation)
 Docker speichert Container-Logs standardmäßig unbegrenzt. Läuft ein Downloader oder Arr-Dienst über längere Zeit, können Logs gigabyteweise Speicherplatz füllen und insbesondere auf SD-Karten (z. B. beim Raspberry Pi) oder kleinen SSDs zum Systemstillstand führen.
@@ -157,6 +157,6 @@ Damit ist garantiert, dass ein Dienst niemals mehr als 30 MB (3 Dateien à 10 MB
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**2.0 Provider & Indexer**](../Provider%20%26%20Indexer/Provider%20%26%20Indexer.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**4.0 VPNs & Mesh-Netzwerke**](VPNs.md) ➔ |
+| [**2.0 Provider & Indexer**](../Provider%20%26%20Indexer/Provider%20%26%20Indexer.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**4.0 VPNs & Mesh-Netzwerke**](VPNs.md) |
