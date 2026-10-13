@@ -2,7 +2,7 @@
 
 # Usenet-Kompass
 
-**Der umfassende deutsche Leitfaden für automatisierte Usenet-Downloads, Medienserver und Heimkino mit Docker Compose.**
+**Der umfassende deutsche Usenet Guide: Docker Compose Stack, Medienserver & Heimkino-Automatisierung.**
 
 [![CI & Distro Portability Matrix](https://img.shields.io/github/actions/workflow/status/KAiSER086/Usenet-Kompass/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI%20Matrix)](https://github.com/KAiSER086/Usenet-Kompass/actions/workflows/ci.yml)
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -17,7 +17,7 @@
 
 <p align="center">
   <b>Sicher & Anonym &nbsp;•&nbsp; Ressourceneffizient &nbsp;•&nbsp; Vollautomatisiert</b><br>
-  <i>Vom ersten Provider-Account bis zur einsatzbereiten Mediathek mit Jellyfin & Seerr.</i>
+  <i>Der moderne Usenet Docker Guide – vom ersten Provider bis zur fertigen Mediathek mit Jellyfin & Seerr.</i>
 </p>
 
 ---
@@ -25,17 +25,18 @@
 </div>
 
 > [!NOTE]
-> **Ressourcenoptimiert für Dauerbetrieb:** Dieses Setup ist für den zuverlässigen, lautlosen 24/7-Betrieb mit minimalem Stromverbrauch konzipiert – optimiert für **Raspberry Pi 5**, stromsparende Mini-PCs (z. B. Intel N100) sowie gängige Linux-Distributionen (Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch Linux).
+> **Ressourcenoptimiert für Dauerbetrieb:** Dieses Setup ist für den zuverlässigen, lautlosen 24/7-Betrieb mit minimalem Stromverbrauch konzipiert – optimiert für **Raspberry Pi 5**, stromsparende Mini-PCs (z. B. Intel N100), **NAS-Systeme** (Synology, Unraid, TrueNAS) sowie gängige Linux-Distributionen (Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch Linux).
 
 ## Über dieses Projekt
 
-Der **Usenet-Kompass** führt Schritt für Schritt zum privaten Medien-Setup. Alle Dienste laufen isoliert in Docker-Containern und greifen nahtlos ineinander:
+Der **Usenet-Kompass** ist dein umfassender **Usenet Docker Guide** für das private Medien-Setup. Alle Dienste laufen isoliert in Docker-Containern und greifen nahtlos ineinander:
 
-* **Privatsphäre & Sicherheit:** VPN-Tunnelung mit Gluetun (WireGuard mit Kill-Switch) und SSL/TLS-verschlüsselte Verbindungen zum Usenet-Provider.
-* **Sicherer Fernzugriff (Optional):** Zugriff von unterwegs über Tailscale Mesh-VPN ohne offene Ports oder Portweiterleitungen am Heimrouter.
+* **Flexibles Netzwerk:** Wahlweise als reines lokales Heimnetz-Setup, mit SSL/TLS-Direktanbindung oder maximal abgesichert über VPN (Gluetun mit Kill-Switch).
+* **Sicherer Fernzugriff (Optional):** Optionaler Zugriff von unterwegs über Tailscale Mesh-VPN – komplett ohne offene Ports oder Portweiterleitungen am Heimrouter.
 * **Vollständige Automatisierung:** Medienanfragen über Seerr werden automatisch an Sonarr & Radarr übergeben und über NZBGet oder SABnzbd heruntergeladen.
 * **Effiziente Dateiverwaltung:** Standardisierte Verzeichnisstruktur nach TRaSH-Guides – fertige Downloads werden verzögerungsfrei und ohne doppelte Schreiblast in die Mediathek verschoben.
 * **Fokus auf deutsche Inhalte:** Vorkonfigurierte Profile und Custom Formats für deutsche Tonspuren und zweisprachige Veröffentlichungen (German DL).
+* **Ruckelfreies Heimkino:** Praxiserprobte Codec-Empfehlungen (H.264, HEVC, AV1) und Client-Tipps zur Vermeidung von unnötiger Transkodierung und Pufferung.
 
 ---
 
@@ -95,15 +96,15 @@ flowchart LR
 
 | Kapitel | Leitfaden | Kerninhalte |
 |:---:|:---|:---|
-| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Hardware-Wahl (Pi 5, Mini-PC oder Cloud VPS), Transkodierung, SSL/TLS vs. VPN |
+| **`1.0`** | **[Grundlagen](Grundlagen/Grundlagen.md#10-grundlagen)** | Usenet-Funktionsweise, Releasenamen entschlüsseln, Hardware-Wahl (inkl. NAS), Codecs (H.264/HEVC/AV1) |
 | **`2.0`** | **[Provider & Indexer](Provider%20%26%20Indexer/Provider%20%26%20Indexer.md#20-provider-und-indexer)** | Retention, Backbones, Block-Accounts, deutsche Indexer (*Treasure-Maps*, *videothek.io*, *NewzBay*) |
 | **`3.0`** | **[Docker Vorbereitung](Docker%20Compose%20Stack/Docker%20Compose%20Stack.md#30-der-docker-compose-stack)** | Container-Grundlagen, Installation unter Debian, Ubuntu, DietPi, Fedora, openSUSE, Arch |
 | **`4.0`** | **[VPN & Netzwerk](Docker%20Compose%20Stack/VPNs.md#40-netzwerk--und-vpn-konfiguration)** | Direktanbindung vs. VPN (Gluetun), LAN-Bypass und optionaler Tailscale-Fernzugriff |
 | **`5.0`** | **[Usenet Downloader](Downloader/Sabnzbd%20vs%20NZBGet.md#50-usenet-downloader-sabnzbd-vs-nzbget)** | Vergleich von SABnzbd und NZBGet, Direct Unpack, I/O-Tuning und Benchmarks |
 | **`6.0`** | **[Automatisierung](Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md#60-prowlarr-sonarr-und-radarr)** | Prowlarr-Sync, standardisierte Speicherpfade (`/data`), German DL Custom Formats |
-| **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Seerr.md#70-jellyfin--seerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Hardware-Transkodierung (Intel QuickSync / VAAPI) & Seerr |
+| **`7.0`** | **[Streaming & Requests](Frontend/Jellyfin%20und%20Seerr.md#70-jellyfin--seerr-das-frontend-deiner-mediathek)** | Jellyfin Einrichtung, Client-Empfehlungen (Moonfin, Infuse, Wholphin), Hardware-Transkodierung & Seerr |
 | **`8.0`** | **[Der finale Stack](Docker%20Compose%20Stack/Finaler%20Stack.md#80-der-komplette-docker-stack)** | Vollständige `docker-compose.yml`-Vorlagen (mit/ohne VPN), Wartung, Updates & Backup |
-| **`9.0`** | **[FAQ & Troubleshooting](FAQ/FAQ.md#90-faq--fehlerbehebung-troubleshooting)** | Lösungen für häufige Fehler: ExFAT/NTFS-Rechte, Gluetun-Ports, Host-Header, Atomic Moves |
+| **`9.0`** | **[FAQ & Troubleshooting](FAQ/FAQ.md#90-faq--fehlerbehebung-troubleshooting)** | Lösungen für häufige Fehler: ExFAT/NTFS-Rechte, Gluetun-Ports, Pufferung & Ruckeln, Host-Header |
 | **`Glossar`** | **[Usenet-Lexikon](Lexikon/Lexikon.md#usenet-lexikon)** | Fachbegriffe verständlich erklärt: Retention, PAR2, Remux, German DL, Newznab |
 
 ---
@@ -122,8 +123,8 @@ curl -fsSL https://raw.githubusercontent.com/KAiSER086/Usenet-Kompass/main/insta
 * **Betriebssystem- & Paketprüfung:** Erkennt die Linux-Distribution (Debian, Ubuntu, DietPi, Arch Linux, Fedora, openSUSE, Alpine etc.) und richtet Docker sowie Docker Compose automatisch über den passenden Paketmanager ein.
 * **Hardwarebeschleunigung:** Erkennt vorhandene Grafikchipsätze (Intel QuickSync / VAAPI via `/dev/dri`) und bindet sie für Jellyfin ein.
 * **Downloader-Wahl:** Bietet die freie Wahl zwischen SABnzbd und NZBGet.
-* **Flexible Netzwerkarchitektur:** Unterstützt sowohl Direktanbindung via SSL/TLS (Port 563) als auch VPN-Tunneling via Gluetun (inkl. automatischem Leak-Test).
-* **Automatisches App-Linking & TRaSH-Provisioning (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander (`fullSync`), bindet Downloader an, konfiguriert das TRaSH Naming Scheme und richtet deutsche Custom Formats (`German DL` +1500, `German` +1000) inklusive Quality-Profile-Scoring vollautomatisch ein.
+* **Flexible Netzwerkarchitektur:** Unterstützt sowohl Direktanbindung via SSL/TLS (Port 563) als auch VPN-Tunneling via Gluetun (inkl. automatischem Leak-Test) sowie optionalen Tailscale-Fernzugriff.
+* **Automatisches App-Linking & TRaSH-Provisioning (`link-apps.sh`):** Liest API-Keys von Sonarr, Radarr und Prowlarr aus, synchronisiert die Dienste untereinander (`fullSync`), bindet Downloader an, konfiguriert das TRaSH Naming Scheme, hinterlegt DACH-Sync-Kategorien (u. a. für *Treasure-Maps* & *videothek.io*) und richtet deutsche Custom Formats (`German DL` +1500, `German` +1000) vollautomatisch ein.
 
 ---
 
@@ -166,7 +167,7 @@ chmod +x link-apps.sh
 
 <div align="center">
 
-### ⭐ Unterstütze das Projekt
+### Unterstütze das Projekt
 
 Wenn dir das Projekt hilft, freue ich mich über einen Stern auf GitHub.
 

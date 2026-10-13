@@ -45,12 +45,17 @@
 * **Remux:** 1:1 verlustfreie Kopie des Original-Videomaterials einer Blu-ray / UHD-Disc ohne Neucodierung. Höchstmögliche Bild- und Tonqualität.
 * **BDRip / BluRay:** Von einer Blu-ray neu komprimiertes Release (z. B. 1080p oder 720p).
 * **WEB-DL / WEBRip:** Direkter digitaler Mitschnitt eines Streaming-Anbieters (Amazon, Netflix, Disney+, Apple TV).
-* **x264 / AVC:** Klassischer, hochkompatibler Videocodec für HD-Inhalte.
-* **x265 / HEVC:** Moderner Videocodec mit deutlich besserer Kompression; Standard für 4K/HDR und platzsparende 1080p-Releases.
+* **x264 / AVC:** Klassischer, hochkompatibler Videocodec für HD-Inhalte (1080p SDR).
+* **x265 / HEVC:** Moderner Videocodec mit hoher Kompression; Standard für 4K UHD, HDR10, Dolby Vision und kompakte 1080p-Releases.
+* **VP9 (Video Processor 9):** Lizenzfreier Videocodec von Google, vor allem auf YouTube und Smart-TVs etabliert; im Usenet kaum vertreten.
+* **AV1:** Moderner, extrem effizienter Open-Source-Codec der AOMedia. Benötigt aktuelle Endgeräte (ab ~2021) für ruckelfreies Hardware-Decoding.
+* **PGS (Presentation Graphic Stream):** Bildbasierte Bitmap-Untertitel von Blu-rays (können auf Smart-TVs Transkodierung durch Einbrennen ins Videobild erzwingen).
+* **SRT (SubRip):** Universelles, textbasiertes Untertitelformat für perfektes, ressourcenschonendes Direct Play.
+* **Direct Stream:** Das Videobild bleibt unangetastet, lediglich Tonspur oder Containerformat werden in Echtzeit angepasst.
 * **MKV (Matroska):** Flexibles Containerformat für Video, mehrere Audiospuren und Untertitel.
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) ➔ |
+| [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**1.0 Grundlagen**](../Grundlagen/Grundlagen.md) |

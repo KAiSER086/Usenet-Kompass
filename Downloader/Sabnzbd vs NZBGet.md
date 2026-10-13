@@ -4,15 +4,15 @@ Nachdem dein Netzwerk (wahlweise mit Gluetun und Tailscale oder als reines lokal
 
 ---
 
-## SABnzbd vs. NZBGet: Moderne Performance-Analyse & Mythen-Check
+## SABnzbd vs. NZBGet: Performance-Vergleich & Systemarchitektur
 
-Lange Zeit hielt sich in der Usenet-Community das Vorurteil: *„Python-basierte Downloader wie SABnzbd sind zu schwerfällig für sparsame Hardware wie den Raspberry Pi – wer Gigabit will, muss zwingend das in C++ geschriebene NZBGet nutzen.“*
+Früher galt in der Usenet-Community oft die Faustregel, dass Python-basierte Downloader wie SABnzbd zu ressourcenintensiv für sparsame Hardware wie den Raspberry Pi seien und für maximale Durchsätze zwingend das in C++ geschriebene NZBGet genutzt werden müsse.
 
-**Unsere aktuellen Hardware-Benchmarks widerlegen diesen Mythos eindeutig.**
+**Aktuelle Hardware-Messungen zeigen ein differenziertes Bild:**
 
 Moderne Versionen von SABnzbd nutzen Python mit **`sabctools`** – nativen, hochoptimierten C-Erweiterungen mit Hardware-SIMD-Unterstützung (**ARM NEON** auf dem Raspberry Pi 5 und **AVX2** auf x86-Systemen). Damit wird die CPU-intensive yEnc-Dekodierung und CRC32-Prüfsummenberechnung direkt auf Hardware-Ebene ausgeführt.
 
-| Kriterium | SABnzbd *(⭐ Standard-Empfehlung)* | NZBGet *(Leichtgewicht)* |
+| Kriterium | SABnzbd *(Standard-Empfehlung)* | NZBGet *(Leichtgewicht)* |
 | :--- | :--- | :--- |
 | **Architektur** | Python mit nativen C-Erweiterungen (**`sabctools`** mit ARM NEON & AVX2 SIMD). | Natives, Multi-Threaded C++. |
 | **Max. Durchsatz (Raspberry Pi 5)** | **Volles Leitungs-Maximum (59,3+ MB/s Netto bei 500 Mbit/s / 115+ MB/s bei Gigabit)**. 1 GB Testdateien in ~18 s. | **Volles Leitungs-Maximum (59,3+ MB/s Netto bei 500 Mbit/s / 115+ MB/s bei Gigabit)**. 1 GB Testdateien in ~20 s. |
@@ -24,23 +24,23 @@ Moderne Versionen von SABnzbd nutzen Python mit **`sabctools`** – nativen, hoc
 
 ---
 
-### 💾 Der wahre Flaschenhals: I/O-Architektur & Festplatten-Thrashing
+### Der wahre Flaschenhals: I/O-Architektur & Festplatten-Thrashing
 
 Wenn ein Usenet-Download auf einem Server oder Raspberry Pi unerwartet bei 20–30 MB/s einbricht, liegt die Ursache in 99 % der Fälle **nicht an der Prozessorleistung**, sondern an der Festplatten-Architektur:
 
 Usenet-Downloads bestehen aus tausenden winzigen Segmenten (Artikeln), die parallel aus dem Netzwerk eintreffen. Werden diese Fragmente direkt und unzusammenhängend auf eine langsame mechanische Festplatte (HDD) geschrieben, tritt massives **Head-Thrashing** auf – die Lese-/Schreibköpfe der Festplatte springen ununterbrochen hin und her, wodurch der I/O-Durchsatz der HDD auf unter 30 MB/s zusammenbricht.
 
 > [!TIP]
-> #### ⚡ Die goldene I/O-Regel für maximale Download-Geschwindigkeit:
+> #### Die goldene I/O-Regel für maximale Download-Geschwindigkeit:
 > 1. **Schneller Zwischenspeicher:** Der temporäre Ordner (`/data/usenet/incomplete`) muss zwingend auf einer schnellen **SSD oder NVMe** liegen (350+ MB/s Schreibdurchsatz).
 > 2. **RAM-Schreibcache in SABnzbd aktivieren:** Stelle in SABnzbd unter **Einstellungen > Allgemein > Cache-Begrenzung** (`cache_limit`) einen Puffer von **`1G`** (oder mindestens `512M`) ein. Dadurch puffert SABnzbd ankommende Segmente im Arbeitsspeicher und schreibt sie in großen, sequenziellen Blöcken auf die SSD – die I/O-Last sinkt drastisch.
 > 3. **Instant Atomic Move:** Nach Abschluss verschieben Sonarr und Radarr die Datei in Millisekunden per Hardlink/Atomic Move in dein Medienverzeichnis (`/data/media`), ohne Daten auf der Festplatte zeitaufwendig kopieren zu müssen.
 
 ---
 
-### 🔌 Wie viele Verbindungen sollte ich eintragen? (Warum weniger oft mehr ist)
+### Wie viele Verbindungen sollte ich eintragen? (Warum weniger oft mehr ist)
 
-Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbindungen, also trage ich auch 50 ein.“* In der Praxis führt das auf vielen Systemen jedoch zum Gegenteil: **Der Download wird langsamer und die CPU überlastet.**
+Ein häufiger Konfigurationsfehler lautet: *„Mein Provider erlaubt 50 Verbindungen, also trage ich auch 50 ein.“* In der Praxis führt das auf vielen Systemen jedoch zum Gegenteil: **Der Download wird langsamer und die CPU überlastet.**
 
 > [!NOTE]
 > **Das „Stau-auf-der-Autobahn“-Prinzip (Context Switching):**  
@@ -59,7 +59,7 @@ Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbi
 
 ---
 
-### 🎯 Entscheidungshilfe: Welcher Downloader für dich?
+### Entscheidungshilfe: Welcher Downloader für dich?
 
 * **Wähle SABnzbd (Empfohlen):**
   * Du nutzt einen **Raspberry Pi 5 (4 GB oder 8 GB)**, einen **Intel N100 / x86-Homeserver** oder einen Cloud-VPS mit mindestens 2 GB RAM.
@@ -72,7 +72,7 @@ Ein weit verbreiteter Anfängerfehler lautet: *„Mein Provider erlaubt 50 Verbi
 ---
 
 <details>
-<summary><b>📊 Reale Hardware-Benchmark-Ergebnisse ansehen (RPi 5 vs. 2-vCPU vs. 6-vCPU Server)</b></summary>
+<summary><b>Reale Hardware-Benchmark-Ergebnisse ansehen (RPi 5 vs. 2-vCPU vs. 6-vCPU Server)</b></summary>
 
 ### 1. Testumgebung & Messmethodik
 * **Raspberry Pi 5:** Broadcom BCM2712 (4x Cortex-A76 @ 2.4 GHz), 8 GB RAM, NVMe SSD, 500 Mbit/s via WireGuard-VPN.
@@ -203,7 +203,7 @@ Anschließend erreichst du das Webinterface:
 
 ## 5.2 Downloader konfigurieren: Usenet-Provider & Server-Prioritäten
 
-### 💡 Wichtig: Haupt-Provider vs. Backup-Blockaccount richtig einrichten
+### Wichtig: Haupt-Provider vs. Backup-Blockaccount richtig einrichten
 
 Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. NewsgroupDirect) als Backup nutzt, musst du **Prioritäten** vergeben, damit dein bezahltes Datenvolumen nicht unnötig verbraucht wird:
 
@@ -215,7 +215,7 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
 
 ### SABnzbd: Usenet-Provider & Performance einrichten
 
-1. **Einstellungen öffnen:** Klicke oben rechts auf das **Zahnrad-Symbol ⚙️**.
+1. **Einstellungen öffnen:** Klicke oben rechts auf das **Zahnrad-Symbol**.
 2. **Server hinzufügen:** Wähle links **"Server"** und klicke auf **"Server hinzufügen"**.
    * **Hostname:** Die News-Server-Adresse deines Providers (z. B. `news.eweka.nl`).
    * **Port:** **`563`** (oder `443`) für verschlüsseltes SSL/TLS.
@@ -266,6 +266,6 @@ Wenn du neben deiner Flatrate (z. B. Eweka) einen Block-Account (z. B. Newsgroup
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**4.0 VPNs & Netzwerk**](../Docker%20Compose%20Stack/VPNs.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) ➔ |
+| [**4.0 VPNs & Netzwerk**](../Docker%20Compose%20Stack/VPNs.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) |
