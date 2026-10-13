@@ -104,7 +104,7 @@ services:
 > **Tipp – Zugangsdaten in `.env` auslagern:**
 > Anstatt sensible Schlüssel wie `WIREGUARD_PRIVATE_KEY` direkt in die `docker-compose.yml` zu schreiben, kannst du diese sicher in der `.env`-Datei definieren (siehe [3.2 Konfigurationsverwaltung](Docker%20Compose%20Stack.md#32-konfigurationsverwaltung-env--log-rotation) und `.env.example`). In der Compose-Datei nutzt du dann einfach `- WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}`.
 
-> 💡 **Wichtig für den lokalen LAN-Zugriff:**
+> **Wichtig für den lokalen LAN-Zugriff:**
 > Gluetun blockiert standardmäßig durch seine integrierte Firewall alle Verbindungen außerhalb des Docker-Netzwerks. Mit `FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24` erlaubst du deinem lokalen Heimnetzwerk (z. B. PC oder Laptop im WLAN deiner Fritz!Box), direkt über die lokale IP des Servers auf die Webinterfaces zuzugreifen. Falls dein Heimnetz einen anderen IP-Bereich nutzt (z. B. `192.168.1.0/24` oder `10.0.0.0/24`), passe diesen Wert entsprechend an.
 
 <details>
@@ -178,7 +178,7 @@ Sobald du verbunden bist, kannst du über die private **Tailscale-IP-Adresse** d
 
 ---
 
-### 🛡️ Wichtig für Gluetun: Tailscale-Subnetz freigeben (`100.64.0.0/10`)
+### Wichtig für Gluetun: Tailscale-Subnetz freigeben (`100.64.0.0/10`)
 
 Wenn du Gluetun als VPN für Downloader und Arr-Dienste nutzt, blockiert dessen Firewall standardmäßig alle eingehenden Verbindungen außerhalb deines lokalen Heimnetzes.
 
@@ -192,7 +192,7 @@ FIREWALL_OUTBOUND_SUBNETS=192.168.178.0/24,100.64.0.0/10
 
 ---
 
-### ⚡ Performance-Tuning: DERP-Relays umgehen für Direct Play in Jellyfin
+### Performance-Tuning: DERP-Relays umgehen für Direct Play in Jellyfin
 
 Tailscale ist als **Peer-to-Peer-Mesh** konzipiert – Daten fließen im Idealfall direkt verschlüsselt von deinem Server zum Abspielgerät (Smartphone, Laptop, Apple TV), mit der vollen Upload-Bandbreite deines Heimanschlusses.
 
@@ -210,8 +210,8 @@ tailscale ping <client>
 tailscale status
 ```
 
-* 🟢 **`via direct <ip>:<port>`** ➔ **Direct Play aktiv!** Ungedrosselte Direktverbindung mit voller Geschwindigkeit.
-* 🟡 **`via DERP(fra)`** ➔ **Relay aktiv!** Die Verbindung läuft über einen Relay-Server und wird gedrosselt.
+* **`via direct <ip>:<port>`** -> **Direct Play aktiv!** Ungedrosselte Direktverbindung mit voller Geschwindigkeit.
+* **`via DERP(fra)`** -> **Relay aktiv!** Die Verbindung läuft über einen Relay-Server und wird gedrosselt.
 
 #### 2. Lösung: Portweiterleitung für UDP 41641 im Router einrichten
 Damit Tailscale immer und von überall eine direkte Punkt-zu-Punkt-Verbindung herstellen kann, benötigt es lediglich einen offenen UDP-Port für WireGuard:
@@ -227,6 +227,6 @@ Sobald der UDP-Port `41641` weitergeleitet wird, kann dein Abspielgerät die NAT
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**3.0 Docker Stack**](Docker%20Compose%20Stack.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) ➔ |
+| [**3.0 Docker Stack**](Docker%20Compose%20Stack.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) |

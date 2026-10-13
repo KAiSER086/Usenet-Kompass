@@ -134,12 +134,12 @@ Prowlarr fungiert als Schaltzentrale für alle Suchanfragen.
    * Navigiere zu **Indexers > (+)** und wähle deine Usenet-Indexer (z. B. *Treasure-Maps*, *NewzBay*, *NZBGeek*, *DrunkenSlug*).
    * Trage deine Zugangsdaten / API-Keys ein.
 
-#### 🇩🇪 DACH-Spezifika: Newznab-Kategorien & Sync-Profile
+#### DACH-Spezifika: Newznab-Kategorien & Sync-Profile
 
 In Prowlarr definieren die **Sync Categories**, welche Kategorien eines Indexers an Sonarr und Radarr weitergereicht werden. Das funktioniert wie eine globale Erlaubnisliste (Whitelist):
 
 * **Treasure-Maps (TM):** Trennt deutsche und internationale Releases. Deutsche Filme liegen unter **`2100`** (`Movies - DE`), deutsche Serien unter **`5100`** (`TV - DE`). *(Hinweis: Ältere Foren-Posts nennen noch veraltete 6-stellige IDs wie `102100` – die offizielle TM-API nutzt heute `2100` und `5100`).*
-* **Videothek.io:** Da hier ausschließlich deutschsprachige Medien gelistet sind, nutzt der Indexer direkt die Newznab-Standards: **`2000`** für Filme und **`5000`** für Serien.
+* **Videothek.io:** Da hier ausschließlich deutschsprachige Medien gelistet sind, nutzt der Indexer direkt die Newznab-Standards: **`2000`** für Filme, **`5000`** für Serien sowie **`3000`** für Audio-Inhalte (Musik und Hörbücher).
 * **Internationale Indexer (NZBGeek, DrunkenSlug):** Nutzen ebenfalls die Standard-IDs `2000` und `5000`.
 
 **Sonarr- & Radarr-Synchronisation in Prowlarr einrichten:**
@@ -159,7 +159,7 @@ In Prowlarr definieren die **Sync Categories**, welche Kategorien eines Indexers
 ### 6.3.2 Sonarr & Radarr einrichten
 
 > [!TIP]
-> #### ⚡ Automatisches 10-Sekunden-Setup mit `link-apps.sh` (Empfohlen)
+> #### Automatisches 10-Sekunden-Setup mit `link-apps.sh` (Empfohlen)
 > Wenn du dir das manuelle Anlegen von Root-Ordnern, Download-Clients, API-Verknüpfungen und das mühsame Abtippen von Custom Formats sparen möchtest, nutze unser mitgeliefertes Automatisierungs-Skript:
 > ```bash
 > chmod +x link-apps.sh
@@ -287,9 +287,9 @@ Jedes gefundene Release wird von Sonarr/Radarr anhand seiner Metadaten und Relea
 1. Navigiere zu **Settings > Profiles** und klicke auf dein gewünschtes Profil (z. B. `HD-1080p` oder erstelle ein neues Profil `1080p - German`).
 2. Scrolle nach unten zum Bereich **Custom Formats**.
 3. Trage die Punktzahlen gemäß der Tabelle oben ein:
-   * `German DL` ➔ `1500`
-   * `German` ➔ `1000`
-   * `German Forced` ➔ `200`
+   * `German DL` -> `1500`
+   * `German` -> `1000`
+   * `German Forced` -> `200`
 4. **Upgrades & Schwellenwert einstellen:**
    * **Upgrades Allowed:** Haken setzen.
    * **Upgrade Until Custom Format Score:** Auf `1500` setzen (damit ein reines deutsches Release automatisch durch eine bessere Dual-Language-Fassung ersetzt wird, sobald eine erscheint).
@@ -300,6 +300,6 @@ Ab sofort wählt der Stack bei jeder Suchanfrage vollautomatisch die für den de
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**7.0 Frontend (Jellyfin & Seerr)**](../Frontend/Jellyfin%20und%20Seerr.md) ➔ |
+| [**5.0 Downloader**](../Downloader/Sabnzbd%20vs%20NZBGet.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**7.0 Frontend (Jellyfin & Seerr)**](../Frontend/Jellyfin%20und%20Seerr.md) |

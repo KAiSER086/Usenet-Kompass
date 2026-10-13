@@ -37,7 +37,7 @@ Füge den folgenden Codeblock in deine `docker-compose.yml` ein:
 
 > **Wichtiger Hinweis zu den Pfaden (TRaSH-Guides):** Wir binden `./data/media:/data/media` ein. Damit greift Jellyfin direkt auf die von Sonarr und Radarr einsortierten Filme (`/data/media/movies`) und Serien (`/data/media/tv`) zu.
 
-#### ⚡ Optional: Hardware-Transcoding mit Intel QuickSync (QSV) aktivieren
+#### Optional: Hardware-Transcoding mit Intel QuickSync (QSV) aktivieren
 
 Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, kann Jellyfin Videos extrem stromsparend über die integrierte Grafikeinheit transkodieren. Damit der Container mit deinem Benutzer (`PUID=1000`) auf die GPU zugreifen darf, benötigt er Zugriff auf die Gruppe `render`:
 
@@ -60,6 +60,27 @@ Wenn du einen Mini-PC mit Intel-Prozessor (z. B. Intel N100 oder Core-i) nutzt, 
    * **Filme:** Ordner `/data/media/movies` auswählen.
    * **Serien:** Ordner `/data/media/tv` auswählen.
 4. **Fertig:** Jellyfin lädt nun automatisch Filmplakate, Beschreibungen und Metadaten herunter.
+
+---
+
+### 7.1.1 Die besten Jellyfin-Clients & Playback-Tipps (Direct Play garantieren)
+
+Die Wahl des richtigen Abspiel-Clients entscheidet maßgeblich darüber, ob dein Server entspannt im **Direct Play** läuft oder unter Volllast transkodieren muss. Integrierte Smart-TV-Apps (LG webOS, Samsung Tizen) sind oft durch limitierte TV-Chipsätze eingeschränkt. Mit den richtigen dedizierten Clients holst du das Maximum heraus:
+
+| Plattform | Empfohlene Clients | Besonderheiten |
+| :--- | :--- | :--- |
+| **Plattformübergreifend (iOS, Android, TV, Desktop)** | **[Moonfin](https://moonfin.io)** *(Design-Tipp)* | Äußerst schicker, moderner Open-Source-Client mit moderner UI, dynamischen Layouts, Multi-Server-Support und nativer Seerr-Anfrage-Integration. Verfügbar für Android, Android TV/Fire TV, iOS, Smart-TVs und Desktop. |
+| **Apple (Apple TV 4K, iPad, iPhone)** | **[Infuse](https://firecore.com/infuse)**, **Swiftfin** | Eigene Rendering-Engine, spielt fast jedes Dolby Vision Profil, PGS-Untertitel und TrueHD/DTS nativ in Direct Play ohne Transcoding ab. **Swiftfin** ist der moderne, native Open-Source-Client. |
+| **Android TV / Fire TV Stick** | **[Wholphin](https://github.com/damontecres/Wholphin)**, offizielle TV-App | **Wholphin** ist ein extrem schneller, moderner Community-Client mit ExoPlayer/LibVLC-Engine, der native Untertitel und Direct Play hervorragend meistert. Die offizielle TV-App ist im Play Store und Amazon Appstore verfügbar. |
+| **Android (Smartphone & Tablet)** | **[Findroid](https://github.com/jarnedemeulemeester/findroid)**, offizielle App | Nativer Kotlin-Client mit integriertem MPV-Player für butterweiches Abspielen aller Codecs. |
+| **LG webOS & Samsung Tizen** | Offizielle Jellyfin-Apps, **[Moonfin](https://moonfin.io)** | Die offiziellen Apps sind in den jeweiligen TV-Stores verfügbar. Moonfin bietet eine optisch ansprechende Alternative. |
+| **PC / Laptop (Windows, macOS, Linux)** | **[Jellyfin Media Player (JMP)](https://github.com/jellyfin/jellyfin-media-player)** | Nutzt den legendären `mpv`-Videoplayer im Hintergrund. Spielt ausnahmslos jede Datei, jeden Codec und jeden Untertitel direkt ab. |
+
+> [!TIP]
+> **Wiedergabe-Informationen prüfen (Der Live-Check):**
+> Klicke während der Wiedergabe im Jellyfin-Player auf das **Zahnrad > Wiedergabe-Informationen** (oder Playback Data).
+> * **Direct Play:** Alles perfekt – 0 % CPU-Last auf dem Server.
+> * **Transkodierung:** Jellyfin zeigt dir hier den **exakten Grund** an (z. B. `Audio-Codec nicht unterstützt`, `Bitrate zu hoch` oder `Untertitel-Format erfordert Einbrennen`). So weißt du sofort, an welcher Stellschraube du drehen musst!
 
 ---
 
@@ -146,6 +167,6 @@ Klicke bei beiden Servern auf **„Verbindung testen“** und anschließend auf 
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**8.0 Finaler Stack**](../Docker%20Compose%20Stack/Finaler%20Stack.md) ➔ |
+| [**6.0 Arr-Stack**](../Arr-Stack/Prowlarr%2C%20Sonarr%2C%20Radarr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**8.0 Finaler Stack**](../Docker%20Compose%20Stack/Finaler%20Stack.md) |

@@ -329,13 +329,13 @@ services:
 
 ---
 
-> 📁 **Hinweis zur TRaSH-Guides Speicherstruktur (`/data`):**
+> **Hinweis zur TRaSH-Guides Speicherstruktur (`/data`):**
 > Durch das einheitliche Mapping von `./data:/data` (bzw. deiner externen Festplatte nach `/data`) nutzen Downloader und Medien-Apps dasselbe Dateisystem.
 > * **Downloads:** SABnzbd/NZBGet legt fertige Dateien unter `/data/usenet/complete` ab (temporär: `/data/usenet/incomplete`).
 > * **Medien:** Sonarr importiert Serien nach `/data/media/tv`, Radarr Filme nach `/data/media/movies`, und Jellyfin streamt aus `/data/media`.
 > * **Der entscheidende Vorteil:** Sonarr und Radarr verschieben fertige Dateien per **Instant Atomic Move (`rename()`) in Millisekunden** – komplett ohne doppelte Schreiblast oder lange Wartezeiten auf der Festplatte.
 
-> 📌 **Hinweis zur internen Kommunikation & Port-Weiterleitung:**
+> **Hinweis zur internen Kommunikation & Port-Weiterleitung:**
 > * **Port-Weiterleitung wie eine Weiche:** Wenn du z. B. `PORT_SABNZBD=8085` wählst, sagst du Docker: *„Empfange Anfragen von außen auf Port 8085 und leite sie intern an Port 8080 im Container weiter.“* So umgehst du Portkonflikte auf dem Host (z. B. wenn Port 8080 schon belegt ist) spielend leicht, während die Anwendung intern ganz normal auf Port 8080 arbeitet.
 > * **Container-zu-Container:** Die interne Kommunikation bleibt davon völlig unberührt, da Dienste untereinander immer auf die standardisierten internen Ports zugreifen:
 >   - **In Variante A (Mit Gluetun):** Da `sabnzbd`, `prowlarr`, `sonarr` und `radarr` über das Gluetun-Netzwerk laufen (`network_mode: "service:gluetun"`), kommunizieren sie untereinander per `127.0.0.1` (localhost). Dienste außerhalb wie `seerr` erreichen Sonarr und Radarr über den Hostnamen **`gluetun`** (z. B. `http://gluetun:7878`).
@@ -388,6 +388,6 @@ Im Falle einer Server-Neuinstallation oder eines Hardware-Wechsels entpackst du 
 
 ---
 
-| ⬅️ Vorheriges Kapitel | 🧭 Inhaltsverzeichnis | ➡️ Nächstes Kapitel |
+| Vorheriges Kapitel | Inhaltsverzeichnis | Nächstes Kapitel |
 | :--- | :---: | ---: |
-| ⬅️ [**7.0 Frontend**](../Frontend/Jellyfin%20und%20Seerr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) ➔ |
+| [**7.0 Frontend**](../Frontend/Jellyfin%20und%20Seerr.md) | [**Inhaltsverzeichnis**](../README.md#inhaltsverzeichnis) | [**9.0 FAQ & Troubleshooting**](../FAQ/FAQ.md) |
