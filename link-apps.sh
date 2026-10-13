@@ -196,7 +196,7 @@ if [[ "$EXISTING_PROWLARR_APPS" != *"Sonarr"* ]]; then
     {"name": "prowlarrUrl", "value": "${PROWLARR_URL_FOR_APPS}"},
     {"name": "baseUrl", "value": "${SONARR_URL_FOR_PROWLARR}"},
     {"name": "apiKey", "value": "${SONARR_KEY}"},
-    {"name": "syncCategories", "value": [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5070, 5080, 5090]},
+    {"name": "syncCategories", "value": [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5070, 5080, 5090, 5100, 105100]},
     {"name": "animeSyncCategories", "value": [5070]},
     {"name": "syncAnimeStandardFormatSearch", "value": true},
     {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
@@ -228,7 +228,7 @@ if [[ "$EXISTING_PROWLARR_APPS" != *"Radarr"* ]]; then
     {"name": "prowlarrUrl", "value": "${PROWLARR_URL_FOR_APPS}"},
     {"name": "baseUrl", "value": "${RADARR_URL_FOR_PROWLARR}"},
     {"name": "apiKey", "value": "${RADARR_KEY}"},
-    {"name": "syncCategories", "value": [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090]},
+    {"name": "syncCategories", "value": [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090, 2100, 102100]},
     {"name": "syncRejectBlocklistedTorrentHashesWhileGrabbing", "value": false}
   ]
 }

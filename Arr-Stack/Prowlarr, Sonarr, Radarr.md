@@ -136,16 +136,11 @@ Prowlarr fungiert als Schaltzentrale für alle Suchanfragen.
 
 #### 🇩🇪 DACH-Spezifika: Newznab-Kategorien & Sync-Profile
 
-Deutsche Indexer strukturieren Releases häufig über spezifische Newznab-Kategorie-IDs. Werden in den Sync-Profilen für Sonarr und Radarr nur englischsprachige Standard-Kategorien hinterlegt, ignorieren Sonarr und Radarr deutsche Releases bei automatischen Suchläufen und RSS-Feeds komplett!
+In Prowlarr definieren die **Sync Categories**, welche Kategorien eines Indexers an Sonarr und Radarr weitergereicht werden. Das funktioniert wie eine globale Erlaubnisliste (Whitelist):
 
-| Medium / Typ | Standard-ID | DACH-spezifische IDs & Bedeutung | Relevanz für DACH-Setups |
-| :--- | :---: | :--- | :--- |
-| **Filme / HD** | `2040` | `2060` (German / Multi), `2000` (Allgemein Filme) | **Kritisch:** Viele DE-Indexer taggen 1080p German/DL hier. |
-| **Filme / UHD (4K)** | `2045` | `2045` (4K / 2160p HDR/DV) | Standard für hochauflösende Film-Releases. |
-| **Serien / HD** | `5040` | `5020` (Foreign/DE), `5000` (Allgemein TV) | **Kritisch:** Deutsche 720p/1080p Serienfolgen. |
-| **Serien / UHD (4K)** | `5045` | `5045` (4K / 2160p) | 4K-Episoden moderner Streaming-Serien. |
-| **Serien / Staffelpakete** | `5070` | `5070`, `5080` (Season Packs) | **Unerlässlich:** Ermöglicht den Download kompletter Staffeln. |
-| **Serien / SD** | `5030` | `5030` (Standard Definition) | Wichtig für ältere Serienklassiker ohne HD-Remaster. |
+* **Treasure-Maps (TM):** Trennt deutsche und internationale Releases. Deutsche Filme liegen unter **`2100`** (`Movies - DE`), deutsche Serien unter **`5100`** (`TV - DE`). *(Hinweis: Ältere Foren-Posts nennen noch veraltete 6-stellige IDs wie `102100` – die offizielle TM-API nutzt heute `2100` und `5100`).*
+* **Videothek.io:** Da hier ausschließlich deutschsprachige Medien gelistet sind, nutzt der Indexer direkt die Newznab-Standards: **`2000`** für Filme und **`5000`** für Serien.
+* **Internationale Indexer (NZBGeek, DrunkenSlug):** Nutzen ebenfalls die Standard-IDs `2000` und `5000`.
 
 **Sonarr- & Radarr-Synchronisation in Prowlarr einrichten:**
 1. Gehe zu **Settings > Applications** und klicke auf **(+)**.
@@ -154,9 +149,10 @@ Deutsche Indexer strukturieren Releases häufig über spezifische Newznab-Katego
    * **Sonarr/Radarr Server:** `http://127.0.0.1:8989` (Sonarr) bzw. `http://127.0.0.1:7878` (Radarr)
    * **API Key:** Aus der jeweiligen App unter *Settings > General > Security* kopieren.
 3. **Sync Categories anpassen:**
-   * **Für Radarr:** Stelle sicher, dass neben `2000`, `2040`, `2045` auch explizit **`2060`** (oder sonstige vom Indexer genutzte DE-Kategorien) ausgewählt sind.
-   * **Für Sonarr:** Aktiviere neben `5000`, `5040`, `5045` unbedingt **`5020`**, **`5030`** sowie **`5070` / `5080`** (Season Packs).
-4. **Speichern:** Prowlarr überträgt nun alle Indexer mitsamt der korrekten DACH-Kategorien an Sonarr und Radarr.
+   * **Für Radarr:** Wähle neben den Standard-Filmkategorien (`2000`, `2040`, `2045` etc.) auch explizit **`2100`** (für Treasure-Maps DE) aus.
+   * **Für Sonarr:** Wähle neben den Standard-Serienkategorien (`5000`, `5040`, `5045` etc.) auch explizit **`5100`** (für Treasure-Maps DE) sowie `5020`, `5070` (Anime) und `5080` (Staffelpakete) aus.
+4. **Speichern:** Prowlarr synchronisiert nun alle Indexer mitsamt der korrekten DACH-Kategorien.  
+   *(Tipp: Wenn du unser Skript `link-apps.sh` nutzt, hinterlegt das Skript diese Whitelist automatisch für alle Standard- und DACH-IDs – egal welche Indexer du später hinzufügst).*
 
 ---
 
